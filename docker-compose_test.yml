@@ -11,9 +11,10 @@ services:
 
   test:
     container_name: test
-    build: .
+    build:
+        context: ./server
     command: pytest
     volumes:
-      - .:/app
+      - ./server:/app
     depends_on:
       - db
