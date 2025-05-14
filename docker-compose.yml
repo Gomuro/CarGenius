@@ -13,10 +13,13 @@ services:
 
   app:
     container_name: app
-    build: .
+    env_file:
+      - ${env_path}
+    build:
+      context: ./server
     command: bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
-      - .:/app
+      - ./server:/app
     ports:
       - 8000:8000
     restart: always
@@ -24,15 +27,17 @@ services:
       - db
 
   redis:
-    container_name: redis_redis_cargenius
+    container_name: redis_cargenius
     image: redis:6.2-alpine
 
   celery_worker:
     container_name: celery_worker_cargenius
-    build: .
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     command: celery -A app.celery_worker.celery worker --loglevel=info
     volumes:
-      - .:/app
+      - ./server:/app
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
@@ -54,7 +59,9 @@ services:
 
   flower:
     container_name: flower_cargenius
-    build: .
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     command: celery -A app.celery_worker.celery flower --port=5555
     ports:
       - 5556:5555
