@@ -1,0 +1,467 @@
+/* Modern Light Theme */
+QWidget {
+    background-color: #ffffff;
+    color: #212529;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+}
+
+/* Main Window and Scrolling */
+QMainWindow {
+    background-color: #ffffff;
+    min-width: 800px;
+    min-height: 600px;
+}
+
+QScrollArea {
+    background-color: #ffffff;
+    border: none;
+}
+
+QScrollBar:vertical {
+    background: #f8f9fa;
+    width: 12px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #dee2e6;
+    min-height: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #ced4da;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background: #f8f9fa;
+    height: 12px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background: #dee2e6;
+    min-width: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #ced4da;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+/* Header Styling */
+#header_frame {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 15px;
+}
+
+#app_title {
+    color: #212529;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: -0.5px;
+}
+
+/* Cards and Containers */
+#filter_card, #notification_frame {
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+#filter_title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #495057;
+    margin: 5px 0 15px 0;
+}
+
+/* Form Controls */
+QLineEdit, QComboBox, QDateEdit {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background-color: #ffffff;
+    color: #495057;
+    selection-background-color: #4dabf7;
+    min-height: 18px;
+}
+
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
+    border-color: #4dabf7;
+}
+
+QComboBox:hover, QLineEdit:hover {
+    border-color: #dee2e6;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 22px;
+    border: none;
+}
+
+QComboBox::down-arrow {
+    width: 10px;
+    height: 10px;
+    background: #4dabf7;
+    border-radius: 5px;
+}
+
+QDateEdit::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 22px;
+    border: none;
+}
+
+QDateEdit::down-arrow {
+    width: 10px;
+    height: 10px;
+    background: #4dabf7;
+    border-radius: 5px;
+}
+
+QLabel {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+QLabel#section_title, QLabel#filter_title {
+    color: #212529;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+QLabel#slider_value {
+    color: #4dabf7;
+    font-weight: bold;
+    padding: 2px 0;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #4dabf7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+QPushButton:hover {
+    background-color: #339af0;
+}
+
+QPushButton:pressed {
+    background-color: #228be6;
+}
+
+#action_button {
+    background-color: #20c997;
+    font-size: 14px;
+    padding: 10px 18px;
+}
+
+#action_button:hover {
+    background-color: #12b886;
+}
+
+#theme_button {
+    background-color: #495057;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+#small_button {
+    padding: 6px 10px;
+    font-size: 11px;
+    background-color: #6c757d;
+}
+
+/* Table Styling */
+QTableWidget {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 2px;
+    gridline-color: #f1f3f5;
+}
+
+QTableWidget::item {
+    padding: 8px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+QTableWidget::item:selected {
+    background-color: #e7f5ff;
+    color: #212529;
+}
+
+QHeaderView::section {
+    background-color: #f8f9fa;
+    color: #495057;
+    padding: 8px;
+    border: none;
+    font-weight: bold;
+}
+
+/* Sliders */
+QSlider::groove:horizontal {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    background: #4dabf7;
+    width: 16px;
+    height: 16px;
+    margin: -5px 0;
+    border-radius: 8px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #4dabf7;
+    border-radius: 3px;
+}
+
+/* Clean filter panel styling */
+#vehicle_sidebar {
+    background-color: #f0f2f5;
+    border-right: none;
+}
+
+#filter_frame {
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+#vehicle_button, #vehicle_button_selected {
+    background-color: transparent;
+    color: #6c757d;
+    border: none;
+    border-radius: 6px;
+    font-size: 24px;
+    padding: 5px;
+}
+
+#vehicle_button_selected {
+    background-color: transparent;
+    color: #e83e32;
+}
+
+#vehicle_button:hover {
+    background-color: #e9ecef;
+}
+
+#filter_content {
+    background-color: #ffffff;
+    padding: 0;
+}
+
+#filter_header {
+    color: #495057;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    padding-left: 2px;
+}
+
+#filter_input {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    color: #212529;
+    font-size: 13px;
+    padding: 10px 12px;
+    min-height: 18px;
+}
+
+#filter_input:focus {
+    border-color: #4dabf7;
+}
+
+#search_button {
+    background-color: #e83e32;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-weight: bold;
+    min-height: 40px;
+    min-width: 150px;
+    font-size: 14px;
+}
+
+#search_button:hover {
+    background-color: #c0392b;
+}
+
+#filter_option {
+    background-color: transparent;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    color: #495057;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: normal;
+    text-align: center;
+}
+
+#filter_option:checked {
+    background-color: #f8f9fa;
+    border-color: #4dabf7;
+}
+
+#text_button {
+    background-color: transparent;
+    border: none;
+    color: #0d6efd;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#text_button:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+/* Payment option buttons */
+#payment_method_frame {
+    background-color: transparent;
+    border: none;
+}
+
+#payment_option, #payment_option_selected {
+    border: 1px solid #ced4da;
+    background-color: transparent;
+    color: #495057;
+    font-weight: normal;
+    padding: 8px 15px;
+    border-radius: 0;
+    margin: 0;
+}
+
+#payment_option_selected {
+    background-color: #6c5ce7;
+    color: white;
+    border-color: #6c5ce7;
+}
+
+#payment_option:hover {
+    background-color: #e9ecef;
+}
+
+/* Add these styles to light.qss for the car listings */
+
+/* Results section styling */
+#results_header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#results_title {
+    color: #343a40;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#listings_container {
+    background-color: #ffffff;
+    border: none;
+    padding: 10px 0;
+}
+
+#car_listing {
+    background-color: #ffffff;
+    border-radius: 4px;
+    margin: 0 10px 10px 10px;
+    border: 1px solid #dee2e6;
+}
+
+#car_listing:hover {
+    background-color: #f8f9fa;
+}
+
+#car_image_container {
+    background-color: #f8f9fa;
+    border-radius: 3px;
+}
+
+#car_image {
+    padding: 5px;
+}
+
+#car_title {
+    color: #212529;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#car_subtitle {
+    color: #6c757d;
+    font-size: 13px;
+}
+
+#car_price {
+    color: #212529;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#price_tag {
+    color: #6c757d;
+    font-size: 12px;
+    font-style: italic;
+    padding-top: 3px;
+}
+
+#car_spec {
+    color: #212529;
+    font-size: 13px;
+}
+
+#car_seller {
+    color: #007bff;
+    font-size: 12px;
+}
+
+#car_location {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+#contact_button, #share_button {
+    background-color: #7952b3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-size: 12px;
+}
+
+#contact_button:hover, #share_button:hover {
+    background-color: #673ab7;
+} 
