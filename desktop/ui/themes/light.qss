@@ -464,4 +464,93 @@ QSlider::sub-page:horizontal {
 
 #contact_button:hover, #share_button:hover {
     background-color: #673ab7;
+}
+
+/* License Dialog Styling */
+QDialog#LicenseDialog {
+    background-color: #ffffff;
+}
+
+#license_subtitle {
+    color: #495057;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+#license_frame {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    margin: 10px 0;
+}
+
+#instructions {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+#license_input {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    background-color: #ffffff;
+    color: #495057;
+}
+
+#license_input:focus {
+    border-color: #4dabf7;
+}
+
+#primary_button {
+    background-color: #4dabf7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#primary_button:hover {
+    background-color: #339af0;
+}
+
+#primary_button:pressed {
+    background-color: #228be6;
+}
+
+#secondary_button {
+    background-color: #e9ecef;
+    color: #495057;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#secondary_button:hover {
+    background-color: #dee2e6;
+}
+
+#secondary_button:pressed {
+    background-color: #ced4da;
+}
+
+#note_text {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+#note_text a {
+    color: #4dabf7;
+    text-decoration: none;
+}
+
+#note_text a:hover {
+    text-decoration: underline;
 } 

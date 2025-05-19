@@ -518,4 +518,194 @@ QSlider::sub-page:horizontal {
 
 #contact_button:hover, #share_button:hover {
     background-color: #673ab7;
+}
+
+/* License Dialog Styling */
+QDialog#LicenseDialog {
+    background-color: #212529;
+}
+
+#license_subtitle {
+    color: #e9ecef;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+#license_frame {
+    background-color: #343a40;
+    border-radius: 10px;
+    border: 1px solid #495057;
+    margin: 10px 0;
+}
+
+#instructions {
+    color: #adb5bd;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+#license_input {
+    border: 1px solid #495057;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    background-color: #2b3035;
+    color: #e9ecef;
+}
+
+#license_input:focus {
+    border-color: #228be6;
+}
+
+#primary_button {
+    background-color: #228be6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#primary_button:hover {
+    background-color: #1c7ed6;
+}
+
+#primary_button:pressed {
+    background-color: #1971c2;
+}
+
+#secondary_button {
+    background-color: #495057;
+    color: #e9ecef;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#secondary_button:hover {
+    background-color: #6c757d;
+}
+
+#secondary_button:pressed {
+    background-color: #495057;
+}
+
+#note_text {
+    color: #adb5bd;
+    font-size: 12px;
+}
+
+#note_text a {
+    color: #4dabf7;
+    text-decoration: none;
+}
+
+#note_text a:hover {
+    text-decoration: underline;
+}
+
+/* Dark Filter Panel Specific Styling */
+#dark_filter_frame {
+    background-color: #1e2228;
+    border-radius: 10px;
+    border: 1px solid #343a40;
+}
+
+#filter_header_light {
+    color: #adb5bd;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 5px;
+    padding-left: 2px;
+}
+
+#dark_filter_input {
+    background-color: #212529;
+    border: 1px solid #343a40;
+    border-radius: 4px;
+    color: #e9ecef;
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+#dark_filter_input:focus {
+    border-color: #4dabf7;
+}
+
+#payment_method_frame_dark {
+    background-color: transparent;
+    border: none;
+}
+
+#payment_option_dark {
+    border: 1px solid #343a40;
+    background-color: #212529;
+    color: #adb5bd;
+    font-weight: normal;
+    padding: 8px 15px;
+    border-radius: 0;
+    margin: 0;
+}
+
+#payment_option_selected_purple {
+    background-color: #6c5ce7;
+    color: white;
+    border: 1px solid #6c5ce7;
+    font-weight: normal;
+    padding: 8px 15px;
+    border-radius: 0;
+    margin: 0;
+}
+
+#payment_option_dark:hover {
+    background-color: #343a40;
+}
+
+#search_button_red {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#search_button_red:hover {
+    background-color: #c0392b;
+}
+
+#dark_filter_option {
+    background-color: #212529;
+    border: 1px solid #343a40;
+    border-radius: 3px;
+    color: #adb5bd;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: normal;
+    text-align: center;
+}
+
+#dark_filter_option:checked {
+    background-color: #212529;
+    border-color: #4dabf7;
+}
+
+#dark_text_button {
+    background-color: transparent;
+    border: none;
+    color: #4dabf7;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#dark_text_button:hover {
+    color: #74c0fc;
+    text-decoration: underline;
 } 
