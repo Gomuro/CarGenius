@@ -10,7 +10,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CarGenius")
-        self.current_theme = "light"
+        self.current_theme = "dark"  # Set dark theme as the only theme
         
         # Set minimum window size for usability
         self.setMinimumSize(800, 600)
@@ -51,35 +51,12 @@ class MainWindow(QMainWindow):
         app_title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         title_layout.addWidget(app_title)
         
-        # Theme switcher
-        self.theme_button = QPushButton("Switch to Dark Theme")
-        self.theme_button.setObjectName("theme_button")
-        self.theme_button.clicked.connect(self._toggle_theme)
-        title_layout.addWidget(self.theme_button, alignment=Qt.AlignmentFlag.AlignRight)
+        # Add spacer to push title to the left
+        title_layout.addStretch()
+        
         header_layout.addLayout(title_layout)
         
-        # Server settings with better adaptive layout
-        server_layout = QHBoxLayout()
-        server_layout.setSpacing(10)
-        
-        server_label = QLabel("Server URL:")
-        server_label.setFixedWidth(80)
-        server_layout.addWidget(server_label)
-        
-        self.server_url = QLineEdit("https://api.cargenius.com")
-        self.server_url.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        server_layout.addWidget(self.server_url, 3)
-        
-        api_label = QLabel("API Key:")
-        api_label.setFixedWidth(60)
-        server_layout.addWidget(api_label)
-        
-        self.api_key = QLineEdit()
-        self.api_key.setPlaceholderText("Enter your API key")
-        self.api_key.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        server_layout.addWidget(self.api_key, 2)
-        
-        header_layout.addLayout(server_layout)
+        # Add header to main layout
         main_layout.addWidget(header_frame)
         
         # Separator
@@ -110,12 +87,6 @@ class MainWindow(QMainWindow):
         self.notification_panel.setObjectName("notification_panel")
         self.notification_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         main_layout.addWidget(self.notification_panel)
-
-    def _toggle_theme(self):
-        self.current_theme = "dark" if self.current_theme == "light" else "light"
-        button_text = "Switch to Light Theme" if self.current_theme == "dark" else "Switch to Dark Theme"
-        self.theme_button.setText(button_text)
-        self._load_styles(self.current_theme)
 
     def _load_styles(self, theme):
         style_file = f"ui/themes/{theme}.qss"
