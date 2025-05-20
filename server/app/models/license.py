@@ -1,3 +1,4 @@
+# app/models/license.py
 from sqlalchemy import Column, DateTime, String, Integer, Boolean
 from datetime import datetime, timezone
 from uuid import uuid4
