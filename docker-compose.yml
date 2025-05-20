@@ -90,7 +90,8 @@ services:
       context: ./server
       dockerfile: Dockerfile
     env_file:
-      - ./.env
+      - .env.test
+      - .env
     environment:
       - PYTHONPATH=/workdir_docker
       - USE_TEST_DB=1

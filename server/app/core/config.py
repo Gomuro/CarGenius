@@ -13,14 +13,16 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 ENV_PATH = BASE_DIR /".env"
 load_dotenv(dotenv_path=ENV_PATH)
 DATABASE_URL = os.getenv("DATABASE_URL")
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL") or os.getenv("test_database_url")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
+USE_TEST_DB = os.getenv("USE_TEST_DB", "0")
 
 
 class Settings(BaseSettings):
     env: str = "dev"
-    use_test_db: bool = bool(os.getenv("TEST_DATABASE_URL", False))
-    database_url: str
-    test_database_url: str
+    use_test_db: bool = bool(int(USE_TEST_DB))
+    database_url: str = DATABASE_URL
+    test_database_url: str = TEST_DATABASE_URL
 
     @property
     def sqlalchemy_database_url(self):
@@ -30,8 +32,9 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
-print("DATABASE_URL:", os.getenv("DATABASE_URL"))
 settings = Settings()
+
+
 # class Settings(BaseSettings):
 #     database_url: str
 #     test_database_url: str
