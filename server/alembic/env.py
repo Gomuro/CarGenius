@@ -1,3 +1,4 @@
+# server/app/alembic/env.py
 import asyncio
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
@@ -7,20 +8,30 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine
-from app.models import lisence
+from app.models import license
+from app.core.database import Base
+from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-ENV_PATH = BASE_DIR / ".env"
 
-load_dotenv(dotenv_path=ENV_PATH)
+env_file = os.getenv('.env')
+load_dotenv(env_file)
 
-from app.core.database import Base
+database_url = os.getenv("DATABASE_URL")
+test_database_url = os.getenv("TEST_DATABASE_URL") or os.getenv("test_database_url")
+
+use_test_db = os.getenv("USE_TEST_DB", "0") == "1"
+
+if use_test_db:
+    sqlalchemy_url = test_database_url
+else:
+    sqlalchemy_url = database_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
+config.set_main_option("sqlalchemy.url", sqlalchemy_url)
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
