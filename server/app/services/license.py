@@ -1,7 +1,8 @@
+# app/servoces/license.py
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.lisence import LicenseKey
+from app.models.license import LicenseKey
 
 
 async def generate_license_key(db: AsyncSession, client_info: str = None, expires_in_days: int = 30) -> LicenseKey:
