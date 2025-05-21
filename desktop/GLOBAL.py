@@ -27,6 +27,10 @@ class GLOBAL:
             except FileNotFoundError:
                 return ""
 
+    # Add API configuration
+    API_BASE_URL = "http://localhost:8000"  # This can be changed for production
+    LICENSE_VALIDATE_ENDPOINT = "/license/validate"
+
     class LOG:
         _logger = None
 

@@ -3,6 +3,8 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QLineEdit,
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QIcon
 from desktop.GLOBAL import GLOBAL
+import uuid
+import requests
 
 class LicenseDialog(QDialog):
     license_validated = pyqtSignal(bool)
@@ -52,7 +54,7 @@ class LicenseDialog(QDialog):
         # License key input
         self.license_input = QLineEdit()
         self.license_input.setObjectName("license_input")
-        self.license_input.setPlaceholderText("XXXX-XXXX-XXXX-XXXX")
+        self.license_input.setPlaceholderText("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX")
         input_layout.addWidget(self.license_input)
         
         # Buttons layout
@@ -62,11 +64,6 @@ class LicenseDialog(QDialog):
         
         # Add spacer to push buttons to the right
         button_layout.addStretch()
-        
-        # Trial button
-        self.trial_button = QPushButton("Continue with Trial")
-        self.trial_button.setObjectName("secondary_button")
-        button_layout.addWidget(self.trial_button)
         
         # Activate button
         self.activate_button = QPushButton("Activate License")
@@ -79,16 +76,8 @@ class LicenseDialog(QDialog):
         # Add input frame to main layout
         main_layout.addWidget(input_frame)
         
-        # Note at the bottom
-        note = QLabel("Don't have a license key? Purchase at <a href='https://cargenius.com/purchase'>cargenius.com</a>")
-        note.setObjectName("note_text")
-        note.setOpenExternalLinks(True)
-        note.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(note)
-        
     def _connect_signals(self):
         self.activate_button.clicked.connect(self._validate_license)
-        self.trial_button.clicked.connect(self._continue_trial)
         
     def _load_styles(self):
         # Use the same theme as the main application
@@ -102,17 +91,51 @@ class LicenseDialog(QDialog):
             
     def _validate_license(self):
         license_key = self.license_input.text().strip()
+        
         if not license_key:
-            QMessageBox.warning(self, "Invalid License", "Please enter a valid license key.")
+            QMessageBox.warning(self, "Invalid License", "Please enter a license key.")
             return
             
-        # In a real app, this would validate with a server
-        # For now, accept any non-empty key
-        GLOBAL.LICENSE.save_license_key(license_key)
-        self.license_validated.emit(True)
-        self.accept()
-        
-    def _continue_trial(self):
-        # User chooses to continue without a license
-        self.license_validated.emit(False)
-        self.accept() 
+        try:
+            uuid_obj = uuid.UUID(license_key, version=4)
+            if str(uuid_obj) != license_key:
+                raise ValueError("Invalid UUID format")
+                
+        except ValueError:
+            QMessageBox.warning(self, "Invalid License", 
+                "Please enter a valid license key in the format:\n"
+                "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX")
+            return
+            
+        # API validation
+        try:
+            response = requests.post(
+                f"{GLOBAL.API_BASE_URL}{GLOBAL.LICENSE_VALIDATE_ENDPOINT}",
+                json={
+                    "key": license_key,
+                    "client_info": "string"
+                },
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                is_valid = response.json().get("is_valid", False)
+                if is_valid:
+                    GLOBAL.LICENSE.save_license_key(license_key)
+                    self.license_validated.emit(True)
+                    self.accept()
+                    return
+                else:
+                    QMessageBox.warning(self, "Invalid License", 
+                        "This license key is not valid or has expired")
+            else:
+                QMessageBox.critical(self, "Validation Error", 
+                    f"License server error: {response.text}")
+                
+        except requests.exceptions.RequestException as e:
+            QMessageBox.critical(self, "Connection Error",
+                f"Could not connect to license server: {str(e)}")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", 
+                f"An unexpected error occurred: {str(e)}") 
