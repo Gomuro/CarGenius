@@ -744,6 +744,44 @@ QDialog#LicenseDialog {
     margin-bottom: 15px;
 }
 
+/* Floating Action Button */
+#chat_fab {
+    background-color: #5D94FB;
+    color: white;
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#chat_fab:hover {
+    background-color: #4A7DD9;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+}
+
+#chat_fab:pressed {
+    background-color: #3A6AC7;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Active state for chat button */
+#chat_fab_active {
+    background-color: #E83E32; /* Red to indicate active state */
+    color: white;
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#chat_fab_active:hover {
+    background-color: #C0392B; /* Darker red on hover */
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+}
+
+#chat_fab_active:pressed {
+    background-color: #A93226; /* Even darker red when pressed */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 #panel_header {
     color: #FFFFFF;
     margin: 5px 0;

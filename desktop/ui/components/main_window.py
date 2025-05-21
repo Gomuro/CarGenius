@@ -1,8 +1,8 @@
-from PyQt6.QtCore import pyqtSignal, Qt, QTimer
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QSize
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QPushButton, QLineEdit, QLabel, QFrame, QComboBox, 
-                           QSizePolicy, QScrollArea)
-from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPainterPath, QColor
+                           QSizePolicy, QScrollArea, QToolTip)
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPainterPath, QColor, QCursor
 from .toast_notification import ToastNotification
 
 class MainWindow(QMainWindow):
@@ -19,8 +19,12 @@ class MainWindow(QMainWindow):
         # Default size that maintains good proportions
         self.resize(1000, 750)
         
+        # Initialize AI chat window reference
+        self.ai_chat_window = None
+        
         self._create_ui()
         self._load_styles(self.current_theme)
+        self._add_floating_chat_button()
 
     def _create_ui(self):
         # Create scroll area as central widget
@@ -64,12 +68,6 @@ class MainWindow(QMainWindow):
         self.multi_notification_btn.clicked.connect(self.show_multiple_notifications)
         title_layout.addWidget(self.multi_notification_btn)
         
-        # Add AI chat button
-        self.ai_chat_btn = QPushButton("Open AI Chat")
-        self.ai_chat_btn.setObjectName("small_button")
-        self.ai_chat_btn.clicked.connect(self.open_ai_chat)
-        title_layout.addWidget(self.ai_chat_btn)
-        
         # Add spacer to push title to the left
         title_layout.addStretch()
         
@@ -107,11 +105,80 @@ class MainWindow(QMainWindow):
         self.notification_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         main_layout.addWidget(self.notification_panel)
 
+    def _add_floating_chat_button(self):
+        """Add a floating action button for opening the AI chat"""
+        self.chat_fab = QPushButton(self)
+        self.chat_fab.setObjectName("chat_fab")
+        self.chat_fab.setCheckable(True)  # Make the button checkable for toggle state
+        
+        # Set size and make it round
+        self.chat_fab.setFixedSize(56, 56)
+        self.chat_fab.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        
+        # Add stars icon
+        stars_icon = QIcon("ui/assets/chat/chat-icon.svg")
+        self.chat_fab.setIcon(stars_icon)
+        self.chat_fab.setIconSize(QSize(28, 28))
+        
+        # Connect click event
+        self.chat_fab.clicked.connect(self.toggle_ai_chat)
+        
+        # Add tooltip
+        self.chat_fab.setToolTip("Open AI Chat")
+        
+        # Position in bottom-right corner (will be updated on resize)
+        self._update_fab_position()
+
+    def _update_fab_position(self):
+        """Update the floating button position"""
+        margin = 20
+        self.chat_fab.move(
+            self.width() - self.chat_fab.width() - margin,
+            self.height() - self.chat_fab.height() - margin
+        )
+
+    def toggle_ai_chat(self):
+        """Toggle the AI chat window open/closed state"""
+        if self.ai_chat_window and self.ai_chat_window.isVisible():
+            # Close window if it exists and is visible
+            self.ai_chat_window.close()
+            self.chat_fab.setChecked(False)
+            self.chat_fab.setToolTip("Open AI Chat")
+            self.chat_fab.setObjectName("chat_fab")
+        else:
+            # Open window
+            self.open_ai_chat()
+            self.chat_fab.setChecked(True)
+            self.chat_fab.setToolTip("Close AI Chat")
+            self.chat_fab.setObjectName("chat_fab_active")
+        
+        # Update styles
+        self.chat_fab.style().unpolish(self.chat_fab)
+        self.chat_fab.style().polish(self.chat_fab)
+
     def open_ai_chat(self):
+        """Open the AI chat window"""
         # Import here to avoid circular imports
         from .ai_chat_window import AIChatWindow
-        self.ai_chat_window = AIChatWindow()
+        
+        # Create a new window if it doesn't exist
+        if not self.ai_chat_window:
+            self.ai_chat_window = AIChatWindow()
+            # Connect close event to update button state
+            self.ai_chat_window.closeEvent = self.handle_chat_close
+        
+        # Show the window
         self.ai_chat_window.show()
+        self.ai_chat_window.activateWindow()
+    
+    def handle_chat_close(self, event):
+        """Handle the chat window close event to update button state"""
+        self.chat_fab.setChecked(False)
+        self.chat_fab.setToolTip("Open AI Chat")
+        self.chat_fab.setObjectName("chat_fab")
+        self.chat_fab.style().unpolish(self.chat_fab)
+        self.chat_fab.style().polish(self.chat_fab)
+        event.accept()  # Allow the window to close
 
     def show_test_notification(self):
         # Create and show a toast notification
@@ -184,5 +251,6 @@ class MainWindow(QMainWindow):
             print(f"Style file {style_file} not found")
             
     def resizeEvent(self, event):
-        # Custom handling of resize events if needed
+        # Update floating button position when window is resized
+        self._update_fab_position()
         super().resizeEvent(event) 

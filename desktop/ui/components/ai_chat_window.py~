@@ -160,6 +160,8 @@ class AIChatWindow(QWidget):
         input_layout.addLayout(send_row)
         
         chat_layout.addWidget(input_frame)
+        # Add context panel to splitter
+        splitter.addWidget(context_panel)
         
         # Set initial splitter sizes (80% chat, 20% context)
         splitter.setSizes([int(self.width() * 0.8), int(self.width() * 0.2)])
