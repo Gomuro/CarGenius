@@ -64,6 +64,12 @@ class MainWindow(QMainWindow):
         self.multi_notification_btn.clicked.connect(self.show_multiple_notifications)
         title_layout.addWidget(self.multi_notification_btn)
         
+        # Add AI chat button
+        self.ai_chat_btn = QPushButton("Open AI Chat")
+        self.ai_chat_btn.setObjectName("small_button")
+        self.ai_chat_btn.clicked.connect(self.open_ai_chat)
+        title_layout.addWidget(self.ai_chat_btn)
+        
         # Add spacer to push title to the left
         title_layout.addStretch()
         
@@ -100,6 +106,12 @@ class MainWindow(QMainWindow):
         self.notification_panel.setObjectName("notification_panel")
         self.notification_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         main_layout.addWidget(self.notification_panel)
+
+    def open_ai_chat(self):
+        # Import here to avoid circular imports
+        from .ai_chat_window import AIChatWindow
+        self.ai_chat_window = AIChatWindow()
+        self.ai_chat_window.show()
 
     def show_test_notification(self):
         # Create and show a toast notification
