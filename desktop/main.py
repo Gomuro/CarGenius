@@ -3,6 +3,7 @@ import os
 from PyQt6.QtWidgets import QApplication
 from desktop.ui.components.main_window import MainWindow
 from desktop.ui.components.license_dialog import LicenseDialog
+from desktop.ui.components.toast_notification import ToastNotification
 from desktop.GLOBAL import GLOBAL
 
 if __name__ == "__main__":
@@ -37,6 +38,10 @@ if __name__ == "__main__":
     
     # Show the main window
     window.show()
+    
+    # Show toast notification
+    toast = ToastNotification(title="STAR", message="Application started successfully")
+    toast.show_notification()
     
     # Execute application
     sys.exit(app.exec())

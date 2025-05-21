@@ -1,8 +1,9 @@
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QPushButton, QLineEdit, QLabel, QFrame, QComboBox, 
                            QSizePolicy, QScrollArea)
-from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPainterPath, QColor
+from .toast_notification import ToastNotification
 
 class MainWindow(QMainWindow):
     theme_changed = pyqtSignal(str)
@@ -51,6 +52,18 @@ class MainWindow(QMainWindow):
         app_title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         title_layout.addWidget(app_title)
         
+        # Add test notification button
+        self.test_notification_btn = QPushButton("Test Toast")
+        self.test_notification_btn.setObjectName("small_button")
+        self.test_notification_btn.clicked.connect(self.show_test_notification)
+        title_layout.addWidget(self.test_notification_btn)
+        
+        # Add multiple notifications test button
+        self.multi_notification_btn = QPushButton("Test Multiple")
+        self.multi_notification_btn.setObjectName("small_button")
+        self.multi_notification_btn.clicked.connect(self.show_multiple_notifications)
+        title_layout.addWidget(self.multi_notification_btn)
+        
         # Add spacer to push title to the left
         title_layout.addStretch()
         
@@ -87,6 +100,67 @@ class MainWindow(QMainWindow):
         self.notification_panel.setObjectName("notification_panel")
         self.notification_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         main_layout.addWidget(self.notification_panel)
+
+    def show_test_notification(self):
+        # Create and show a toast notification
+        toast = ToastNotification(
+            title="STAR",
+            message="New match found: BMW X5 2021"
+        )
+        toast.show_notification()
+    
+    def show_multiple_notifications(self):
+        # Show 3 notifications with different messages and avatars
+        messages = [
+            {"title": "STAR", "message": "Haxel: Looking good", "avatar": None},
+            {"title": "STAR", "message": "Sally Ann: 😊😊😊", "avatar": None},
+            {"title": "STAR", "message": "Haxel: Nice day in London!", "avatar": None}
+        ]
+        
+        # Custom avatar colors for each notification
+        avatar_colors = ["#4285F4", "#DB4437", "#0F9D58"]
+        
+        # Show notifications with a small delay between them
+        for i, msg in enumerate(messages):
+            QTimer.singleShot(i * 500, lambda m=msg, i=i: self._show_delayed_notification(
+                m["title"], 
+                m["message"], 
+                avatar_colors[i]
+            ))
+    
+    def _show_delayed_notification(self, title, message, avatar_color=None):
+        toast = ToastNotification(title=title, message=message)
+        
+        # Customize avatar if color provided
+        if avatar_color:
+            # Access the avatar label and update it with custom color
+            for child in toast.children():
+                if isinstance(child, QLabel) and child.width() == 32 and child.height() == 32:
+                    size = 32
+                    pixmap = QPixmap(size, size)
+                    pixmap.fill(Qt.GlobalColor.transparent)
+                    
+                    painter = QPainter(pixmap)
+                    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                    
+                    # Draw circular background
+                    path = QPainterPath()
+                    path.addEllipse(0, 0, size, size)
+                    painter.setClipPath(path)
+                    
+                    painter.fillRect(0, 0, size, size, QColor(avatar_color))
+                    
+                    # Draw initial
+                    painter.setPen(Qt.GlobalColor.white)
+                    painter.setFont(QFont('Arial', 15, QFont.Weight.Bold))
+                    painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, title[0])
+                    
+                    painter.end()
+                    
+                    child.setPixmap(pixmap)
+                    break
+        
+        toast.show_notification()
 
     def _load_styles(self, theme):
         style_file = f"ui/themes/{theme}.qss"

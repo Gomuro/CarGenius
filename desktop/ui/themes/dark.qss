@@ -708,4 +708,32 @@ QDialog#LicenseDialog {
 #dark_text_button:hover {
     color: #74c0fc;
     text-decoration: underline;
+}
+
+#notification_toast {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#notification_toast:hover {
+    background: #f5f5f5;
+    cursor: pointer;
+}
+
+#dismiss_button {
+    border: none;
+    color: #999;
+    font-size: 18px;
+    padding: 0 4px;
+}
+
+#dismiss_button:hover {
+    color: #666;
+}
+
+#timestamp {
+    color: #999;
+    font-size: 12px;
 } 
