@@ -1,6 +1,4 @@
 # server/app/core/database.py
-from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import MetaData
 from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -24,6 +22,7 @@ async_session_maker = async_sessionmaker(
 Base = declarative_base()
 # MetaData object used for table definitions and migrations
 metadata = MetaData()
+from app.models import license, gpt  # Dont move or remove this line. Import models to ensure they are registered with the Base
 
 async def get_db():
     """

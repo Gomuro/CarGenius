@@ -16,13 +16,9 @@ class LicenseCreateResponse(BaseModel):
 
 class LicenseValidateRequest(BaseModel):
     key: str
+    device_id: Optional[str] = None
     client_info: str
 
 class LicenseValidateResponse(BaseModel):
     is_valid: bool
-
-class LicenseInfo(BaseModel):
-    key: str
-    is_active: bool
-    created_at: datetime
-    client_info: Optional[str]
+    message: Optional[str] = None
