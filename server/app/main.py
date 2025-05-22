@@ -1,6 +1,9 @@
-# app.main.py
+# app/main.py
 from fastapi import FastAPI
-from app.routers import license
+from app.routers import license, gpt
 
 app = FastAPI()
-app.include_router(license.router, prefix="/license", tags=["license"])
+API_PREFIX = "/api/v1"
+
+app.include_router(license.router, prefix=f"{API_PREFIX}/license", tags=["license"])
+app.include_router(gpt.router, prefix=f"{API_PREFIX}/gpt", tags=["gpt"])
