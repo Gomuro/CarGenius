@@ -45,6 +45,21 @@ services:
       - backend
       - redis
 
+  celery_beat:
+    container_name: celery_beat_cargenius
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: celery -A app.celery_worker.celery beat --loglevel=info
+    volumes:
+      - ./server:/workdir_docker
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+        - backend
+        - redis
+
   pgadmin:
     container_name: pgadmin_cargenius
     image: dpage/pgadmin4
