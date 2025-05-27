@@ -5,12 +5,12 @@ import pytest
 @pytest.mark.asyncio
 async def test_generate_and_validate_license(client):
     # Generate license
-    response = await client.post("/license/generate", json={"client_info": "test-client"})
+    response = await client.post("/api/v1/license/generate", json={"client_info": "test-client"})
     assert response.status_code == 200
     license_key = response.json()["key"]
 
     # Validate license
-    response = await client.post("/license/validate", json={
+    response = await client.post("/api/v1/license/validate", json={
         "key": license_key,
         "client_info": "test-client"
     })
