@@ -20,6 +20,7 @@ class MessageBubble(QFrame):
         # Create layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(0)  # Reduce spacing between sender and message
         
         # Show who sent the message
         sender = QLabel("You" if is_user else "AI")
@@ -32,10 +33,14 @@ class MessageBubble(QFrame):
         message_label.setObjectName("message_content")
         message_label.setWordWrap(True)
         message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        message_label.setFont(QFont("Segoe UI", 10))
         layout.addWidget(message_label)
         
         # Set alignment based on sender
         self.setProperty("align", "right" if is_user else "left")
+        
+        # Set maximum width
+        self.setMaximumWidth(500)
 
 
 class LoadingBubble(MessageBubble):
@@ -50,12 +55,15 @@ class LoadingBubble(MessageBubble):
         
         # Add loading indicator
         loading_layout = QHBoxLayout()
+        loading_layout.setContentsMargins(15, 10, 15, 10)
+        loading_layout.setSpacing(4)
         self.dots = []
         
         for i in range(3):
             dot = QLabel("•")
             dot.setObjectName("loading_dot")
-            font = QFont("Arial", 18)
+            font = QFont("Segoe UI", 16)
+            font.setBold(True)
             dot.setFont(font)
             self.dots.append(dot)
             loading_layout.addWidget(dot)
@@ -71,9 +79,9 @@ class LoadingBubble(MessageBubble):
     def _animate_dots(self):
         for i, dot in enumerate(self.dots):
             if i == self.animation_step % 3:
-                dot.setStyleSheet("color: #5D94FB;") 
+                dot.setStyleSheet("color: #5D94FB; margin-top: 0px;") 
             else:
-                dot.setStyleSheet("color: #AAAAAA;")
+                dot.setStyleSheet(f"color: #AAAAAA; margin-top: {5 if i == (self.animation_step + 1) % 3 else 2}px;")
         self.animation_step += 1
 
 
@@ -102,10 +110,15 @@ class AIChatWindow(QWidget):
         splitter.addWidget(chat_widget)
         
         # Chat header with title
+        header_layout = QHBoxLayout()
         chat_header = QLabel("AI Chat Assistant")
         chat_header.setObjectName("chat_header")
-        chat_header.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-        chat_layout.addWidget(chat_header)
+        chat_header.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        header_layout.addWidget(chat_header)
+        
+        # Add spacer and optional button in header
+        header_layout.addStretch()
+        chat_layout.addLayout(header_layout)
         
         # Create scroll area for messages
         self.scroll_area = QScrollArea()
@@ -117,10 +130,11 @@ class AIChatWindow(QWidget):
         
         # Container for messages
         self.messages_widget = QWidget()
+        self.messages_widget.setObjectName("messages_container")
         self.messages_layout = QVBoxLayout(self.messages_widget)
         self.messages_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.messages_layout.setSpacing(12)
-        self.messages_layout.setContentsMargins(0, 0, 0, 10)
+        self.messages_layout.setContentsMargins(0, 10, 0, 10)
         self.scroll_area.setWidget(self.messages_widget)
         
         # Welcome message
@@ -131,33 +145,44 @@ class AIChatWindow(QWidget):
         input_frame.setObjectName("input_frame")
         input_frame.setFrameShape(QFrame.Shape.StyledPanel)
         input_layout = QVBoxLayout(input_frame)
-        input_layout.setContentsMargins(10, 10, 10, 10)
+        input_layout.setContentsMargins(15, 12, 15, 12)
+        
+        # Create a horizontal layout for the input field and send button
+        input_row = QHBoxLayout()
+        input_row.setSpacing(10)
         
         # Text area for input
         self.input_text = QTextEdit()
         self.input_text.setObjectName("input_text")
         self.input_text.setPlaceholderText("Type your message... (Press Enter to send)")
         self.input_text.setAcceptRichText(False)
+        self.input_text.setMinimumHeight(40)
         self.input_text.setMaximumHeight(100)
         
         # Handle enter key to send message
         self.input_text.installEventFilter(self)
         
-        input_layout.addWidget(self.input_text)
+        # Add input field to horizontal layout
+        input_row.addWidget(self.input_text)
         
-        # Send button row
-        send_row = QHBoxLayout()
-        hint_label = QLabel("Press Enter to send")
-        hint_label.setObjectName("hint_label")
-        send_row.addWidget(hint_label)
-        send_row.addStretch()
-        
-        # Send button
+        # Send button with icon
         send_button = QPushButton("Send")
         send_button.setObjectName("send_button")
+        send_button.setIcon(QIcon("desktop/ui/assets/send_icon.svg"))
         send_button.clicked.connect(self.send_message)
-        send_row.addWidget(send_button)
-        input_layout.addLayout(send_row)
+        send_button.setMinimumWidth(80)
+        
+        # Add send button to horizontal layout
+        input_row.addWidget(send_button)
+        
+        # Add the input row to the main input layout
+        input_layout.addLayout(input_row)
+        
+        # Add hint text below the input field
+        hint_label = QLabel("Press Enter to send")
+        hint_label.setObjectName("hint_label")
+        hint_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        input_layout.addWidget(hint_label)
         
         chat_layout.addWidget(input_frame)
         
@@ -170,10 +195,11 @@ class AIChatWindow(QWidget):
         from PyQt6.QtGui import QKeyEvent
         
         if obj == self.input_text and event.type() == QEvent.Type.KeyPress:
-            key_event = QKeyEvent(event)
-            if key_event.key() == Qt.Key.Key_Return and not key_event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
-                self.send_message()
-                return True
+            # Check if the event is a QKeyEvent
+            if isinstance(event, QKeyEvent):
+                if event.key() == Qt.Key.Key_Return and not event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+                    self.send_message()
+                    return True
         return super().eventFilter(obj, event)
         
     def send_message(self):

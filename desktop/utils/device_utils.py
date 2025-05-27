@@ -7,12 +7,17 @@ import requests
 # Get value from WMIC via subprocess (works on Windows)
 def get_wmic_value(wmic_class: str, prop: str):
     try:
-        output = subprocess.check_output(f"wmic {wmic_class} get {prop}", shell=True, text=True)
+        output = subprocess.check_output(
+            ["wmic", wmic_class, "get", prop],
+            text=True
+        )
         lines = output.strip().split("\n")
-        return lines[1].strip() if len(lines) > 1 else None
+        values = [line.strip() for line in lines if line.strip()]
+        return values[1] if len(values) > 1 else None
     except Exception as e:
         print(f"Error getting {prop} from {wmic_class}: {e}")
         return None
+
 
 # Generate unique device ID based on hardware serials
 def get_device_id():

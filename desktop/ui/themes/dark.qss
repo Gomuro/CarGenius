@@ -710,38 +710,104 @@ QDialog#LicenseDialog {
     text-decoration: underline;
 }
 
+#notification_panel {
+    background-color: #1E2228;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px;
+}
+
+#section_title {
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
 #notification_toast {
-    background: white;
+    background: #2D2D2D;
     border-radius: 8px;
     padding: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 8px 0;
+    border-left: 4px solid #4CAF50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 #notification_toast:hover {
-    background: #f5f5f5;
+    background: #333333;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-#dismiss_button {
-    border: none;
-    color: #999;
-    font-size: 18px;
-    padding: 0 4px;
+#match_title {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: bold;
 }
 
-#dismiss_button:hover {
-    color: #666;
+#match_subtitle {
+    color: #AAAAAA;
+    font-size: 12px;
+}
+
+#match_price {
+    color: #4CAF50;
+    font-size: 16px;
+    font-weight: bold;
 }
 
 #timestamp {
-    color: #999;
+    color: #888888;
     font-size: 12px;
+}
+
+/* Different notification types */
+#notification_toast[type="match"] {
+    border-left-color: #4CAF50;  /* Green for matches */
+}
+
+#notification_toast[type="price_drop"] {
+    border-left-color: #2196F3;  /* Blue for price drops */
+}
+
+#notification_toast[type="new_arrival"] {
+    border-left-color: #FF9800;  /* Orange for new arrivals */
 }
 
 /* AI Chat Window Styles */
 #chat_header {
     color: #FFFFFF;
     margin-bottom: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+#messages_container {
+    background-color: transparent;
+    border-radius: 8px;
+}
+
+/* Custom scrollbar for chat */
+#messages_container QScrollBar:vertical {
+    background: #2A2A2A;
+    width: 8px;
+    margin: 0px;
+    border-radius: 4px;
+}
+
+#messages_container QScrollBar::handle:vertical {
+    background: #4A4A4A;
+    min-height: 30px;
+    border-radius: 4px;
+}
+
+#messages_container QScrollBar::handle:vertical:hover {
+    background: #5D94FB;
+}
+
+#messages_container QScrollBar::add-line:vertical,
+#messages_container QScrollBar::sub-line:vertical {
+    height: 0px;
 }
 
 /* Floating Action Button */
@@ -794,79 +860,211 @@ QDialog#LicenseDialog {
     margin-bottom: 5px;
 }
 
+/* Modern message bubbles */
 #user_bubble {
     background-color: #5D94FB;
     color: white;
-    border-radius: 12px;
-    border-top-right-radius: 2px;
+    border-radius: 18px;
+    border-top-right-radius: 4px;
     max-width: 80%;
     padding: 4px;
+    margin: 2px 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 #ai_bubble {
     background-color: #2D2D2D;
-    color: #E0E0E0;
-    border-radius: 12px;
-    border-top-left-radius: 2px;
+    color: #F0F0F0;
+    border-radius: 18px;
+    border-top-left-radius: 4px;
     max-width: 80%;
     padding: 4px;
+    margin: 2px 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
-#user_bubble #sender_label, #ai_bubble #sender_label {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 9px;
+#user_bubble:hover, #ai_bubble:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+#user_bubble #sender_label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 10px;
+    font-weight: 500;
+    padding-left: 12px;
+    padding-top: 6px;
+}
+
+#ai_bubble #sender_label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 10px;
+    font-weight: 500;
+    padding-left: 12px;
+    padding-top: 6px;
+}
+
+#user_bubble #message_content, #ai_bubble #message_content {
+    padding: 8px 12px;
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+/* Modern input area */
 #input_frame {
     background-color: #2D2D2D;
-    border-radius: 8px;
+    border-radius: 12px;
     margin-top: 10px;
+    border: 1px solid #3D3D3D;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+#input_frame:focus-within {
+    border-color: #5D94FB;
+    box-shadow: 0 3px 8px rgba(93, 148, 251, 0.2);
 }
 
 #input_text {
     background-color: #333333;
-    border-radius: 4px;
+    border-radius: 8px;
     color: #FFFFFF;
-    padding: 8px;
+    padding: 10px 12px;
+    border: 1px solid #444444;
+    font-size: 14px;
+    line-height: 1.4;
+    selection-background-color: #5D94FB;
+    selection-color: white;
+}
+
+#input_text:focus {
+    border-color: #5D94FB;
+    background-color: #383838;
+}
+
+#input_text::placeholder {
+    color: #888888;
+    font-style: italic;
 }
 
 #send_button {
     background-color: #5D94FB;
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 6px 15px;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+    min-width: 70px;
+    min-height: 30px;
 }
 
 #send_button:hover {
     background-color: #4A7DD9;
 }
 
+#send_button:pressed {
+    background-color: #3A6AC7;
+}
+
 #hint_label {
-    color: #777777;
+    color: #888888;
     font-size: 11px;
+    font-style: italic;
 }
 
 #context_panel {
     background-color: #222222;
     padding: 15px;
+    border-left: 1px solid #333333;
 }
 
 #prompt_button {
     background-color: #333333;
     color: #DDDDDD;
     border: none;
-    border-radius: 4px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 10px;
     text-align: left;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 #prompt_button:hover {
     background-color: #444444;
 }
 
+/* Loading animation */
 #loading_dot {
     color: #AAAAAA;
     padding: 0 2px;
+    font-size: 20px;
+}
+
+#view_listing_button {
+    background-color: #4CAF50;  /* Green color for website action */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 140px;  /* Slightly wider for the new text */
+    transition: all 0.2s ease-in-out;
+}
+
+#view_listing_button:hover {
+    background-color: #43A047;  /* Darker green on hover */
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#view_listing_button:pressed {
+    background-color: #388E3C;  /* Even darker green when pressed */
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+#view_listing_button:disabled {
+    background-color: #BDBDBD;
+    cursor: not-allowed;
+}
+
+/* Icon styling */
+#view_listing_button QIcon {
+    margin-right: 8px;
+}
+
+/* Margin Indicator Styles */
+#margin_bar_filled {
+    background-color: #38A37A; /* Green color from image */
+    min-width: 20px; 
+    max-width: 20px; 
+    min-height: 10px;
+    max-height: 10px;
+    border-radius: 2px;
+}
+
+#margin_bar_empty {
+    background-color: #4A5568; /* Darker gray for empty state */
+    min-width: 20px; 
+    max-width: 20px; 
+    min-height: 10px;
+    max-height: 10px;
+    border-radius: 2px;
+}
+
+#margin_text_label {
+    color: #E2E8F0; /* Light text color */
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px; /* Small space above text */
+}
+
+#margin_percentage_label {
+    color: #A0AEC0; /* Slightly dimmer/grayer than the main margin text */
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 1px; /* Little space from the label above */
+    padding-left: 1px; /* Optional: slight indent if needed */
 } 

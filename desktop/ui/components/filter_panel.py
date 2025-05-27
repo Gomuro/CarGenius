@@ -1,12 +1,17 @@
 from PyQt6.QtWidgets import (QLineEdit, QComboBox, 
                            QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
-                           QLabel, QPushButton, QFrame)
-from PyQt6.QtCore import Qt
+                           QLabel, QPushButton, QFrame, QCheckBox)
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
 from . import BaseComponent
 
 class FilterPanel(BaseComponent):
+    model_tracking_requested = pyqtSignal(dict)
+
     def _create_ui(self):
+        self.is_tracking_mode = False
+        self.original_search_button_text = "165 178 listings"
+
         # Main container layout
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -93,9 +98,10 @@ class FilterPanel(BaseComponent):
         self.price.addItems(["Any price", "€10,000", "€20,000", "€30,000", "€50,000", "€100,000"])
         self.price.setFixedHeight(uniform_height)
         
-        self.search_btn = QPushButton("165 178 listings")
+        self.search_btn = QPushButton(self.original_search_button_text)
         self.search_btn.setObjectName("search_button_red")
         self.search_btn.setFixedHeight(uniform_height)
+        self.search_btn.clicked.connect(self._on_search_button_clicked)
         
         # Add to grid
         filter_grid.addWidget(self.location, 3, 0)
@@ -132,6 +138,13 @@ class FilterPanel(BaseComponent):
         additional_btn.setFixedHeight(32)
         options_row.addWidget(additional_btn)
         
+        # Add Tracking Mode CheckBox
+        self.tracking_mode_checkbox = QCheckBox("Track Specific Models")
+        self.tracking_mode_checkbox.setObjectName("filter_checkbox_light")
+        self.tracking_mode_checkbox.setFixedHeight(32)
+        self.tracking_mode_checkbox.stateChanged.connect(self._toggle_tracking_mode)
+        options_row.addWidget(self.tracking_mode_checkbox)
+        
         reset_btn = QPushButton("Reset")
         reset_btn.setObjectName("dark_text_button")
         reset_btn.setFixedHeight(32)
@@ -147,3 +160,43 @@ class FilterPanel(BaseComponent):
         content_layout.addStretch(1)
         
         main_layout.addWidget(content, 1) 
+
+    def _toggle_tracking_mode(self, state):
+        if state == Qt.CheckState.Checked.value:
+            self.is_tracking_mode = True
+            self.search_btn.setText("Add to Tracked List")
+        else:
+            self.is_tracking_mode = False
+            self.search_btn.setText(self.original_search_button_text)
+
+    def _on_search_button_clicked(self):
+        if self.is_tracking_mode:
+            # Gather criteria for tracking
+            brand = self.brand_input.currentText()
+            model = self.model_input.currentText()
+            reg_date = self.reg_date.currentText()
+            # Add other relevant filters if needed (e.g., mileage, price for context)
+            # For now, let's keep it simple with brand, model, year.
+            # Ensure "Any" values are handled, perhaps by emitting None or a specific string.
+            
+            model_criteria = {
+                "brand": brand if brand != "Any Brand" else None,
+                "model": model if model != "Any Model" else None,
+                "year": reg_date if reg_date != "Any year" else None,
+                # You can add more fields here based on what you want to track
+            }
+            # Filter out None values if you only want to emit specified criteria
+            # model_criteria = {k: v for k, v in model_criteria.items() if v is not None}
+
+            if any(model_criteria.values()): # Only emit if at least one criterion is set
+                print(f"[FilterPanel] Tracking requested for: {model_criteria}") # For debugging
+                self.model_tracking_requested.emit(model_criteria)
+            else:
+                print("[FilterPanel] Tracking requested, but no criteria set.") # Or show a message to user
+        else:
+            # Normal search logic (currently just updates button text or a placeholder)
+            print("[FilterPanel] Normal search button clicked.")
+            # Potentially update the self.original_search_button_text if it's dynamic
+            # For now, it reuses the static text. If this count is meant to be live,
+            # this part of the logic would need to perform an actual search and update.
+            pass # Placeholder for actual search logic for listings 

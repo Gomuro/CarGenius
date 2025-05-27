@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QSizePolicy, QScrollArea, QToolTip)
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPainterPath, QColor, QCursor
 from .toast_notification import ToastNotification
+from .analytics_dialog import AnalyticsDialog
 
 class MainWindow(QMainWindow):
     theme_changed = pyqtSignal(str)
@@ -12,6 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("CarGenius")
         self.current_theme = "dark"  # Set dark theme as the only theme
+        self.tracked_models_criteria = [] # Initialize list for tracked models
         
         # Set minimum window size for usability
         self.setMinimumSize(800, 600)
@@ -68,6 +70,12 @@ class MainWindow(QMainWindow):
         self.multi_notification_btn.clicked.connect(self.show_multiple_notifications)
         title_layout.addWidget(self.multi_notification_btn)
         
+        # Add Analytics Dialog button
+        self.analytics_btn = QPushButton("Open Analytics")
+        self.analytics_btn.setObjectName("small_button")
+        self.analytics_btn.clicked.connect(self._open_analytics_dialog)
+        title_layout.addWidget(self.analytics_btn)
+        
         # Add spacer to push title to the left
         title_layout.addStretch()
         
@@ -82,12 +90,21 @@ class MainWindow(QMainWindow):
         separator.setFrameShadow(QFrame.Shadow.Sunken)
         separator.setObjectName("separator")
         main_layout.addWidget(separator)
+        
+        # Notification panel with natural height
+        from .notification_panel import NotificationPanel
+        self.notification_panel = NotificationPanel()
+        self.notification_panel.setObjectName("notification_panel")
+        self.notification_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        main_layout.addWidget(self.notification_panel)
 
         # Filter panel with natural height
         from .filter_panel import FilterPanel
         self.filter_panel = FilterPanel()
         self.filter_panel.setObjectName("filter_panel")
         self.filter_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        # Connect to the filter panel's signal for model tracking
+        self.filter_panel.model_tracking_requested.connect(self._handle_model_tracking_request)
         main_layout.addWidget(self.filter_panel)
 
         # Results table with flexible sizing
@@ -97,13 +114,6 @@ class MainWindow(QMainWindow):
         # Remove minimum height requirement so it takes its natural size
         self.result_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         main_layout.addWidget(self.result_table)
-
-        # Notification panel with natural height
-        from .notification_panel import NotificationPanel
-        self.notification_panel = NotificationPanel()
-        self.notification_panel.setObjectName("notification_panel")
-        self.notification_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        main_layout.addWidget(self.notification_panel)
 
     def _add_floating_chat_button(self):
         """Add a floating action button for opening the AI chat"""
@@ -171,6 +181,24 @@ class MainWindow(QMainWindow):
         self.ai_chat_window.show()
         self.ai_chat_window.activateWindow()
     
+    def _handle_model_tracking_request(self, criteria):
+        """Handles the request to track a new model based on criteria."""
+        # Basic check for duplicates to avoid adding the exact same criteria multiple times
+        if criteria not in self.tracked_models_criteria:
+            self.tracked_models_criteria.append(criteria)
+            print(f"[MainWindow] Added to tracked models: {criteria}")
+            print(f"[MainWindow] Current tracked list: {self.tracked_models_criteria}")
+            # Optionally, provide feedback to the user (e.g., a toast notification)
+            # self.show_toast_notification("Model Added", f"'{criteria.get('brand','')} {criteria.get('model','')}' added to tracking.")
+        else:
+            print(f"[MainWindow] Model criteria {criteria} already tracked.")
+
+    def _open_analytics_dialog(self):
+        """Opens the Car Analytics dialog."""
+        # Pass the list of tracked models and self as parent
+        dialog = AnalyticsDialog(self.tracked_models_criteria, parent=self) 
+        dialog.exec() # Show as a modal dialog
+
     def handle_chat_close(self, event):
         """Handle the chat window close event to update button state"""
         self.chat_fab.setChecked(False)
@@ -183,21 +211,33 @@ class MainWindow(QMainWindow):
     def show_test_notification(self):
         # Create and show a toast notification
         toast = ToastNotification(
-            title="STAR",
-            message="New match found: BMW X5 2021"
+            title="New Match",
+            message="BMW X5 2021 matches your search criteria"
         )
         toast.show_notification()
     
     def show_multiple_notifications(self):
-        # Show 3 notifications with different messages and avatars
+        # Show 3 notifications with different car matches
         messages = [
-            {"title": "STAR", "message": "Haxel: Looking good", "avatar": None},
-            {"title": "STAR", "message": "Sally Ann: 😊😊😊", "avatar": None},
-            {"title": "STAR", "message": "Haxel: Nice day in London!", "avatar": None}
+            {
+                "title": "New Match",
+                "message": "Mercedes-Benz CLA 200 d Shooting Brake - 35.980 €",
+                "avatar": None
+            },
+            {
+                "title": "Price Drop",
+                "message": "BMW 3 Series 320d - Price reduced by 2.500 €",
+                "avatar": None
+            },
+            {
+                "title": "New Match",
+                "message": "Audi A4 Avant 2.0 TDI - Just arrived in your area",
+                "avatar": None
+            }
         ]
         
         # Custom avatar colors for each notification
-        avatar_colors = ["#4285F4", "#DB4437", "#0F9D58"]
+        avatar_colors = ["#4CAF50", "#2196F3", "#FF9800"]
         
         # Show notifications with a small delay between them
         for i, msg in enumerate(messages):
