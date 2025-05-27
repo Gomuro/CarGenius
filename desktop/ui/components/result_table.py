@@ -32,7 +32,7 @@ class ResultTable(BaseComponent):
         # Create sample listings
         sample_cars = [
             {
-                "image": "🚗",  # Replace with real image loading
+                "image": "🚗",
                 "title": "Mercedes-Benz CLA 200 d Shooting Brake",
                 "subtitle": "CLA 200 d SB • AMG • CAMERA • AHK • MBUX • SHZ",
                 "price": "35.980 €",
@@ -42,7 +42,10 @@ class ResultTable(BaseComponent):
                 "power": "110 kW (150 PS)",
                 "fuel": "Diesel",
                 "seller": "STERNPARTNER SE & Co. KG",
-                "location": "21465 Reinbek"
+                "location": "21465 Reinbek",
+                "margin_rating": 5,
+                "margin_text": "Very good price",
+                "margin_percentage_text": "Potential margin: 18%"
             },
             {
                 "image": "🚗",
@@ -55,7 +58,10 @@ class ResultTable(BaseComponent):
                 "power": "270 kW (367 PS)",
                 "fuel": "Diesel",
                 "seller": "",
-                "location": "68789 Mannheim, Gartenstadt"
+                "location": "68789 Mannheim, Gartenstadt",
+                "margin_rating": 3,
+                "margin_text": "Fair price",
+                "margin_percentage_text": "Potential margin: 8%"
             },
             {
                 "image": "🚗",
@@ -68,7 +74,10 @@ class ResultTable(BaseComponent):
                 "power": "120 kW (163 PS)",
                 "fuel": "Diesel",
                 "seller": "Die Autohaui Bad Salzuflen KG. der Deal",
-                "location": "32105 Bad Salzuflen"
+                "location": "32105 Bad Salzuflen",
+                "margin_rating": 4,
+                "margin_text": "Good price",
+                "margin_percentage_text": "Potential margin: 12%"
             }
         ]
         
@@ -132,6 +141,44 @@ class ResultTable(BaseComponent):
         price_layout.addWidget(price_tag)
         price_layout.addStretch()
         
+        # Margin Indicator Section
+        margin_section_widget = QWidget()
+        margin_section_layout = QVBoxLayout(margin_section_widget)
+        margin_section_layout.setContentsMargins(0, 8, 0, 5) # top_margin, left, bottom, right
+        margin_section_layout.setSpacing(4) # Spacing between bars row and text row
+
+        # Row 1: Bars
+        bars_container = QWidget() 
+        bars_container_layout = QHBoxLayout(bars_container)
+        bars_container_layout.setContentsMargins(0,0,0,0)
+        bars_container_layout.setSpacing(3) 
+
+        num_total_bars = 5
+        active_bars = car_data.get("margin_rating", 0)
+
+        for i in range(num_total_bars):
+            bar = QFrame()
+            if i < active_bars:
+                bar.setObjectName("margin_bar_filled")
+            else:
+                bar.setObjectName("margin_bar_empty")
+            bars_container_layout.addWidget(bar)
+        
+        bars_container_layout.addStretch(1) # Keep bars to the left
+        margin_section_layout.addWidget(bars_container)
+
+        # Row 2: Margin Text
+        margin_text_label = QLabel(car_data.get("margin_text", ""))
+        margin_text_label.setObjectName("margin_text_label")
+        margin_section_layout.addWidget(margin_text_label)
+
+        # Add the new margin percentage text label
+        margin_percentage_label = QLabel(car_data.get("margin_percentage_text", ""))
+        margin_percentage_label.setObjectName("margin_percentage_label")
+        margin_section_layout.addWidget(margin_percentage_label) # Add it to the same vertical layout
+
+        details_layout.addWidget(margin_section_widget)
+        
         # Car specifications
         specs_layout = QHBoxLayout()
         specs_layout.setContentsMargins(0, 0, 0, 0)
@@ -172,13 +219,14 @@ class ResultTable(BaseComponent):
         button_layout.setSpacing(10)
         button_layout.addStretch()
         
-        contact_btn = QPushButton("Contact")
-        contact_btn.setObjectName("contact_button")
+        view_listing_btn = QPushButton("Open on Website")
+        view_listing_btn.setObjectName("view_listing_button")
+        view_listing_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         
         share_btn = QPushButton("Share")
         share_btn.setObjectName("share_button")
         
-        button_layout.addWidget(contact_btn)
+        button_layout.addWidget(view_listing_btn)
         button_layout.addWidget(share_btn)
         
         # Add all elements to the details layout

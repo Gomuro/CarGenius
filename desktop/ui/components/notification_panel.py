@@ -1,32 +1,386 @@
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QFrame
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import (QLabel, QVBoxLayout, QHBoxLayout, 
+                            QPushButton, QFrame, QWidget, QComboBox, QGridLayout, QScrollArea, QDialog, QSizePolicy)
+from PyQt6.QtCore import Qt, QPropertyAnimation, QPoint, QTimer
+from PyQt6.QtGui import QIcon, QCursor, QFont
 from . import BaseComponent
 
 class NotificationPanel(BaseComponent):
     def _create_ui(self):
+        self.all_sample_notifications_data = [] # Store all notification data
         main_layout = QVBoxLayout(self)
         self.setObjectName("notification_panel")
+
+        self.grid_row = 0
+        self.grid_col = 0
+        self.num_columns = 2  # Display 2 notifications per row
         
-        # Header with title and settings
+        # Header with title, clear all, and settings
         header_layout = QHBoxLayout()
-        title = QLabel("Notifications")
+        title = QLabel("Recent Matches")
         title.setObjectName("section_title")
+        title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         header_layout.addWidget(title)
+        header_layout.addStretch(1) # Add stretch before buttons
+
+        self.clear_all_button = QPushButton("Clear All")
+        self.clear_all_button.setObjectName("small_button") # Re-use existing style or create new
+        self.clear_all_button.clicked.connect(self._clear_all_notifications_action)
+        header_layout.addWidget(self.clear_all_button)
         
         settings_button = QPushButton("Settings")
         settings_button.setObjectName("small_button")
-        header_layout.addWidget(settings_button, alignment=Qt.AlignmentFlag.AlignRight)
+        header_layout.addWidget(settings_button) # Removed alignment, will use stretch before
         
         main_layout.addLayout(header_layout)
         
-        # Notification area
-        notification_frame = QFrame()
-        notification_frame.setObjectName("notification_frame")
-        notification_layout = QVBoxLayout(notification_frame)
+        # Notification container setup with QGridLayout
+        self.notification_container = QWidget() # This widget will hold the grid
+        self.grid_layout = QGridLayout(self.notification_container)
+        self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.grid_layout.setSpacing(10)
+        for i in range(self.num_columns):
+            self.grid_layout.setColumnStretch(i, 1)
+
+        # Add the notification container (which contains the grid) directly to the main layout
+        main_layout.addWidget(self.notification_container)
         
-        self.notification_area = QLabel("New matches will appear here")
-        self.notification_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        notification_layout.addWidget(self.notification_area)
+        # "View All Notifications" button
+        self.view_all_button = QPushButton("View All Notifications")
+        self.view_all_button.setObjectName("view_all_button") # For potential styling
+        self.view_all_button.clicked.connect(self._show_all_notifications_dialog)
+        main_layout.addWidget(self.view_all_button, alignment=Qt.AlignmentFlag.AlignCenter)
         
-        main_layout.addWidget(notification_frame) 
+        # Load and display initial notifications
+        self._load_sample_notifications_data()
+        self._display_initial_notifications()
+
+    def _load_sample_notifications_data(self):
+        sample_matches = [
+            {
+                "title": "Mercedes-Benz CLA 200 d",
+                "subtitle": "Shooting Brake • AMG • CAMERA",
+                "price": "35.980 €",
+                "time": "2 hours ago",
+                "type": "match",
+                "margin_rating": 5,
+                "margin_text": "Very good price",
+                "margin_percentage_text": "Profit est: 18%"
+            },
+            {
+                "title": "BMW 3 Series 320d",
+                "subtitle": "M Sport • Panorama • LED",
+                "price": "42.500 €",
+                "time": "3 hours ago",
+                "type": "price_drop",
+                "margin_rating": 3,
+                "margin_text": "Fair price",
+                "margin_percentage_text": "Profit est: 8%"
+            },
+            {
+                "title": "Audi A4 Avant 2.0 TDI",
+                "subtitle": "S line • quattro • Matrix",
+                "price": "38.900 €",
+                "time": "5 hours ago",
+                "type": "new_arrival",
+                "margin_rating": 4,
+                "margin_text": "Good price",
+                "margin_percentage_text": "Profit est: 12%"
+            },
+            {
+                "title": "Volkswagen Golf VIII",
+                "subtitle": "1.5 eTSI • R-Line • HUD",
+                "price": "28.750 €",
+                "time": "1 day ago",
+                "type": "match",
+                "margin_rating": 5,
+                "margin_text": "Excellent deal",
+                "margin_percentage_text": "Profit est: 20%"
+            },
+            # Adding a fifth notification to test the "View All" functionality
+            {
+                "title": "Tesla Model 3",
+                "subtitle": "Long Range • Autopilot",
+                "price": "55.000 €",
+                "time": "2 days ago",
+                "type": "match",
+                "margin_rating": 4,
+                "margin_text": "Good price",
+                "margin_percentage_text": "Profit est: 15%"
+            }
+        ]
+        self.all_sample_notifications_data = sample_matches
+
+    def _clear_grid_layout(self):
+        # Clears all widgets from self.grid_layout
+        # Also remove the "no matches" label if it exists
+        existing_no_matches_label = self.notification_container.findChild(QLabel, "no_matches_label_style")
+        if existing_no_matches_label:
+            self.grid_layout.removeWidget(existing_no_matches_label)
+            existing_no_matches_label.deleteLater()
+            
+        while self.grid_layout.count():
+            child = self.grid_layout.takeAt(0)
+            if child.widget():
+                # child.widget().setParent(None) # Not strictly necessary before deleteLater if taken from layout
+                child.widget().deleteLater()
+        self.grid_row = 0
+        self.grid_col = 0
+
+    def _display_initial_notifications(self):
+        self._clear_grid_layout()
+        
+        if not self.all_sample_notifications_data:
+            # Display "No new matches" message
+            no_matches_label = QLabel("No new matches so far.")
+            no_matches_label.setObjectName("no_matches_label_style") # For styling
+            no_matches_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            no_matches_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Normal)) # Example font
+            # Add to grid, spanning all columns
+            self.grid_layout.addWidget(no_matches_label, 0, 0, 1, self.num_columns)
+            self.grid_row = 1 # Next item would be on next row
+            self.grid_col = 0
+            
+            self.view_all_button.hide()
+            self.clear_all_button.hide()
+            # change the size of the scroll area
+        else:
+            # Display up to the last 3 notifications.
+            notifications_to_show = self.all_sample_notifications_data[-3:]
+            for match_data in notifications_to_show:
+                self._add_match_notification(match_data)
+            
+            # Show/Hide "View All" button
+            if len(self.all_sample_notifications_data) <= 3:
+                self.view_all_button.hide()
+            else:
+                self.view_all_button.show()
+            
+            # Show/Hide Clear All button
+            self.clear_all_button.show()
+
+    def _show_all_notifications_action(self):
+        self._clear_grid_layout()
+        for match_data in self.all_sample_notifications_data:
+            self._add_match_notification(match_data)
+        self.view_all_button.hide() # Hide button after showing all
+
+    def _add_sample_notifications(self):
+        # This method is now replaced by _load_sample_notifications_data
+        # and _display_initial_notifications.
+        # Kept for reference or if other parts of the code call it,
+        # but its direct usage in _create_ui is removed.
+        # For safety, let's make it call the new flow.
+        self._load_sample_notifications_data()
+        self._display_initial_notifications() # Or _show_all_notifications_action if that's intended
+
+    def _create_notification_widget(self, match_data):
+        notification = QFrame()
+        notification.setObjectName("notification_toast")
+        notification.setProperty("type", match_data["type"])
+        # Ensure the notification toast has a minimum width, or stretches
+        notification.setMinimumWidth(250) # Adjust as needed
+        notification.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+        layout = QVBoxLayout(notification)
+        layout.setContentsMargins(15, 12, 15, 12)
+        layout.setSpacing(8)
+        
+        header = QHBoxLayout()
+        title = QLabel(match_data["title"])
+        title.setObjectName("match_title")
+        title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        
+        time_label = QLabel(match_data["time"])
+        time_label.setObjectName("timestamp")
+
+        # Dismiss button for individual notification
+        dismiss_btn = QPushButton("×")
+        dismiss_btn.setObjectName("dismiss_button_toast") # For styling
+        dismiss_btn.setFixedSize(20, 20) # Make it small
+        dismiss_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        # Lambda captures current match_data and the notification frame (widget) itself
+        dismiss_btn.clicked.connect(lambda checked=False, m_data=match_data, nf_widget=notification: self._handle_dismiss_notification(m_data, nf_widget))
+        
+        header.addWidget(title)
+        header.addStretch()
+        header.addWidget(time_label)
+        header.addWidget(dismiss_btn) # Add dismiss button to header
+        
+        subtitle = QLabel(match_data["subtitle"])
+        subtitle.setObjectName("match_subtitle")
+        
+        price_layout = QHBoxLayout()
+        price = QLabel(match_data["price"])
+        price.setObjectName("match_price")
+        price.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        
+        price_layout.addWidget(price)
+        price_layout.addStretch()
+        
+        layout.addLayout(header)
+        layout.addWidget(subtitle)
+        layout.addLayout(price_layout)
+
+        margin_section_widget_notif = QWidget()
+        margin_section_layout_notif = QVBoxLayout(margin_section_widget_notif)
+        margin_section_layout_notif.setContentsMargins(0, 8, 0, 0)
+        margin_section_layout_notif.setSpacing(4)
+
+        bars_container_notif = QWidget()
+        bars_container_layout_notif = QHBoxLayout(bars_container_notif)
+        bars_container_layout_notif.setContentsMargins(0,0,0,0)
+        bars_container_layout_notif.setSpacing(3)
+
+        num_total_bars_notif = 5
+        active_bars_notif = match_data.get("margin_rating", 0)
+
+        for i in range(num_total_bars_notif):
+            bar_notif = QFrame()
+            if i < active_bars_notif:
+                bar_notif.setObjectName("margin_bar_filled")
+            else:
+                bar_notif.setObjectName("margin_bar_empty")
+            bars_container_layout_notif.addWidget(bar_notif)
+        
+        bars_container_layout_notif.addStretch(1)
+        margin_section_layout_notif.addWidget(bars_container_notif)
+
+        margin_text_label_notif = QLabel(match_data.get("margin_text", ""))
+        margin_text_label_notif.setObjectName("margin_text_label")
+        margin_section_layout_notif.addWidget(margin_text_label_notif)
+
+        margin_percentage_label_notif = QLabel(match_data.get("margin_percentage_text", ""))
+        margin_percentage_label_notif.setObjectName("margin_percentage_label")
+        margin_section_layout_notif.addWidget(margin_percentage_label_notif)
+
+        layout.addWidget(margin_section_widget_notif)
+        return notification
+
+    def _add_match_notification(self, match_data):
+        notification_widget = self._create_notification_widget(match_data)
+        self.grid_layout.addWidget(notification_widget, self.grid_row, self.grid_col)
+        self.grid_col += 1
+        if self.grid_col >= self.num_columns:
+            self.grid_col = 0
+            self.grid_row += 1
+
+    def _show_all_notifications_dialog(self):
+        if not self.all_sample_notifications_data:
+            return # No data to show
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("All Notifications")
+        dialog.setMinimumSize(700, 500) # Set a decent minimum size
+
+        dialog_layout = QVBoxLayout(dialog)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff) # Usually off for vertical lists
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+
+        notification_container_dialog = QWidget()
+        grid_layout_dialog = QGridLayout(notification_container_dialog)
+        grid_layout_dialog.setAlignment(Qt.AlignmentFlag.AlignTop)
+        grid_layout_dialog.setSpacing(10)
+        
+        # Determine number of columns (can be same as main panel or different)
+        num_dialog_columns = self.num_columns 
+        for i in range(num_dialog_columns):
+            grid_layout_dialog.setColumnStretch(i, 1)
+
+        dialog_grid_row = 0
+        dialog_grid_col = 0
+
+        for match_data in self.all_sample_notifications_data:
+            notification_widget = self._create_notification_widget(match_data)
+            grid_layout_dialog.addWidget(notification_widget, dialog_grid_row, dialog_grid_col)
+            dialog_grid_col += 1
+            if dialog_grid_col >= num_dialog_columns:
+                dialog_grid_col = 0
+                dialog_grid_row += 1
+        
+        scroll_area.setWidget(notification_container_dialog)
+        dialog_layout.addWidget(scroll_area)
+
+        # Optional: Add a close button to the dialog
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(dialog.accept) # Or dialog.close
+        dialog_layout.addWidget(close_button, alignment=Qt.AlignmentFlag.AlignRight)
+
+        dialog.exec()
+
+    def show_notification(self, sender, message):
+        toast = QFrame()
+        toast.setFixedWidth(350)
+        toast.setObjectName("notification_toast")
+        
+        # Toast layout
+        layout = QHBoxLayout(toast)
+        avatar = QLabel("👤")  # Placeholder
+        layout.addWidget(avatar)
+        
+        text_layout = QVBoxLayout()
+        header = QHBoxLayout()
+        header.addWidget(QLabel(f"<b>{sender}</b>"))
+        header.addWidget(QLabel("10:30 AM", objectName="timestamp"))
+        header.addStretch()
+        
+        # Dismiss button
+        close_btn = QPushButton("×", objectName="dismiss_button")
+        close_btn.clicked.connect(lambda: self._dismiss_toast(toast))
+        header.addWidget(close_btn)
+        
+        text_layout.addLayout(header)
+        text_layout.addWidget(QLabel(message))
+        layout.addLayout(text_layout)
+        
+        # Animation setup
+        self._animate_toast(toast)
+        # This next line for show_notification might need review if it's intended for the panel
+        # self.notification_container.layout().addWidget(toast) 
+        # For now, assuming show_notification creates floating toasts, not panel items.
+        # If they are panel items, they would also need grid placement.
+        # The current logic in _add_match_notification uses self.grid_layout, which is correct for panel items.
+
+    def _animate_toast(self, toast):
+        # This animation logic is for the floating toast from show_notification
+        # It might not be directly applicable to grid items in the panel
+        # For simplicity, I'm assuming panel items don't animate in the same way
+        toast.move(QPoint(400, 0))
+        anim = QPropertyAnimation(toast, b"pos")
+        anim.setEndValue(QPoint(0, 0))
+        anim.setDuration(200)
+        anim.start()
+        
+        # Auto-dismiss after 5 seconds
+        QTimer.singleShot(5000, lambda: self._dismiss_toast(toast))
+
+    def _dismiss_toast(self, toast):
+        # This animation logic is for the floating toast
+        anim = QPropertyAnimation(toast, b"pos")
+        anim.setEndValue(QPoint(400, 0))
+        anim.setDuration(200)
+        anim.finished.connect(toast.deleteLater)
+        anim.start() 
+
+    def _handle_dismiss_notification(self, match_data_to_remove, notification_widget_to_remove):
+        # Remove from data source
+        if match_data_to_remove in self.all_sample_notifications_data:
+            self.all_sample_notifications_data.remove(match_data_to_remove)
+
+        # Delete the widget
+        if notification_widget_to_remove:
+            # Set parent to None before deleting to ensure it's removed from layout management
+            notification_widget_to_remove.setParent(None) 
+            notification_widget_to_remove.deleteLater()
+
+        # Refresh the main notification panel display
+        # This will re-render the initial notifications and update button states
+        self._display_initial_notifications()
+
+    def _clear_all_notifications_action(self):
+        self.all_sample_notifications_data.clear()
+        # _display_initial_notifications will call _clear_grid_layout and update buttons
+        self._display_initial_notifications() 
