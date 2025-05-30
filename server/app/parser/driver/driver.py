@@ -100,6 +100,8 @@ class BaseSeleniumDriver(uc.Chrome):
                 if isinstance(self.proxy, Proxy):
                     proxy_connector = ProxyConnectorExtension(self.proxy)
                     options.add_argument(f'--load-extension={proxy_connector.get_extension_dir()}')
+                    # Universal proxy argument that works for both types
+                    options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
 
                 # Store the service object on the instance
                 self.service = Service(self.executable_path)

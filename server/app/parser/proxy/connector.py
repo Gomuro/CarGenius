@@ -50,33 +50,39 @@ class ProxyConnectorExtension:
         """
 
 
-        background_js = """
-        let config = {
-                mode: "fixed_servers",
-                rules: {
-                singleProxy: {
+        background_js = f"""
+        let config = {{
+            mode: "fixed_servers",
+            rules: {{
+                singleProxy: {{
                     scheme: "http",
-                    host: "%s",
-                    port: parseInt(%s)
-                },
+                    host: "{proxy.host}",
+                    port: parseInt({proxy.port})
+                }},
                 bypassList: ["localhost"]
-                }
-            };
-        chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
-        function callbackFn(details) {
-            return {
-                authCredentials: {
-                    username: "%s",
-                    password: "%s"
-                }
-            };
-        }
+            }}
+        }};
+        chrome.proxy.settings.set({{value: config, scope: "regular"}}, function() {{}});
+        """
+
+        # Add authentication only if both username and password are provided
+        if proxy.username and proxy.userpass:
+            background_js += f"""
+        function callbackFn(details) {{
+            return {{
+                authCredentials: {{
+                    username: "{proxy.username}",
+                    password: "{proxy.userpass}"
+                }}
+            }};
+        }}
         chrome.webRequest.onAuthRequired.addListener(
-                    callbackFn,
-                    {urls: ["<all_urls>"]},
-                    ['blocking']
-        );
-        """ % (proxy.host, proxy.port, proxy.username, proxy.userpass)
+            callbackFn,
+            {{urls: ["<all_urls>"]}},
+            ['blocking']
+        );"""
+        elif proxy.username or proxy.userpass:
+            print("Warning: Proxy has partial credentials - only username or password provided")
 
 
         """
