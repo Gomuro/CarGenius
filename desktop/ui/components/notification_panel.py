@@ -44,7 +44,7 @@ class NotificationPanel(BaseComponent):
 
         # Add the notification container (which contains the grid) directly to the main layout
         main_layout.addWidget(self.notification_container)
-        
+
         # "View All Notifications" button
         self.view_all_button = QPushButton("View All Notifications")
         self.view_all_button.setObjectName("view_all_button") # For potential styling
