@@ -6,6 +6,7 @@ beutifulsoup4==4.13.4
 celery==5.2.7
 fastapi==0.115.12
 fastapi_jwt==0.3.0
+fake-useragent==2.2.0
 filelock==3.12.2
 flower==2.0.1
 google-api-python-client==2.138.0
