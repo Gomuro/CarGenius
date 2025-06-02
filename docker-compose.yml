@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-
   db:
     container_name: postgres_cargenius
     image: postgres
@@ -123,3 +122,19 @@ services:
       - ./server:/workdir_docker
     depends_on:
       - test_db
+
+  parser:
+    container_name: parser_cargenius
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: python -m app.parser.main
+    volumes:
+      - ./server:/workdir_docker
+    environment:
+      - CHROME_BIN=/usr/bin/google-chrome
+      - CHROMEDRIVER_PATH=/usr/local/bin/chromedriver
+      - DISPLAY=:99
+    depends_on:
+      - backend
+      - redis

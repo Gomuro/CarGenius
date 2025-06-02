@@ -198,7 +198,7 @@ class MainWindow(QMainWindow):
         # Pass the list of tracked models and self as parent
         dialog = AnalyticsDialog(self.tracked_models_criteria, parent=self) 
         dialog.exec() # Show as a modal dialog
-
+    
     def handle_chat_close(self, event):
         """Handle the chat window close event to update button state"""
         self.chat_fab.setChecked(False)

@@ -1,102 +1,98 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, 
-                             QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView)
-from PyQt6.QtCore import Qt
-import random # For mock data
+                             QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QFrame)
+from PyQt6.QtCore import Qt, QRectF, QPointF
+import random
+import math
+
+# Import the new graph widget
+from .analytics_dialog_components.time_series_graph_widget import TimeSeriesLineGraphWidget
 
 class AnalyticsDialog(QDialog):
     def __init__(self, tracked_models_criteria, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Car Analytics")
-        self.setMinimumSize(800, 600) # Set a default size
-        self.tracked_models_criteria = tracked_models_criteria # Store the passed criteria
-
+        self.setWindowTitle("Car Analytics & Price Trends")
+        self.setMinimumSize(800, 600)
+        self.tracked_models_criteria = tracked_models_criteria
         self._create_ui()
 
     def _create_ui(self):
         main_layout = QVBoxLayout(self)
-
-        # Tab Widget
         self.tab_widget = QTabWidget()
         main_layout.addWidget(self.tab_widget)
 
-        # Create and add the 'Average Prices' tab
-        self.average_prices_tab = self._create_average_prices_tab()
-        self.tab_widget.addTab(self.average_prices_tab, "Average Prices")
+        self.average_prices_tab_content = self._create_average_prices_tab()
+        self.tab_widget.addTab(self.average_prices_tab_content, "Price Trends") # Renamed tab for clarity
 
-        # Add more tabs here in the future if needed
-        # self.price_trends_tab = self._create_price_trends_tab()
-        # self.tab_widget.addTab(self.price_trends_tab, "Price Trends")
-
-        # Close button
         close_button = QPushButton("Close")
-        close_button.clicked.connect(self.accept) # self.accept() closes the dialog
+        close_button.clicked.connect(self.accept)
         main_layout.addWidget(close_button, alignment=Qt.AlignmentFlag.AlignRight)
 
+    def _generate_mock_time_series(self, num_points=10, base_price=30000, volatility=5000):
+        data = []
+        current_price = base_price + random.uniform(-volatility/2, volatility/2)
+        for i in range(num_points):
+            data.append((i, current_price))
+            current_price += random.uniform(-volatility * 0.3, volatility * 0.3)
+            current_price = max(5000, current_price) # Ensure price doesn't go too low
+        return data
+
     def _create_average_prices_tab(self):
-        tab_content_widget = QWidget()
-        layout = QVBoxLayout(tab_content_widget)
-        layout.setContentsMargins(15, 15, 15, 15)
-        layout.setSpacing(10)
-        
+        # This tab will now hold a scrollable list of individual graphs
+        scroll_widget = QWidget() # Widget to hold the layout of graphs
+        scroll_layout = QVBoxLayout(scroll_widget)
+        scroll_layout.setContentsMargins(10,10,10,10)
+        scroll_layout.setSpacing(20)
+
         if not self.tracked_models_criteria:
-            # Display a message if no models are being tracked
-            info_label = QLabel("No models are currently being tracked. "
-                                "Please add models to track from the main page filters.")
-            info_label.setObjectName("info_label_analytics") # For potential styling
+            info_label = QLabel("No models are currently tracked for price trends. "
+                                "Add models using the main page filters and 'Track Specific Models' mode.")
             info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             info_label.setWordWrap(True)
-            layout.addWidget(info_label)
+            scroll_layout.addWidget(info_label)
         else:
-            # Create a table to display average prices for tracked models
-            self.avg_prices_table = QTableWidget()
-            self.avg_prices_table.setObjectName("analytics_table") # For styling
-            # Define columns: Brand, Model, Year, Estimated Avg. Price
-            column_headers = ["Brand", "Model", "Year", "Est. Avg. Price"]
-            self.avg_prices_table.setColumnCount(len(column_headers))
-            self.avg_prices_table.setHorizontalHeaderLabels(column_headers)
-            self.avg_prices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers) # Read-only
-            self.avg_prices_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-            self.avg_prices_table.setAlternatingRowColors(True)
-            self.avg_prices_table.verticalHeader().setVisible(False) # Hide vertical row numbers
+            for criteria in self.tracked_models_criteria:
+                model_name_parts = []
+                if criteria.get("brand") and criteria.get("brand") != "N/A":
+                    model_name_parts.append(criteria.get("brand"))
+                if criteria.get("model") and criteria.get("model") != "N/A":
+                    model_name_parts.append(criteria.get("model"))
+                if criteria.get("year") and criteria.get("year") != "N/A":
+                    model_name_parts.append(criteria.get("year"))
+                model_display_name = " ".join(model_name_parts) if model_name_parts else "Unknown Model"
 
-            # Populate table with tracked models and mock prices
-            self.avg_prices_table.setRowCount(len(self.tracked_models_criteria))
-            for row, criteria in enumerate(self.tracked_models_criteria):
-                brand = criteria.get("brand", "N/A")
-                model = criteria.get("model", "N/A")
-                year = criteria.get("year", "N/A")
+                # Graph Title (could also be part of the graph widget itself)
+                # graph_title_label = QLabel(f"Price Trend: {model_display_name}")
+                # graph_title_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+                # graph_title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                # scroll_layout.addWidget(graph_title_label)
+
+                # Generate mock data for this model
+                # Adjust base_price and volatility based on criteria if desired
+                mock_data = self._generate_mock_time_series(num_points=random.randint(5,12), base_price=random.randint(15000, 60000))
                 
-                # Mock estimated average price
-                mock_price = f"€ {random.randint(10000, 80000):,}"
-
-                self.avg_prices_table.setItem(row, 0, QTableWidgetItem(brand))
-                self.avg_prices_table.setItem(row, 1, QTableWidgetItem(model))
-                self.avg_prices_table.setItem(row, 2, QTableWidgetItem(year))
-                self.avg_prices_table.setItem(row, 3, QTableWidgetItem(mock_price))
-            
-            # Adjust column widths
-            header = self.avg_prices_table.horizontalHeader()
-            header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch) # Stretch all columns initially
-            header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents) # Resize price column to contents
-
-            layout.addWidget(self.avg_prices_table)
+                graph_widget = TimeSeriesLineGraphWidget(mock_data, model_display_name)
+                scroll_layout.addWidget(graph_widget)
         
-        layout.addStretch() # Pushes content to the top if table is small
-        return tab_content_widget
+        scroll_layout.addStretch(1) # Add stretch at the end of the vertical layout
 
-    # Example for a future tab
-    # def _create_price_trends_tab(self):
-    #     widget = QWidget()
-    #     layout = QVBoxLayout(widget)
-    #     label = QLabel("Price Trends content will go here.")
-    #     layout.addWidget(label)
-    #     return widget
+        # Put the scroll_widget inside a QScrollArea
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setWidget(scroll_widget)
+
+        return scroll_area # The tab now gets the scroll_area
 
 if __name__ == '__main__':
-    # This is for testing the dialog directly
     import sys
     from PyQt6.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    dialog = AnalyticsDialog([{"brand": "Toyota", "model": "Corolla", "year": "2020"}, {"brand": "Honda", "model": "Civic", "year": "2021"}])
+    # Sample tracked models for testing the dialog directly
+    sample_tracked = [
+        {"brand": "Toyota", "model": "Camry", "year": "2021"},
+        {"brand": "Honda", "model": "CR-V", "year": "2022"},
+        {"brand": "BMW", "model": "X5"}, # Year might be None
+    ]
+    dialog = AnalyticsDialog(sample_tracked)
     dialog.show()
     sys.exit(app.exec()) 

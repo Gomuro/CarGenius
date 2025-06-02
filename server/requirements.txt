@@ -2,9 +2,12 @@ anyio==4.9.0
 asyncpg==0.29.0
 alembic==1.10.4
 authlib==1.3.1
+beutifulsoup4==4.13.4
 celery==5.2.7
 fastapi==0.115.12
 fastapi_jwt==0.3.0
+fake-useragent==2.2.0
+filelock==3.12.2
 flower==2.0.1
 google-api-python-client==2.138.0
 google-auth==2.32.0
@@ -12,6 +15,7 @@ google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1
 google-cloud-language==2.13.4
 httpx==0.27.0
+ping3==4.0.3
 openai==1.79.0
 python-jose==3.3.0
 psycopg2-binary==2.9.6
@@ -19,6 +23,7 @@ pydantic==1.10.8
 PyJWT==2.8.0
 passlib[bcrypt]==1.7.4
 psycopg2-binary==2.9.6
+psutil==5.9.5
 pytest==8.3.2
 pytest-asyncio==0.26.0
 python-dotenv==1.0.1
@@ -27,6 +32,8 @@ sqlalchemy==2.0.41
 slowapi==0.1.9
 starlette==0.46.2
 uvicorn==0.22.0
+undetected_chromedriver==3.5.5
 websockets==15.0.1
+pywin32==306
 
 

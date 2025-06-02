@@ -1,9 +1,8 @@
 from PyQt6.QtWidgets import (QLabel, QVBoxLayout, QHBoxLayout, 
-                            QPushButton, QFrame, QWidget, QGridLayout, QScrollArea, QDialog, QSizePolicy)
+                            QPushButton, QFrame, QWidget, QComboBox, QGridLayout, QScrollArea, QDialog, QSizePolicy)
 from PyQt6.QtCore import Qt, QPropertyAnimation, QPoint, QTimer
 from PyQt6.QtGui import QIcon, QCursor, QFont
 from . import BaseComponent
-from .notification_components.notification_card import NotificationCard
 
 class NotificationPanel(BaseComponent):
     def _create_ui(self):
@@ -44,7 +43,7 @@ class NotificationPanel(BaseComponent):
 
         # Add the notification container (which contains the grid) directly to the main layout
         main_layout.addWidget(self.notification_container)
-
+        
         # "View All Notifications" button
         self.view_all_button = QPushButton("View All Notifications")
         self.view_all_button.setObjectName("view_all_button") # For potential styling
@@ -146,18 +145,124 @@ class NotificationPanel(BaseComponent):
             # change the size of the scroll area
         else:
             # Display up to the last 3 notifications.
-            notifications_to_show = self.all_sample_notifications_data[-2:]
+            notifications_to_show = self.all_sample_notifications_data[-3:]
             for match_data in notifications_to_show:
-                self._add_match_notification_to_grid(match_data)
+                self._add_match_notification(match_data)
             
             # Show/Hide "View All" button
-            if len(self.all_sample_notifications_data) <= 2:
+            if len(self.all_sample_notifications_data) <= 4:
                 self.view_all_button.hide()
             else:
                 self.view_all_button.show()
             
             # Show/Hide Clear All button
             self.clear_all_button.show()
+
+    def _show_all_notifications_action(self):
+        self._clear_grid_layout()
+        for match_data in self.all_sample_notifications_data:
+            self._add_match_notification(match_data)
+        self.view_all_button.hide() # Hide button after showing all
+
+    def _add_sample_notifications(self):
+        # This method is now replaced by _load_sample_notifications_data
+        # and _display_initial_notifications.
+        # Kept for reference or if other parts of the code call it,
+        # but its direct usage in _create_ui is removed.
+        # For safety, let's make it call the new flow.
+        self._load_sample_notifications_data()
+        self._display_initial_notifications() # Or _show_all_notifications_action if that's intended
+
+    def _create_notification_widget(self, match_data):
+        notification = QFrame()
+        notification.setObjectName("notification_toast")
+        notification.setProperty("type", match_data["type"])
+        # Ensure the notification toast has a minimum width, or stretches
+        notification.setMinimumWidth(250) # Adjust as needed
+        notification.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+        layout = QVBoxLayout(notification)
+        layout.setContentsMargins(15, 12, 15, 12)
+        layout.setSpacing(8)
+        
+        header = QHBoxLayout()
+        title = QLabel(match_data["title"])
+        title.setObjectName("match_title")
+        title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        
+        time_label = QLabel(match_data["time"])
+        time_label.setObjectName("timestamp")
+
+        # Dismiss button for individual notification
+        dismiss_btn = QPushButton("×")
+        dismiss_btn.setObjectName("dismiss_button_toast") # For styling
+        dismiss_btn.setFixedSize(20, 20) # Make it small
+        dismiss_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        # Lambda captures current match_data and the notification frame (widget) itself
+        dismiss_btn.clicked.connect(lambda checked=False, m_data=match_data, nf_widget=notification: self._handle_dismiss_notification(m_data, nf_widget))
+        
+        header.addWidget(title)
+        header.addStretch()
+        header.addWidget(time_label)
+        header.addWidget(dismiss_btn) # Add dismiss button to header
+        
+        subtitle = QLabel(match_data["subtitle"])
+        subtitle.setObjectName("match_subtitle")
+        
+        price_layout = QHBoxLayout()
+        price = QLabel(match_data["price"])
+        price.setObjectName("match_price")
+        price.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        
+        price_layout.addWidget(price)
+        price_layout.addStretch()
+        
+        layout.addLayout(header)
+        layout.addWidget(subtitle)
+        layout.addLayout(price_layout)
+
+        margin_section_widget_notif = QWidget()
+        margin_section_layout_notif = QVBoxLayout(margin_section_widget_notif)
+        margin_section_layout_notif.setContentsMargins(0, 8, 0, 0)
+        margin_section_layout_notif.setSpacing(4)
+
+        bars_container_notif = QWidget()
+        bars_container_layout_notif = QHBoxLayout(bars_container_notif)
+        bars_container_layout_notif.setContentsMargins(0,0,0,0)
+        bars_container_layout_notif.setSpacing(3)
+
+        num_total_bars_notif = 5
+        active_bars_notif = match_data.get("margin_rating", 0)
+
+        for i in range(num_total_bars_notif):
+            bar_notif = QFrame()
+            if i < active_bars_notif:
+                bar_notif.setObjectName("margin_bar_filled")
+            else:
+                bar_notif.setObjectName("margin_bar_empty")
+            bars_container_layout_notif.addWidget(bar_notif)
+        
+        bars_container_layout_notif.addStretch(1)
+        margin_section_layout_notif.addWidget(bars_container_notif)
+
+        margin_text_label_notif = QLabel(match_data.get("margin_text", ""))
+        margin_text_label_notif.setObjectName("margin_text_label")
+        margin_section_layout_notif.addWidget(margin_text_label_notif)
+
+        margin_percentage_label_notif = QLabel(match_data.get("margin_percentage_text", ""))
+        margin_percentage_label_notif.setObjectName("margin_percentage_label")
+        margin_section_layout_notif.addWidget(margin_percentage_label_notif)
+
+        layout.addWidget(margin_section_widget_notif)
+        return notification
+
+    def _add_match_notification(self, match_data):
+        notification_widget = self._create_notification_widget(match_data)
+        self.grid_layout.addWidget(notification_widget, self.grid_row, self.grid_col)
+        self.grid_col += 1
+        if self.grid_col >= self.num_columns:
+            self.grid_col = 0
+            self.grid_row += 1
 
     def _show_all_notifications_dialog(self):
         if not self.all_sample_notifications_data:
@@ -189,7 +294,7 @@ class NotificationPanel(BaseComponent):
         dialog_grid_col = 0
 
         for match_data in self.all_sample_notifications_data:
-            notification_widget = NotificationCard(match_data, self._handle_dismiss_notification_from_dialog)
+            notification_widget = self._create_notification_widget(match_data)
             grid_layout_dialog.addWidget(notification_widget, dialog_grid_row, dialog_grid_col)
             dialog_grid_col += 1
             if dialog_grid_col >= num_dialog_columns:
@@ -206,68 +311,74 @@ class NotificationPanel(BaseComponent):
 
         dialog.exec()
 
-    def _add_match_notification_to_grid(self, match_data, target_layout=None, dismiss_callback=None):
-        # Default to self.grid_layout and self._handle_dismiss_notification if not provided
-        layout_to_use = target_layout if target_layout else self.grid_layout
-        callback_to_use = dismiss_callback if dismiss_callback else self._handle_dismiss_notification
-
-        notification_widget = NotificationCard(match_data, callback_to_use)
+    def show_notification(self, sender, message):
+        toast = QFrame()
+        toast.setFixedWidth(350)
+        toast.setObjectName("notification_toast")
         
-        # Determine where to add the widget based on which layout is being used
-        if layout_to_use == self.grid_layout:
-            layout_to_use.addWidget(notification_widget, self.grid_row, self.grid_col)
-            self.grid_col += 1
-            if self.grid_col >= self.num_columns:
-                self.grid_col = 0
-                self.grid_row += 1
-        else: # Assuming it's a dialog grid or similar, needs row/col management if not self.grid_layout
-            # For simplicity, this example assumes dialogs manage their own row/col or add sequentially
-            # For a more robust solution for dialogs, pass row/col indices or manage them in the dialog method
-            current_row = target_layout.rowCount()
-            current_col = 0
-            # Find the next available cell or start a new row
-            # This is a simplified logic; a more robust one would track col/row for the dialog grid
-            if target_layout.itemAtPosition(current_row -1, self.num_columns -1) is not None : # if last cell of current row is filled
-                 current_row +=1
-            else: # find first empty cell in current_row (or last row)
-                for c in range(self.num_columns):
-                    if target_layout.itemAtPosition(current_row -1, c) is None:
-                        current_col = c
-                        current_row -=1 # use current row
-                        break
-            layout_to_use.addWidget(notification_widget, current_row, current_col)
+        # Toast layout
+        layout = QHBoxLayout(toast)
+        avatar = QLabel("👤")  # Placeholder
+        layout.addWidget(avatar)
+        
+        text_layout = QVBoxLayout()
+        header = QHBoxLayout()
+        header.addWidget(QLabel(f"<b>{sender}</b>"))
+        header.addWidget(QLabel("10:30 AM", objectName="timestamp"))
+        header.addStretch()
+        
+        # Dismiss button
+        close_btn = QPushButton("×", objectName="dismiss_button")
+        close_btn.clicked.connect(lambda: self._dismiss_toast(toast))
+        header.addWidget(close_btn)
+        
+        text_layout.addLayout(header)
+        text_layout.addWidget(QLabel(message))
+        layout.addLayout(text_layout)
+        
+        # Animation setup
+        self._animate_toast(toast)
+        # This next line for show_notification might need review if it's intended for the panel
+        # self.notification_container.layout().addWidget(toast) 
+        # For now, assuming show_notification creates floating toasts, not panel items.
+        # If they are panel items, they would also need grid placement.
+        # The current logic in _add_match_notification uses self.grid_layout, which is correct for panel items.
+
+    def _animate_toast(self, toast):
+        # This animation logic is for the floating toast from show_notification
+        # It might not be directly applicable to grid items in the panel
+        # For simplicity, I'm assuming panel items don't animate in the same way
+        toast.move(QPoint(400, 0))
+        anim = QPropertyAnimation(toast, b"pos")
+        anim.setEndValue(QPoint(0, 0))
+        anim.setDuration(200)
+        anim.start()
+        
+        # Auto-dismiss after 5 seconds
+        QTimer.singleShot(5000, lambda: self._dismiss_toast(toast))
+
+    def _dismiss_toast(self, toast):
+        # This animation logic is for the floating toast
+        anim = QPropertyAnimation(toast, b"pos")
+        anim.setEndValue(QPoint(400, 0))
+        anim.setDuration(200)
+        anim.finished.connect(toast.deleteLater)
+        anim.start() 
 
     def _handle_dismiss_notification(self, match_data_to_remove, notification_widget_to_remove):
+        # Remove from data source
         if match_data_to_remove in self.all_sample_notifications_data:
             self.all_sample_notifications_data.remove(match_data_to_remove)
 
+        # Delete the widget
         if notification_widget_to_remove:
+            # Set parent to None before deleting to ensure it's removed from layout management
             notification_widget_to_remove.setParent(None) 
             notification_widget_to_remove.deleteLater()
-        
+
         # Refresh the main notification panel display
+        # This will re-render the initial notifications and update button states
         self._display_initial_notifications()
-
-    def _handle_dismiss_notification_from_dialog(self, match_data_to_remove, notification_widget_to_remove):
-        # This method is called when a notification is dismissed from the "All Notifications" dialog.
-        # It ensures the main panel is also updated.
-        if match_data_to_remove in self.all_sample_notifications_data:
-            self.all_sample_notifications_data.remove(match_data_to_remove)
-        
-        # The widget itself is part of the dialog, so it will be cleaned up when the dialog closes
-        # or if we manually remove it from the dialog's layout.
-        # For simplicity, we'll let the card handle its own deletion via its dismiss_callback.
-        # The key is to update the underlying data and refresh the main panel.
-        if notification_widget_to_remove: # Widget is passed to be removed from dialog's layout
-             notification_widget_to_remove.setParent(None)
-             notification_widget_to_remove.deleteLater()
-
-        # Refresh the main notification panel display after dialog interaction
-        self._display_initial_notifications()
-        
-        # Additionally, we might need to refresh the dialog if it's still open,
-        # or simply close it. For now, let's assume the user will close the dialog.
-        # If the dialog needs to be refreshed live, its parent (dialog) would need a method to rebuild its content.
 
     def _clear_all_notifications_action(self):
         self.all_sample_notifications_data.clear()
