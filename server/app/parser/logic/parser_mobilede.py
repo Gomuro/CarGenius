@@ -60,7 +60,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
             headless=False,
             window_size=(1200, 1000),
             logger=logger,
-            user_agent=UserAgent().random
+            user_agent=UserAgent().chrome
         )
         # _driver_instance = new_driver # REMOVED
 
@@ -237,6 +237,12 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             car_data["key_features"]["power"] = power
                         except:
                             car_data["key_features"]["power"] = "Not found"
+
+                        try:
+                            fuel_type = features.find_element(By.CSS_SELECTOR, 'div[data-testid="vip-key-features-list-item-fuel"]').text.strip()
+                            car_data["key_features"]["fuel_type"] = fuel_type
+                        except:
+                            car_data["key_features"]["fuel_type"] = "Not found"
                             
                         try:
                             transmission = features.find_element(By.CSS_SELECTOR, 'div[data-testid="vip-key-features-list-item-transmission"]').text.strip()
@@ -268,21 +274,74 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                         except:
                             car_data["key_features"]["warranty_registration"] = "Not found"
 
-                        # Extract special features using data-testid
-                        # try:
-                        #     special_features_section = detail_soup.find("section", {"data-testid": "content-section"})
-                        #     if special_features_section:
-                        #         features = special_features_section.find_all("span", {"data-testid": "vip-feature-item"})
-                        #         car_data["special_features"] = [f.get_text(strip=True) for f in features]
-                        # except Exception as e:
-                        #     logger.error(f"❌ Error extracting special features: {str(e)}")
+                        # Extract special "Technische Daten"
+                        #===============TECHNICAL DATA==================
+                        try:
+                            # Find all dt elements with data-testid
+                            dt_elements = driver.find_elements(By.CSS_SELECTOR, "dl dt[data-testid]")
+                            # find expand button
+                            try:
+                                expand_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Mehr anzeigen')]")
+                                for expand_button in expand_buttons:
+                                    expand_button.click()
+                                    logger.info("🔍 Clicked expand button")
+                                    time.sleep(1)
+                            except:
+                                logger.warning("⚠️ No expand button found")
+                                continue
+                            
+                            # Initialize technical data dictionary
+                            car_data["technical_data"] = {}
+                            
+                            # Process each dt element
+                            for dt in dt_elements:
+                                try:
+                                    # Get the data-testid value
+                                    data_testid = dt.get_attribute("data-testid")
+                                    logger.info(f"🔍 Processing technical data field: {data_testid}")
 
+                                    
+                                    
+                                    # Find the parent dl element
+                                    dl = dt.find_element(By.XPATH, "./..")
+                                    logger.debug(f"📑 Found parent dl element")
+                                    
+                                    # Find all dd elements within the same dl
+                                    dd_elements = dl.find_elements(By.TAG_NAME, "dd")
+                                    logger.debug(f"📑 Found {len(dd_elements)} dd elements")
+                                    
+                                    # Get the index of current dt element
+                                    dt_index = dl.find_elements(By.TAG_NAME, "dt").index(dt)
+                                    logger.debug(f"📑 Current dt index: {dt_index}")
+                                    
+                                    # Get corresponding dd element
+                                    dd = dd_elements[dt_index]
+                                    logger.debug(f"📑 Found corresponding dd element: {dd.text}")
+                                    
+                                    # Extract text values
+                                    key = data_testid
+                                    value = dd.text.strip()
+                                    if value == "":
+                                        value = dd.text
+                                    logger.info(f"✅ Extracted {key}: {value}")
+                                    
+                                    # Store in technical_data dictionary
+                                    car_data["technical_data"][key] = value
+                                    logger.debug(f"💾 Stored {key} in technical_data dictionary")
+                                    
+                                except Exception as e:
+                                    logger.warning(f"Failed to extract technical data pair for {data_testid}: {str(e)}")
+                                    continue
+                                    
+                        except Exception as e:
+                            logger.error(f"Failed to extract technical data section: {str(e)}")
+                            car_data["technical_data"] = {}
+                        #===============================================
                         # Store the data instead of printing
                         # TODO: Add your storage logic here (database, file, etc.)
                         logger.info("📦 Extracted car data:")
                         logger.info(car_data)
-                        #===============================================
-
+                        
                         # Close current tab and switch back to main window (if a new tab was opened)
                         if driver.current_window_handle != main_window:
                             driver.close()
