@@ -203,8 +203,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                         # Extract and store car details here
                         car_data = {
                             "basic_info": {},
-                            "key_features": [],
-                            "special_features": []
+                            "key_features": {}
                         }
 
                         # Extract basic info from main listing
