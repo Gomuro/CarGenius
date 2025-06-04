@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 # import atexit # Removed atexit
@@ -362,11 +363,29 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             logger.warning(f"⚠️ Failed to extract equipment: {str(e)}")
                             car_data["equipment"] = {}
                         #============================================
+                        #=================LOCATION==================
+                        try:
+                            logger.info("🔍 Looking for location section...")
+                            # Find the map info popup using static data-testid
+                            location_popup = driver.find_element(By.CSS_SELECTOR, 'div[data-testid="dealer-map-info-popup"]')
+                            # Find address by position relative to known elements
+                            address_span = location_popup.find_element(By.XPATH, './/span[preceding-sibling::b and following-sibling::a]')
+                            car_data["basic_info"]["location"] = address_span.text.strip()
+                            logger.info(f"✅ Extracted location: {car_data['basic_info']['location']}")
+                        except Exception as e:  
+                            logger.warning(f"⚠️ Failed to extract location: {str(e)}")
+                            car_data["basic_info"]["location"] = ""
+                        #============================================
                         
                         # Store the data instead of printing
                         # TODO: Add your storage logic here (database, file, etc.)
                         logger.info("📦 Extracted car data:")
                         logger.info(car_data)
+                        #============================================
+                        #==============JSON STORAGE==================
+                        with open(f"car_data_{brand}_{idx}.json", "w") as f:
+                            json.dump(car_data, f)
+                        #============================================
                         
                         # Close current tab and switch back to main window (if a new tab was opened)
                         if driver.current_window_handle != main_window:
