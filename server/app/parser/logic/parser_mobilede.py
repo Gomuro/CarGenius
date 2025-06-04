@@ -336,7 +336,34 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                         except Exception as e:
                             logger.error(f"Failed to extract technical data section: {str(e)}")
                             car_data["technical_data"] = {}
-                        #===============================================
+                        #============================================
+                        #=================EQUIPMENT==================
+                        try:
+                            logger.info("🔍 Looking for equipment section...")
+                            equipment_section = driver.find_element(By.CSS_SELECTOR, 'article[data-testid="vip-features-box"]')
+                            
+                            # Find the features list
+                            features_list = equipment_section.find_element(By.CSS_SELECTOR, 'ul[data-testid="vip-features-list"]')
+                            
+                            # Get all list items
+                            equipment_items = features_list.find_elements(By.CSS_SELECTOR, 'li')
+                            
+                            # Extract text from each item
+                            equipment = [item.text.strip() for item in equipment_items if item.text.strip()]
+                            
+                            # Store in car_data as dictionary with True values
+                            car_data["equipment"] = {item: True for item in equipment}
+                            
+                            if equipment:
+                                logger.info(f"✅ Extracted {len(equipment)} equipment items: {equipment}")
+                            else:
+                                logger.warning("⚠️ Found equipment section but no items detected")
+                            
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to extract equipment: {str(e)}")
+                            car_data["equipment"] = {}
+                        #============================================
+                        
                         # Store the data instead of printing
                         # TODO: Add your storage logic here (database, file, etc.)
                         logger.info("📦 Extracted car data:")
