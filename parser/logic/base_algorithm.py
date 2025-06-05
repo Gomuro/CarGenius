@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from server.app.parser.proxy import ProxyABC, EmptyProxy
+from ..proxy import ProxyABC, EmptyProxy
 
 class BaseAlgorithm(ABC):
     def __init__(self, executable_path: str,

@@ -1,16 +1,18 @@
+import json
 import time
 from datetime import datetime
 # import atexit # Removed atexit
 
 from server.app.GLOBAL import GLOBAL
-from server.app.parser.driver.driver import BaseSeleniumDriver
-from server.app.parser.proxy import ProxyABC, Proxy, EmptyProxy  # Proxy import removed
+from parser.driver.driver import BaseSeleniumDriver
+from proxy import (ProxyABC, Proxy, EmptyProxy)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 import logging
 from fake_useragent import UserAgent
+from parser.exceptions.driver import AccessDeniedError, NoProxyProvidedError  # Add at top
 
 # Set up logging with a more readable format
 logging.basicConfig(
@@ -60,7 +62,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
             headless=False,
             window_size=(1200, 1000),
             logger=logger,
-            user_agent=UserAgent().random
+            user_agent=UserAgent().chrome
         )
         # _driver_instance = new_driver # REMOVED
 
@@ -75,10 +77,25 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         try:
             ip = driver.find_element(By.TAG_NAME, "pre").text
             logger.info(f"✅ Current IP address: {ip}")
-            if isinstance(proxy, Proxy) and ip != proxy.host:
-                logger.warning(f"⚠️ Expected proxy IP {proxy.host} but got {ip}")
+            
+            if isinstance(proxy, Proxy):
+                expected_ip = proxy.host
+                if ip != expected_ip:
+                    logger.warning(f"⚠️ PROXY MISMATCH! Expected {expected_ip} but got {ip}")
+                    logger.error("❌ Proxy verification failed - using direct connection")
+                    # raise ValueError("Proxy IP mismatch detected")
+                else:
+                    logger.info(f"🔒 Proxy verified successfully ({ip} == {expected_ip})")
+            else:
+                logger.info("🔓 no proxy was provided skipping this proxy")
+                print(f"type(proxy): {type(proxy)}")
+                print(f"Proxy: {Proxy}")
+                print(f"proxy.__class__ == Proxy: {proxy.__class__ == Proxy}")
+                print(f"isinstance(proxy, Proxy): {isinstance(proxy, Proxy)}")
+                # raise NoProxyProvidedError("No proxy provided - removing this proxy")
+                
         except Exception as e:
-            logger.error(f"❌ Error checking IP: {str(e)}")
+            logger.error(f"❌ Critical error checking IP: {str(e)}")
             raise
 
         log_section("STARTING PARSING")
@@ -149,7 +166,23 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 WebDriverWait(driver, 30).until(
                     EC.presence_of_element_located((By.TAG_NAME, "body"))
                 )
+                # Check for access denied page
+                page_source = driver.page_source
+                if "Access Denied" in page_source and "Reference #" in page_source:
+                    ref_start = page_source.find("Reference #") + len("Reference #")
+                    ref_end = page_source.find("<", ref_start)
+                    ref_number = page_source[ref_start:ref_end].strip()
+                    logger.error(f"🚫 Access denied detected (Ref: {ref_number})")
+                    time.sleep(10)
+                    raise AccessDeniedError(f"Blocked with reference: {ref_number}")
                 time.sleep(30)  # Increased wait time to ensure page loads completely
+                
+                # Check if we're on mobile version
+                if "m.mobile.de" in driver.current_url:
+                    logger.warning("⚠️ Detected mobile version of the site")
+                    logger.info("⏳ Waiting 10 minutes before trying next proxy...")
+                    time.sleep(600)  # 10 minutes wait
+                    raise Exception("Mobile version detected - switching proxy")
                 
                 # Get and parse page content
                 page_source = driver.page_source
@@ -203,8 +236,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                         # Extract and store car details here
                         car_data = {
                             "basic_info": {},
-                            "key_features": [],
-                            "special_features": []
+                            "key_features": {}
                         }
 
                         # Extract basic info from main listing
@@ -237,6 +269,12 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             car_data["key_features"]["power"] = power
                         except:
                             car_data["key_features"]["power"] = "Not found"
+
+                        try:
+                            fuel_type = features.find_element(By.CSS_SELECTOR, 'div[data-testid="vip-key-features-list-item-fuel"]').text.strip()
+                            car_data["key_features"]["fuel_type"] = fuel_type
+                        except:
+                            car_data["key_features"]["fuel_type"] = "Not found"
                             
                         try:
                             transmission = features.find_element(By.CSS_SELECTOR, 'div[data-testid="vip-key-features-list-item-transmission"]').text.strip()
@@ -268,21 +306,119 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                         except:
                             car_data["key_features"]["warranty_registration"] = "Not found"
 
-                        # Extract special features using data-testid
-                        # try:
-                        #     special_features_section = detail_soup.find("section", {"data-testid": "content-section"})
-                        #     if special_features_section:
-                        #         features = special_features_section.find_all("span", {"data-testid": "vip-feature-item"})
-                        #         car_data["special_features"] = [f.get_text(strip=True) for f in features]
-                        # except Exception as e:
-                        #     logger.error(f"❌ Error extracting special features: {str(e)}")
+                        # Extract special "Technische Daten"
+                        #===============TECHNICAL DATA==================
+                        try:
+                            # Find all dt elements with data-testid
+                            dt_elements = driver.find_elements(By.CSS_SELECTOR, "dl dt[data-testid]")
+                            # find expand button
+                            try:
+                                expand_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Mehr anzeigen')]")
+                                for expand_button in expand_buttons:
+                                    expand_button.click()
+                                    logger.info("🔍 Clicked expand button")
+                                    time.sleep(1)
+                            except:
+                                logger.warning("⚠️ No expand button found")
+                                continue
+                            
+                            # Initialize technical data dictionary
+                            car_data["technical_data"] = {}
+                            
+                            # Process each dt element
+                            for dt in dt_elements:
+                                try:
+                                    # Get the data-testid value
+                                    data_testid = dt.get_attribute("data-testid")
+                                    logger.info(f"🔍 Processing technical data field: {data_testid}")
 
+                                    
+                                    
+                                    # Find the parent dl element
+                                    dl = dt.find_element(By.XPATH, "./..")
+                                    logger.debug(f"📑 Found parent dl element")
+                                    
+                                    # Find all dd elements within the same dl
+                                    dd_elements = dl.find_elements(By.TAG_NAME, "dd")
+                                    logger.debug(f"📑 Found {len(dd_elements)} dd elements")
+                                    
+                                    # Get the index of current dt element
+                                    dt_index = dl.find_elements(By.TAG_NAME, "dt").index(dt)
+                                    logger.debug(f"📑 Current dt index: {dt_index}")
+                                    
+                                    # Get corresponding dd element
+                                    dd = dd_elements[dt_index]
+                                    logger.debug(f"📑 Found corresponding dd element: {dd.text}")
+                                    
+                                    # Extract text values
+                                    key = data_testid
+                                    value = dd.text.strip()
+                                    if value == "":
+                                        value = dd.text
+                                    logger.info(f"✅ Extracted {key}: {value}")
+                                    
+                                    # Store in technical_data dictionary
+                                    car_data["technical_data"][key] = value
+                                    logger.debug(f"💾 Stored {key} in technical_data dictionary")
+                                    
+                                except Exception as e:
+                                    logger.warning(f"Failed to extract technical data pair for {data_testid}: {str(e)}")
+                                    continue
+                                    
+                        except Exception as e:
+                            logger.error(f"Failed to extract technical data section: {str(e)}")
+                            car_data["technical_data"] = {}
+                        #============================================
+                        #=================EQUIPMENT==================
+                        try:
+                            logger.info("🔍 Looking for equipment section...")
+                            equipment_section = driver.find_element(By.CSS_SELECTOR, 'article[data-testid="vip-features-box"]')
+                            
+                            # Find the features list
+                            features_list = equipment_section.find_element(By.CSS_SELECTOR, 'ul[data-testid="vip-features-list"]')
+                            
+                            # Get all list items
+                            equipment_items = features_list.find_elements(By.CSS_SELECTOR, 'li')
+                            
+                            # Extract text from each item
+                            equipment = [item.text.strip() for item in equipment_items if item.text.strip()]
+                            
+                            # Store in car_data as dictionary with True values
+                            car_data["equipment"] = {item: True for item in equipment}
+                            
+                            if equipment:
+                                logger.info(f"✅ Extracted {len(equipment)} equipment items: {equipment}")
+                            else:
+                                logger.warning("⚠️ Found equipment section but no items detected")
+                            
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to extract equipment: {str(e)}")
+                            car_data["equipment"] = {}
+                        #============================================
+                        #=================LOCATION==================
+                        try:
+                            logger.info("🔍 Looking for location section...")
+                            # Find the map info popup using static data-testid
+                            location_popup = driver.find_element(By.CSS_SELECTOR, 'div[data-testid="dealer-map-info-popup"]')
+                            # Find address by position relative to known elements
+                            address_span = location_popup.find_element(By.XPATH, './/span[preceding-sibling::b and following-sibling::a]')
+                            car_data["basic_info"]["location"] = address_span.text.strip()
+                            logger.info(f"✅ Extracted location: {car_data['basic_info']['location']}")
+                        except Exception as e:  
+                            logger.warning(f"⚠️ Failed to extract location: {str(e)}")
+                            car_data["basic_info"]["location"] = ""
+                        #============================================
+                        
                         # Store the data instead of printing
                         # TODO: Add your storage logic here (database, file, etc.)
                         logger.info("📦 Extracted car data:")
                         logger.info(car_data)
-                        #===============================================
-
+                        #============================================
+                        #==============JSON STORAGE==================
+                        with open(f"car_data_{brand}_{idx}.json", "w") as f:
+                            json.dump(car_data, f)
+                        #============================================
+                        
                         # Close current tab and switch back to main window (if a new tab was opened)
                         if driver.current_window_handle != main_window:
                             driver.close()
