@@ -4,14 +4,15 @@ from datetime import datetime
 # import atexit # Removed atexit
 
 from server.app.GLOBAL import GLOBAL
-from server.app.parser.driver.driver import BaseSeleniumDriver
-from server.app.parser.proxy import ProxyABC, Proxy, EmptyProxy  # Proxy import removed
+from parser.driver.driver import BaseSeleniumDriver
+from proxy import (ProxyABC, Proxy, EmptyProxy)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 import logging
 from fake_useragent import UserAgent
+from parser.exceptions.driver import AccessDeniedError, NoProxyProvidedError  # Add at top
 
 # Set up logging with a more readable format
 logging.basicConfig(
@@ -76,10 +77,25 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         try:
             ip = driver.find_element(By.TAG_NAME, "pre").text
             logger.info(f"✅ Current IP address: {ip}")
-            if isinstance(proxy, Proxy) and ip != proxy.host:
-                logger.warning(f"⚠️ Expected proxy IP {proxy.host} but got {ip}")
+            
+            if isinstance(proxy, Proxy):
+                expected_ip = proxy.host
+                if ip != expected_ip:
+                    logger.warning(f"⚠️ PROXY MISMATCH! Expected {expected_ip} but got {ip}")
+                    logger.error("❌ Proxy verification failed - using direct connection")
+                    # raise ValueError("Proxy IP mismatch detected")
+                else:
+                    logger.info(f"🔒 Proxy verified successfully ({ip} == {expected_ip})")
+            else:
+                logger.info("🔓 no proxy was provided skipping this proxy")
+                print(f"type(proxy): {type(proxy)}")
+                print(f"Proxy: {Proxy}")
+                print(f"proxy.__class__ == Proxy: {proxy.__class__ == Proxy}")
+                print(f"isinstance(proxy, Proxy): {isinstance(proxy, Proxy)}")
+                # raise NoProxyProvidedError("No proxy provided - removing this proxy")
+                
         except Exception as e:
-            logger.error(f"❌ Error checking IP: {str(e)}")
+            logger.error(f"❌ Critical error checking IP: {str(e)}")
             raise
 
         log_section("STARTING PARSING")
@@ -150,7 +166,23 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 WebDriverWait(driver, 30).until(
                     EC.presence_of_element_located((By.TAG_NAME, "body"))
                 )
+                # Check for access denied page
+                page_source = driver.page_source
+                if "Access Denied" in page_source and "Reference #" in page_source:
+                    ref_start = page_source.find("Reference #") + len("Reference #")
+                    ref_end = page_source.find("<", ref_start)
+                    ref_number = page_source[ref_start:ref_end].strip()
+                    logger.error(f"🚫 Access denied detected (Ref: {ref_number})")
+                    time.sleep(10)
+                    raise AccessDeniedError(f"Blocked with reference: {ref_number}")
                 time.sleep(30)  # Increased wait time to ensure page loads completely
+                
+                # Check if we're on mobile version
+                if "m.mobile.de" in driver.current_url:
+                    logger.warning("⚠️ Detected mobile version of the site")
+                    logger.info("⏳ Waiting 10 minutes before trying next proxy...")
+                    time.sleep(600)  # 10 minutes wait
+                    raise Exception("Mobile version detected - switching proxy")
                 
                 # Get and parse page content
                 page_source = driver.page_source

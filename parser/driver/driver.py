@@ -11,11 +11,11 @@ import os
 
 import logging
 
-from server.app.parser.proxy import ProxyABC, Proxy, EmptyProxy
-from server.app.parser.proxy.connector import ProxyConnectorExtension
+from proxy import ProxyABC, Proxy, EmptyProxy
+from proxy.connector import ProxyConnectorExtension
 from utils.bot.scrollers import VerticalScroller
 from utils.selenium import driver_processes
-from server.app.parser.exceptions.driver import TryAgainPageError, BrowserClosedError
+from ..exceptions.driver import TryAgainPageError, BrowserClosedError
 
 class BaseSeleniumDriver(uc.Chrome):
     """
@@ -102,6 +102,14 @@ class BaseSeleniumDriver(uc.Chrome):
                     options.add_argument(f'--load-extension={proxy_connector.get_extension_dir()}')
                     # Universal proxy argument that works for both types
                     options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
+                else:
+                    print("No proxy provided ")
+                    print(f"type(self.proxy): {type(self.proxy)}")
+                    print(f"Proxy: {Proxy}")
+                    print(f"self.proxy.__class__ == Proxy: {self.proxy.__class__ == Proxy}")
+                    print(f"isinstance(self.proxy, Proxy): {isinstance(self.proxy, Proxy)}")
+
+                    
 
                 # Store the service object on the instance
                 self.service = Service(self.executable_path)

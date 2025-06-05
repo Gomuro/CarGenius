@@ -1,8 +1,14 @@
+import sys
+import os
 import requests
 from datetime import datetime
 import logging
-from server.app.parser.logic.parser_mobilede import logic_mobilede
-from server.app.parser.proxy import Proxy, EmptyProxy
+from logic.parser_mobilede import logic_mobilede
+from proxy import Proxy, EmptyProxy
+from parser.exceptions.driver import AccessDeniedError, NoProxyProvidedError  # Add at top
+
+# Add project root to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Set up logging
 logging.basicConfig(
@@ -66,6 +72,30 @@ if __name__ == "__main__":
                 logger.info(f"🗑️ Removed failed proxy {proxy_str} from proxy.txt")
             except Exception as e:
                 logger.error(f"❌ Failed to remove proxy from file: {str(e)}")
+            continue
+        except AccessDeniedError as e:
+            logger.error(f"❌ Access denied blocked detected: {str(e)}")
+            # Remove failed proxy from file
+            try:
+                with open("proxy.txt", "r") as file:
+                    lines = file.readlines()
+                with open("proxy.txt", "w") as file:
+                    file.writelines([line for line in lines if line.strip() != proxy_str])
+                logger.info(f"🗑️ Removed blocked proxy {proxy_str} from proxy.txt")
+            except Exception as file_error:
+                logger.error(f"❌ Failed to remove proxy from file: {str(file_error)}")
+            continue
+        except NoProxyProvidedError as e:
+            logger.info(f"🔓 No proxy provided - removing this proxy: {str(e)}")
+            # Remove failed proxy from file
+            try:
+                with open("proxy.txt", "r") as file:
+                    lines = file.readlines()
+                with open("proxy.txt", "w") as file:
+                    file.writelines([line for line in lines if line.strip() != proxy_str])
+                logger.info(f"🗑️ Removed no proxy provided proxy {proxy_str} from proxy.txt")
+            except Exception as file_error:
+                logger.error(f"❌ Failed to remove proxy from file: {str(file_error)}")
             continue
         except Exception as e:
             logger.error(f"❌ Unexpected error with proxy {proxy_str}: {str(e)}")
