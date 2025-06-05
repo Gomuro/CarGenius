@@ -1,7 +1,8 @@
 # app/main.py
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from app.core.rate_limiter import limiter
 from app.routers import license, gpt, notify
+from app.routers.stats import license_stats, analytics
 from fastapi import Request
 from starlette.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
@@ -35,3 +36,5 @@ app.add_middleware(
 app.include_router(license.router, prefix=f"{API_PREFIX}/license", tags=["license"])
 app.include_router(gpt.router, prefix=f"{API_PREFIX}/gpt", tags=["gpt"])
 app.include_router(notify.router, prefix=f"{API_PREFIX}/ws", tags=["ws-notify"])
+app.include_router(license_stats.router, prefix=f"{API_PREFIX}/stats", tags=["stats"])
+app.include_router(analytics.router, prefix=f"{API_PREFIX}/analytics", tags=["analytics"])
