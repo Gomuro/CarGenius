@@ -40,22 +40,38 @@ if __name__ == "__main__":
     # Check if proxy is working with error handling
     for idx, proxy_str in enumerate(proxy_list_str, 1):
         try:
-            host, port_str = proxy_str.split(":")
-            port = int(port_str)
+            # Use the existing Proxy.from_user_format_string method to handle both formats
+            proxy_obj = Proxy.from_user_format_string(proxy_str)
             
-            proxy_dict_for_requests = {
-                'http': f'http://{host}:{port}',
-                'https': f'http://{host}:{port}'
-            }
+            # Check if we got a valid proxy object
+            if isinstance(proxy_obj, EmptyProxy):
+                logger.error(f"❌ Invalid proxy format: {proxy_str}")
+                continue
             
-            logger.info(f"🔍 Testing proxy {idx}/{len(proxy_list_str)}: {host}:{port}")
+            # Build proxy configuration for requests with authentication
+            if proxy_obj.username and proxy_obj.userpass:
+                # Format: http://username:password@host:port
+                auth_proxy_url = f"http://{proxy_obj.username}:{proxy_obj.userpass}@{proxy_obj.host}:{proxy_obj.port}"
+                proxy_dict_for_requests = {
+                    'http': auth_proxy_url,
+                    'https': auth_proxy_url
+                }
+                logger.info(f"🔍 Testing authenticated proxy {idx}/{len(proxy_list_str)}: {proxy_obj.host}:{proxy_obj.port} (user: {proxy_obj.username})")
+            else:
+                # No authentication - original format
+                proxy_dict_for_requests = {
+                    'http': f'http://{proxy_obj.host}:{proxy_obj.port}',
+                    'https': f'http://{proxy_obj.host}:{proxy_obj.port}'
+                }
+                logger.info(f"🔍 Testing proxy {idx}/{len(proxy_list_str)}: {proxy_obj.host}:{proxy_obj.port}")
+            
             response = requests.get("https://api.ipify.org", proxies=proxy_dict_for_requests, timeout=10)
             response.raise_for_status()
             logger.info(f"✅ Proxy check successful. IP: {response.text}")
             
-            active_proxy = Proxy(host=host, port=port)
+            # Use the parsed proxy object
             log_section("STARTING PARSER")
-            logic_mobilede(active_proxy)
+            logic_mobilede(proxy_obj)
             break
             
         except ValueError as e:

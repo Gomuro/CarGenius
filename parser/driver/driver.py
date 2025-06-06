@@ -100,8 +100,15 @@ class BaseSeleniumDriver(uc.Chrome):
                 if isinstance(self.proxy, Proxy):
                     proxy_connector = ProxyConnectorExtension(self.proxy)
                     options.add_argument(f'--load-extension={proxy_connector.get_extension_dir()}')
-                    # Universal proxy argument that works for both types
-                    options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
+                    
+                    # Use proper proxy URL format with authentication
+                    if self.proxy.username and self.proxy.userpass:
+                        proxy_url = f"http://{self.proxy.username}:{self.proxy.userpass}@{self.proxy.host}:{self.proxy.port}"
+                        options.add_argument(f'--proxy-server={proxy_url}')
+                    else:
+                        # No authentication - original format
+                        options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
+
                 else:
                     print("No proxy provided ")
                     print(f"type(self.proxy): {type(self.proxy)}")
