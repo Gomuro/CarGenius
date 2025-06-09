@@ -35,11 +35,11 @@ class TechnicalDetails(Base):
     id = Column(Integer, primary_key=True, index=True)
     # Relationships
     listing_id = Column(Integer, ForeignKey("listing_mobilede.id", ondelete="CASCADE"), unique=True)
-    listing = relationship("ListingMobileDe", back_populates="technical_details")
+    listing_mobilede = relationship("ListingMobileDe", back_populates="technical_details")
 
-    damage_condition = Column(String, index=True, nullable=True)  # Gebrauchtfahrzeug, Unfallfrei
-    category = Column(String, index=True, nullable=True)  # SUV / Geländewagen / Pickup
-    trim_line = Column(String, nullable=True)  # Advanced
+    damage_condition = Column(String, index=True, nullable=True)
+    category = Column(String, index=True, nullable=True)
+    trim_line = Column(String, nullable=True)
     sku = Column(String, unique=True, nullable=True)  # Individual code
     country_version = Column(String, nullable=True)  # Deutsche Ausführung
     power = Column(Integer, nullable=True)  # 210 kW (286 PS)
@@ -53,9 +53,11 @@ class TechnicalDetails(Base):
     door_count = Column(Integer, nullable=True)  # 4/5
     transmission = Column(String, index=True, nullable=True)  # Automatik
     emissions_sticker = Column(String, nullable=True)  # 4 (Grün)
-    first_registration = Column(Date, index=True, nullable=True)  # 02/2024
+    first_year_registration = Column(Integer, index=True, nullable=True)
+    first_month_registration = Column(Integer, index=True, nullable=True)
     number_of_previous_owners = Column(String, nullable=True)  # 1
-    hu = Column(Date, nullable=True)  # Hauptuntersuchung: 02/2027
+    hu_year = Column(Integer, nullable=True)
+    hu_month = Column(Integer, nullable=True)
     climatisation = Column(String, nullable=True)  # 3-Zonen-Klimaautomatik
     park_assists = Column(String, nullable=True)  # Vorne, Hinten, Kamera
     airbags = Column(String, nullable=True)  # Front-, Seiten- und weitere Airbags
@@ -73,7 +75,7 @@ class Equipment(Base):
     id = Column(Integer, primary_key=True, index=True)
     # Relationships
     listing_id = Column(Integer, ForeignKey("listing_mobilede.id", ondelete="CASCADE"), unique=True)
-    listing = relationship("ListingMobileDe", back_populates="equipment", uselist=False)
+    listing_mobilede = relationship("ListingMobileDe", back_populates="equipment", uselist=False)
 
     abs = Column(Boolean, default=False)
     adaptive_cruise_control = Column(Boolean, default=False)

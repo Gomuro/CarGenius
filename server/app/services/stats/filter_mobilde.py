@@ -1,13 +1,9 @@
 # app/services/stats/filters/filter_mobilde.py
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
-from sqlalchemy.sql.elements import BinaryExpression
-
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingFilter, TechnicalDetailsSchema, Equipmentschema
+from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema
 
 
-async def filtered_listings(filters: ListingFilter) -> list[ListingMobileDe]:
+def filtered_listings(filters: ListingSchema) -> list[ListingMobileDe]:
     """
     Get car listings filtered by the ListingFilter schema criteria.
     """
@@ -29,15 +25,10 @@ async def filtered_listings(filters: ListingFilter) -> list[ListingMobileDe]:
         conditions.append(ListingMobileDe.price <= filters.price_lte)
     if filters.price_gte:
         conditions.append(ListingMobileDe.price >= filters.price_gte)
-
     return conditions
 
-    # stmt = select(ListingMobileDe).where(and_(*conditions))
-    # result = await db.execute(stmt)
-    # return list(result.scalars().all())
 
-
-async def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[TechnicalDetails]:
+def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[TechnicalDetails]:
     """
     Get technical details filtered by the TechnicalDetailsSchema criteria.
     """
@@ -75,12 +66,16 @@ async def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[Technic
         conditions.append(TechnicalDetails.transmission.ilike(f"%{filters.transmission}%"))
     if filters.emissions_sticker:
         conditions.append(TechnicalDetails.emissions_sticker.ilike(f"%{filters.emissions_sticker}%"))
-    if filters.first_registration:
-        conditions.append(TechnicalDetails.first_registration == filters.first_registration)
+    if filters.first_year_registration:
+        conditions.append(TechnicalDetails.first_year_registration == filters.first_year_registration)
+    if filters.first_month_registration:
+        conditions.append(TechnicalDetails.first_month_registration == filters.first_month_registration)
     if filters.number_of_previous_owners:
         conditions.append(TechnicalDetails.number_of_previous_owners.ilike(f"%{filters.number_of_previous_owners}%"))
-    if filters.hu:
-        conditions.append(TechnicalDetails.hu == filters.hu)
+    if filters.hu_year:
+        conditions.append(TechnicalDetails.hu_year == filters.hu_year)
+    if filters.hu_month:
+        conditions.append(TechnicalDetails.hu_month == filters.hu_month)
     if filters.climatisation:
         conditions.append(TechnicalDetails.climatisation.ilike(f"%{filters.climatisation}%"))
     if filters.park_assists:
@@ -99,18 +94,18 @@ async def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[Technic
         conditions.append(TechnicalDetails.net_weight == filters.net_weight)
     if filters.waranty_registration:
         conditions.append(TechnicalDetails.waranty_registration == filters.waranty_registration)
-
     return conditions
 
 
-async def filtered_equipment(filters: Equipmentschema) -> list[BinaryExpression]:
-    """
-    Get equipment filtered by the Equipmentschema criteria.
+def filtered_equipment(filters: EquipmentSchema) -> list[Equipment]:
+    """"
+    Get equipment filtered by the EquipmentSchema criteria.
     """
     conditions = []  # List to hold filter conditions
     filter_data = filters.dict(exclude_unset=True)  # Convert schema to dictionary and exclude unset fields
     for field_name, value in filter_data.items():  # Iterate over each field and value in the filter data
-        if hasattr(Equipment, field_name):  # Check if the Equipment model has the field
-            conditions.append(
-                getattr(Equipment, field_name).is_(value))  # Append the condition to the list if value is not None
+        if value is not None:
+            equipment_field = getattr(Equipment, field_name, None)  # Get the field from the Equipment model
+            if equipment_field is not None:  # Check if the field exists in the Equipment model
+                conditions.append(equipment_field == value)
     return conditions

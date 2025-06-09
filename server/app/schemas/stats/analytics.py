@@ -3,38 +3,7 @@ from datetime import datetime, date
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-
-class ListingFilter(BaseModel):
-    brand: Optional[str] = Field(None, description="Filter by car brand")
-    model: Optional[str] = Field(None, description="Filter by car model")
-    registration_year: Optional[int] = Field(None, description="Filter by registration year")
-    mileage: Optional[float] = Field(None, description="Filter by mileage")
-    city_or_postal_code: Optional[str] = Field(None, description="Filter by city or postal code")
-    color: Optional[str] = Field(None, description="Filter by car color")
-    price_lte: Optional[float] = Field(None, description="Filter by maximum price")
-    price_gte: Optional[float] = Field(None, description="Filter by minimum price")
-
-
-class ListingOut(BaseModel):
-    id: int = Field(..., description="Unique identifier for the car listing")
-    created_at: datetime = Field(..., description="Timestamp when the car listing was created")
-    brand: str = Field(..., description="Brand of the car")
-    model: str = Field(..., description="Model of the car")
-    registration_year: int = Field(..., description="Year the car was registered")
-    mileage: Optional[float] = Field(None, description="Mileage of the car in kilometers")
-    city_or_postal_code: Optional[str] = Field(None, description="City or postal code where the car is located")
-    color: Optional[str] = Field(None, description="Color of the car")
-    price: float = Field(..., description="Price of the car in the specified currency")
-    currency: Optional[str] = Field(..., description="Currency of the price, e.g., EUR")
-    url: str = Field(..., description="URL of the car listing")
-
-    class Config:
-        orm_mode = True
-
-
 """Schemas for car technical details and equipment, used in the analytics module."""
-
-
 class TechnicalDetailsSchema(BaseModel):
     damage_condition: Optional[str] = Field(None, description="damageCondition-item")  # Gebrauchtfahrzeug, Unfallfrei
     category: Optional[str] = Field(None, description="category-item")  # SUV / Geländewagen / Pickup
@@ -49,12 +18,14 @@ class TechnicalDetailsSchema(BaseModel):
     battery_certificate: Optional[str] = Field(None, description="batteryCertificate-item")  # Getestet vom Händler
     battery_range: Optional[int] = Field(None, description="batteryRange-item")  # 500 km
     num_seats: Optional[int] = Field(None, description="numSeats-item")  # 5
-    door_count: Optional[str] = Field(None, description="doorCount-item")  # 4/5
+    door_count: Optional[int] = Field(None, description="doorCount-item")  # 4/5
     transmission: Optional[str] = Field(None, description="transmission-item")  # Automatik
     emissions_sticker: Optional[str] = Field(None, description="emissionsSticker-item")  # 4 (Grün)
-    first_registration: Optional[date] = Field(None, description="firstRegistration-item")  # 02/2024  needs  2024-02-01
+    first_year_registration: Optional[int] = Field(None, description="firstRegistration-item")
+    first_month_registration: Optional[int] = Field(None, description="firstRegistration-item")
     number_of_previous_owners: Optional[str] = Field(None, description="numberOfPreviousOwners-item")  # 1
-    hu: Optional[date] = Field(None, description="hu-item")  # Hauptuntersuchung (TO): 02/2027
+    hu_year: Optional[int] = Field(None, description="hu-item")
+    hu_month: Optional[int] = Field(None, description="hu-item")
     climatisation: Optional[str] = Field(None, description="climatisation-item")  # 3-Zonen-Klimaautomatik
     park_assists: Optional[str] = Field(None, description="parkAssists-item")  # Vorne, Hinten, Kamera
     airbags: Optional[str] = Field(None, description="airbag-item")  # Front-, Seiten- und weitere Airbags
@@ -72,9 +43,7 @@ class TechnicalDetailsSchema(BaseModel):
 
 
 """Schemas for car equipment, used in the analytics module."""
-
-
-class Equipmentschema(BaseModel):
+class EquipmentSchema(BaseModel):
     abs: Optional[bool] = Field(None, description="Antiblockiersystem")
     adaptive_cruise_control: Optional[bool] = Field(None, description="Abstandstempomat")
     distance_warning: Optional[bool] = Field(None, description="Abstandswarner")
@@ -133,6 +102,54 @@ class Equipmentschema(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+
+
+"""Schemas for json to fill the database with car listings."""
+class ListingCreateRequestSchema(BaseModel):
+    brand: str = Field(..., description="Brand of the car")
+    model: str = Field(..., description="Model of the car")
+    registration_year: int = Field(..., description="Year the car was registered")
+    mileage: Optional[int] = Field(None, description="Mileage of the car in kilometers")
+    city_or_postal_code: Optional[str] = Field(None, description="City or postal code where the car is located")
+    color: Optional[str] = Field(None, description="Color of the car")
+    price: int = Field(..., description="Price of the car in the specified currency")
+    currency: Optional[str] = Field("EUR", description="Currency of the price, e.g., EUR")
+    url: str = Field(..., description="URL of the car listing")
+    technical_details: TechnicalDetailsSchema
+    equipment: EquipmentSchema
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+"""Filtering scheme for GET requests with query parameters."""
+class ListingSchema(BaseModel):
+    brand: Optional[str] = Field(None, description="Filter by car brand")
+    model: Optional[str] = Field(None, description="Filter by car model")
+    registration_year: Optional[int] = Field(None, description="Filter by registration year")
+    mileage: Optional[int] = Field(None, description="Filter by mileage")
+    city_or_postal_code: Optional[str] = Field(None, description="Filter by city or postal code")
+    color: Optional[str] = Field(None, description="Filter by car color")
+    price_lte: Optional[int] = Field(None, description="Filter by maximum price")
+    price_gte: Optional[int] = Field(None, description="Filter by minimum price")
+
+
+"""Schemas for car listings, used in the analytics module."""
+class ListingOut(BaseModel):
+    id: int = Field(..., description="Unique identifier for the car listing")
+    created_at: datetime = Field(..., description="Timestamp when the car listing was created")
+    brand: str = Field(..., description="Brand of the car")
+    model: str = Field(..., description="Model of the car")
+    registration_year: int = Field(..., description="Year the car was registered")
+    mileage: Optional[int] = Field(None, description="Mileage of the car in kilometers")
+    city_or_postal_code: Optional[str] = Field(None, description="City or postal code where the car is located")
+    color: Optional[str] = Field(None, description="Color of the car")
+    price: float = Field(..., description="Price of the car in the specified currency")
+    currency: Optional[str] = Field(..., description="Currency of the price, e.g., EUR")
+    url: str = Field(..., description="URL of the car listing")
+
+    class Config:
+        orm_mode = True
 
 
 class AvgPriceByBrand(BaseModel):

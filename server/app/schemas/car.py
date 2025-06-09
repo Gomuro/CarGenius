@@ -14,7 +14,8 @@ class CarBase(BaseModel):
     mileage: Optional[float] = None
     power: Optional[str] = None
     transmission: Optional[str] = None
-    first_registration: Optional[str] = None
+    first_year_registration: Optional[int] = None
+    first_mont_registration: Optional[int] = None
     number_of_previous_owners: Optional[str] = None
     battery_range: Optional[str] = None
     warranty_registration: Optional[str] = None

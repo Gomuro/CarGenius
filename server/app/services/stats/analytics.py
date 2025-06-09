@@ -1,38 +1,69 @@
 # app/services/stats/analytics.py
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
-from app.models.car import ListingMobileDe
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingFilter
+from sqlalchemy.orm import joinedload
+
+from app.models.car import ListingMobileDe, Equipment, TechnicalDetails
+from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
+    ListingCreateRequestSchema
+from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment
 
 
-#
-# async def get_filtered_listings(db: AsyncSession, filters: ListingFilter) -> list[ListingMobileDe]:
-#     """
-#     Get car listings filtered by the provided criteria.
-#     """
-#     conditions = [ListingMobileDe.is_active.is_(True)]
-#
-#     if filters.brand:
-#         conditions.append(ListingMobileDe.brand.ilike(f"%{filters.brand}%"))
-#     if filters.model:
-#         conditions.append(ListingMobileDe.model.ilike(f"%{filters.model}%"))
-#     if filters.registration_year:
-#         conditions.append(ListingMobileDe.registration_year == filters.registration_year)
-#     if filters.mileage:
-#         conditions.append(ListingMobileDe.mileage <= filters.mileage)
-#     if filters.city_or_postal_code:
-#         conditions.append(ListingMobileDe.city_or_postal_code.ilike(f"%{filters.city_or_postal_code}%"))
-#     if filters.color:
-#         conditions.append(ListingMobileDe.color.ilike(f"%{filters.color}%"))
-#     if filters.price_lte:
-#         conditions.append(ListingMobileDe.price <= filters.price_lte)
-#     if filters.price_gte:
-#         conditions.append(ListingMobileDe.price >= filters.price_gte)
-#
-#
-#     stmt = select(ListingMobileDe).where(and_(*conditions))
-#     result = await db.execute(stmt)
-#     return list(result.scalars().all())
+async def get_filterd(
+        db: AsyncSession,
+        listing_filters: ListingSchema,
+        tech_filters:TechnicalDetailsSchema,
+        equipment_filters: EquipmentSchema
+) -> list[ListingMobileDe]:
+    """Filtering listings with JOIN on TechnicalDetails and Equipment."""
+    listing_conditions = filtered_listings(listing_filters)
+    techdetails_conditions = filtered_tech_details(tech_filters)
+    equipment_conditions = filtered_equipment(equipment_filters)
+
+    stmt = (
+        select(ListingMobileDe)
+        .outerjoin(ListingMobileDe.technical_details)
+        .outerjoin(ListingMobileDe.equipment)
+        .options(
+            joinedload(ListingMobileDe.technical_details),
+                    joinedload(ListingMobileDe.equipment)
+        )
+        .where(and_(
+            *listing_conditions,
+            *techdetails_conditions,
+            *equipment_conditions
+        ))
+    )
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def listings_json_to_db(db: AsyncSession, data:ListingCreateRequestSchema) -> ListingMobileDe:
+    """
+    Save a listing to the database.
+    """
+    listing = ListingMobileDe(
+        brand = data.brand,
+        model = data.model,
+        registration_year = data.registration_year,
+        mileage = data.mileage,
+        city_or_postal_code = data.city_or_postal_code,
+        color = data.color,
+        price = data.price,
+        currency = data.currency,
+        url = data.url,
+    )
+
+    technical_details = TechnicalDetails(**data.technical_details.dict() if data.technical_details else {})
+    equipment = Equipment(**data.equipment.dict() if data.equipment else {})
+
+    listing.technical_details = technical_details
+    listing.equipment = equipment
+
+    db.add(listing)            # Add the listing to the session
+    await db.commit()          # Commit the session to save the listing
+    await db.refresh(listing)  # Refresh the instance to get the updated state
+    return listing
 
 
 async def get_avg_price_by_brand(limit: int, db: AsyncSession) -> list[AvgPriceByBrand]:
