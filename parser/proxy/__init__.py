@@ -166,23 +166,41 @@ class Proxy(ProxyABC):
         split_proxy = proxy_string.split(':')
 
         try:
-            if len(split_proxy) == 4:
-
+            # Handle format: username:password@host:port
+            if '@' in proxy_string:
+                # Split by @ to separate credentials from host:port
+                credentials_part, host_port_part = proxy_string.rsplit('@', 1)
+                
+                # Parse credentials (username:password)
+                if ':' in credentials_part:
+                    username, password = credentials_part.split(':', 1)
+                else:
+                    return EmptyProxy()
+                
+                # Parse host:port
+                if ':' in host_port_part:
+                    host, port_str = host_port_part.split(':', 1)
+                    port = int(port_str)
+                else:
+                    return EmptyProxy()
+                
+                return Proxy(host=host, port=port, username=username, userpass=password)
+            
+            # Handle existing format: host:port:username:password
+            elif len(split_proxy) == 4:
                 return Proxy(host=split_proxy[0],
                              port=int(split_proxy[1]),
                              username=split_proxy[2],
                              userpass=split_proxy[3])
 
+            # Handle format: host:port (no authentication)
             elif len(split_proxy) == 2:
-
                 return Proxy(host=split_proxy[0],
                              port=int(split_proxy[1]))
 
             else:
-
                 return EmptyProxy()
         except ValueError:
-
             return EmptyProxy()
 
     def to_user_format_string(self) -> str:

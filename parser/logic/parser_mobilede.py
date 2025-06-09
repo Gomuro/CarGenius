@@ -76,25 +76,50 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         logger.info("🌐 Testing proxy connection...")
         driver.get("https://api.ipify.org")
         time.sleep(5)
+        
         try:
-            ip = driver.find_element(By.TAG_NAME, "pre").text
-            logger.info(f"✅ Current IP address: {ip}")
+            # Try to find the IP in a <pre> element first
+            try:
+                ip = driver.find_element(By.TAG_NAME, "pre").text.strip()
+                logger.info(f"✅ Current IP address (from <pre>): {ip}")
+            except Exception:
+                # If <pre> element not found, try to get IP from page body
+                try:
+                    ip = driver.find_element(By.TAG_NAME, "body").text.strip()
+                    # Clean up the IP - it should be just the IP address
+                    import re
+                    ip_pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+                    ip_match = re.search(ip_pattern, ip)
+                    if ip_match:
+                        ip = ip_match.group()
+                        logger.info(f"✅ Current IP address (from body): {ip}")
+                    else:
+                        raise Exception("No valid IP address found in page content")
+                except Exception as body_error:
+                    # If all else fails, check the page source for debugging
+                    page_source = driver.page_source
+                    logger.error(f"❌ Page content: {page_source[:500]}...")
+                    raise Exception(f"Could not extract IP from page. Body error: {body_error}")
             
             if isinstance(proxy, Proxy):
-                expected_ip = proxy.host
-                if ip != expected_ip:
-                    logger.warning(f"⚠️ PROXY MISMATCH! Expected {expected_ip} but got {ip}")
-                    logger.error("❌ Proxy verification failed - using direct connection")
-                    # raise ValueError("Proxy IP mismatch detected")
+                # For authenticated proxies, we can't easily predict the IP 
+                # as it might be different from the proxy host IP
+                if proxy.username and proxy.userpass:
+                    logger.info(f"🔒 Authenticated proxy working - got IP: {ip}")
                 else:
-                    logger.info(f"🔒 Proxy verified successfully ({ip} == {expected_ip})")
+                    # For non-authenticated proxies, we can still check the IP
+                    expected_ip = proxy.host
+                    if ip != expected_ip:
+                        logger.warning(f"⚠️ PROXY MISMATCH! Expected {expected_ip} but got {ip}")
+                        logger.warning("Note: This might be normal for some proxy providers")
+                    else:
+                        logger.info(f"🔒 Proxy verified successfully ({ip} == {expected_ip})")
             else:
-                logger.info("🔓 no proxy was provided skipping this proxy")
-                print(f"type(proxy): {type(proxy)}")
-                print(f"Proxy: {Proxy}")
-                print(f"proxy.__class__ == Proxy: {proxy.__class__ == Proxy}")
-                print(f"isinstance(proxy, Proxy): {isinstance(proxy, Proxy)}")
-                # raise NoProxyProvidedError("No proxy provided - removing this proxy")
+                logger.info("🔓 No proxy was provided, using direct connection")
+                logger.debug(f"type(proxy): {type(proxy)}")
+                logger.debug(f"Proxy: {Proxy}")
+                logger.debug(f"proxy.__class__ == Proxy: {proxy.__class__ == Proxy}")
+                logger.debug(f"isinstance(proxy, Proxy): {isinstance(proxy, Proxy)}")
                 
         except Exception as e:
             logger.error(f"❌ Critical error checking IP: {str(e)}")
@@ -155,6 +180,12 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
             logger.info(f"✅ Found {len(car_brands)} car brands")
             for brand, url in car_brands.items():
                 logger.info(f"{brand}: {url}")
+            
+            for brand in car_brands_names:
+                # also add aditional brands that are not in the list
+                if brand not in car_brands.keys():
+                    #url example for 2 words brand https://suchen.mobile.de/auto/alfa-romeo.html
+                    car_brands[brand] = f"https://suchen.mobile.de/auto/{brand.lower().replace(' ', '-')}.html"
                 
             # Store the results in a more structured format if needed
             car_brands_data = {

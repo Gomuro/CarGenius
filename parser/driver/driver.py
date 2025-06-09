@@ -98,23 +98,31 @@ class BaseSeleniumDriver(uc.Chrome):
                     options.add_argument('--headless')
 
                 if isinstance(self.proxy, Proxy):
-                    proxy_connector = ProxyConnectorExtension(self.proxy)
-                    options.add_argument(f'--load-extension={proxy_connector.get_extension_dir()}')
-                    
-                    # Use proper proxy URL format with authentication
+                    # For authenticated proxies, use proxy extension
                     if self.proxy.username and self.proxy.userpass:
-                        proxy_url = f"http://{self.proxy.username}:{self.proxy.userpass}@{self.proxy.host}:{self.proxy.port}"
-                        options.add_argument(f'--proxy-server={proxy_url}')
+                        proxy_connector = ProxyConnectorExtension(self.proxy)
+                        ext_dir = proxy_connector.get_extension_dir()
+                        options.add_argument(f'--load-extension={ext_dir}')
+                        
+                        # Additional arguments to ensure proxy is used
+                        options.add_argument('--disable-extensions-except=' + ext_dir)
+                        options.add_argument('--enable-logging')
+                        options.add_argument('--log-level=0')
+                        options.add_argument('--no-proxy-server')  # Prevent default proxy conflicts
+                        
+                        self.logger.info(f"Using proxy extension for authenticated proxy: {self.proxy.host}:{self.proxy.port}")
+                        self.logger.info(f"Extension directory: {ext_dir}")
                     else:
-                        # No authentication - original format
+                        # For non-authenticated proxies, use --proxy-server only
                         options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
+                        self.logger.info(f"Using --proxy-server for non-authenticated proxy: {self.proxy.host}:{self.proxy.port}")
 
                 else:
-                    print("No proxy provided ")
-                    print(f"type(self.proxy): {type(self.proxy)}")
-                    print(f"Proxy: {Proxy}")
-                    print(f"self.proxy.__class__ == Proxy: {self.proxy.__class__ == Proxy}")
-                    print(f"isinstance(self.proxy, Proxy): {isinstance(self.proxy, Proxy)}")
+                    self.logger.info("No proxy provided")
+                    self.logger.debug(f"type(self.proxy): {type(self.proxy)}")
+                    self.logger.debug(f"Proxy: {Proxy}")
+                    self.logger.debug(f"self.proxy.__class__ == Proxy: {self.proxy.__class__ == Proxy}")
+                    self.logger.debug(f"isinstance(self.proxy, Proxy): {isinstance(self.proxy, Proxy)}")
 
                     
 

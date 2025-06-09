@@ -1,3 +1,4 @@
+import re
 import sys
 import os
 import requests
@@ -47,8 +48,7 @@ if __name__ == "__main__":
             if isinstance(proxy_obj, EmptyProxy):
                 logger.error(f"❌ Invalid proxy format: {proxy_str}")
                 continue
-            
-            # Build proxy configuration for requests with authentication
+                
             if proxy_obj.username and proxy_obj.userpass:
                 # Format: http://username:password@host:port
                 auth_proxy_url = f"http://{proxy_obj.username}:{proxy_obj.userpass}@{proxy_obj.host}:{proxy_obj.port}"
