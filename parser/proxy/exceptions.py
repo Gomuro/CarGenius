@@ -1,0 +1,2 @@
+class ProxyError(BaseException):
+    pass
