@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select
 from app.models.license import LicenseKey
 
 
@@ -22,7 +22,6 @@ async def generate_license_key(db: AsyncSession, client_info: str = None, expire
     await db.commit()
     await db.refresh(licens_obj)
     return licens_obj
-
 
 
 async def validate_license_key(key: str, client_info: str, db: AsyncSession) -> bool:
