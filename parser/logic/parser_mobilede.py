@@ -41,6 +41,33 @@ def log_section(title):
     """Helper function to create section headers in logs"""
     logger.info(f"\n{'='*50}\n{title}\n{'='*50}")
 
+def wait_and_find_clickable_element(driver, by, selector, timeout=10, scroll_into_view=True):
+    """
+    Helper function to wait for an element to be present, visible, and clickable
+    Works better in both headless and windowed modes
+    """
+    try:
+        # First wait for element to be present
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((by, selector))
+        )
+        
+        if scroll_into_view:
+            # Scroll element into view
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+            time.sleep(1)
+        
+        # Wait for element to be clickable
+        clickable_element = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable(element)
+        )
+        
+        return clickable_element
+        
+    except Exception as e:
+        logger.debug(f"Failed to find clickable element {selector}: {str(e)}")
+        return None
+
 def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
     driver = None
     start_time = datetime.now()
@@ -61,7 +88,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         driver = BaseSeleniumDriver(
             executable_path=GLOBAL.PATH.CHROMEDRIVER_PATH,
             proxy=proxy,
-            headless=False,
+            headless=True,
             window_size=(1200, 1000),
             logger=logger,
             user_agent=UserAgent().chrome
@@ -339,15 +366,35 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             try:
                                 dt_elements = driver.find_elements(By.CSS_SELECTOR, "dl dt[data-testid]")
                                 
+                                # find expand button with better waiting and error handling
                                 try:
-                                    expand_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Mehr anzeigen')]")
+                                    logger.info("🔍 Looking for expand buttons...")
+                                    # Wait for buttons to be present and clickable
+                                    expand_buttons = WebDriverWait(driver, 10).until(
+                                        EC.presence_of_all_elements_located((By.XPATH, "//button[contains(text(), 'Mehr anzeigen')]"))
+                                    )
+                                    
                                     for expand_button in expand_buttons:
-                                        expand_button.click()
-                                        logger.info("🔍 Clicked expand button")
-                                        time.sleep(1)
-                                except:
-                                    logger.warning("⚠️ No expand button found")
-                                    continue
+                                        try:
+                                            # Scroll button into view
+                                            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", expand_button)
+                                            time.sleep(1)
+                                            
+                                            # Wait for button to be clickable
+                                            WebDriverWait(driver, 5).until(EC.element_to_be_clickable(expand_button))
+                                            
+                                            # Click using JavaScript to avoid interception issues
+                                            driver.execute_script("arguments[0].click();", expand_button)
+                                            logger.info("🔍 Successfully clicked expand button")
+                                            time.sleep(2)  # Wait for content to expand
+                                            
+                                        except Exception as click_error:
+                                            logger.warning(f"⚠️ Failed to click expand button: {str(click_error)}")
+                                            continue
+                                            
+                                except Exception as find_error:
+                                    logger.warning(f"⚠️ No expand buttons found or not clickable: {str(find_error)}")
+                                    # Don't continue here, just proceed without expanding
                                 
                                 # Initialize technical data dictionary
                                 car_data["technical_data"] = {}
@@ -608,16 +655,35 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             try:
                                 # Find all dt elements with data-testid
                                 dt_elements = driver.find_elements(By.CSS_SELECTOR, "dl dt[data-testid]")
-                                # find expand button
+                                # find expand button with better waiting and error handling
                                 try:
-                                    expand_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Mehr anzeigen')]")
+                                    logger.info("🔍 Looking for expand buttons...")
+                                    # Wait for buttons to be present and clickable
+                                    expand_buttons = WebDriverWait(driver, 10).until(
+                                        EC.presence_of_all_elements_located((By.XPATH, "//button[contains(text(), 'Mehr anzeigen')]"))
+                                    )
+                                    
                                     for expand_button in expand_buttons:
-                                        expand_button.click()
-                                        logger.info("🔍 Clicked expand button")
-                                        time.sleep(1)
-                                except:
-                                    logger.warning("⚠️ No expand button found")
-                                    continue
+                                        try:
+                                            # Scroll button into view
+                                            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", expand_button)
+                                            time.sleep(1)
+                                            
+                                            # Wait for button to be clickable
+                                            WebDriverWait(driver, 5).until(EC.element_to_be_clickable(expand_button))
+                                            
+                                            # Click using JavaScript to avoid interception issues
+                                            driver.execute_script("arguments[0].click();", expand_button)
+                                            logger.info("🔍 Successfully clicked expand button")
+                                            time.sleep(2)  # Wait for content to expand
+                                            
+                                        except Exception as click_error:
+                                            logger.warning(f"⚠️ Failed to click expand button: {str(click_error)}")
+                                            continue
+                                            
+                                except Exception as find_error:
+                                    logger.warning(f"⚠️ No expand buttons found or not clickable: {str(find_error)}")
+                                    # Don't continue here, just proceed without expanding
                                 
                                 # Initialize technical data dictionary
                                 car_data["technical_data"] = {}
@@ -717,19 +783,52 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                                 validated_data = validator.validate(car_data)
                                 logger.info("📦 Validated car data:")
                                 logger.info(validated_data)
-                                
-                                # Store both raw and validated data
-                                with open(f"car_data_raw_{brand}_{idx}.json", "w", encoding='utf-8') as f:
-                                    json.dump(car_data, f, ensure_ascii=False, indent=2)
-                                
-                                with open(f"car_data_validated_{brand}_{idx}.json", "w", encoding='utf-8') as f:
-                                    json.dump(validated_data, f, ensure_ascii=False, indent=2)
-                                    
+
+                                # === RAW DATA ===
+                                try:
+                                    with open("raw_cars_data.json", "r", encoding="utf-8") as f:
+                                        raw_data = json.load(f)
+                                        if not isinstance(raw_data, list):
+                                            raw_data = [raw_data]
+                                except (FileNotFoundError, json.JSONDecodeError):
+                                    raw_data = []
+
+                                raw_data.append(car_data)
+
+                                with open("raw_cars_data.json", "w", encoding="utf-8") as f:
+                                    json.dump(raw_data, f, ensure_ascii=False, indent=2)
+
+                                # === VALIDATED DATA ===
+                                try:
+                                    with open("validated_cars_data.json", "r", encoding="utf-8") as f:
+                                        validated_list = json.load(f)
+                                        if not isinstance(validated_list, list):
+                                            validated_list = [validated_list]
+                                except (FileNotFoundError, json.JSONDecodeError):
+                                    validated_list = []
+
+                                validated_list.append(validated_data)
+
+                                with open("validated_cars_data.json", "w", encoding="utf-8") as f:
+                                    json.dump(validated_list, f, ensure_ascii=False, indent=2)
+
                             except Exception as validation_error:
                                 logger.error(f"❌ Validation failed: {str(validation_error)}")
-                                # Still save raw data even if validation fails
-                                with open(f"car_data_raw_{brand}_{idx}.json", "w", encoding='utf-8') as f:
-                                    json.dump(car_data, f, ensure_ascii=False, indent=2)
+
+                                # Запис тільки raw_cars_data.json навіть при помилці
+                                try:
+                                    with open("raw_cars_data.json", "r", encoding="utf-8") as f:
+                                        raw_data = json.load(f)
+                                        if not isinstance(raw_data, list):
+                                            raw_data = [raw_data]
+                                except (FileNotFoundError, json.JSONDecodeError):
+                                    raw_data = []
+
+                                raw_data.append(car_data)
+
+                                with open("raw_cars_data.json", "w", encoding="utf-8") as f:
+                                    json.dump(raw_data, f, ensure_ascii=False, indent=2)
+
                             #============================================
                             
                             # Close current tab and switch back to main window (if a new tab was opened)

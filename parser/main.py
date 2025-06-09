@@ -65,9 +65,9 @@ if __name__ == "__main__":
                 }
                 logger.info(f"🔍 Testing proxy {idx}/{len(proxy_list_str)}: {proxy_obj.host}:{proxy_obj.port}")
             
-            response = requests.get("https://api.ipify.org", proxies=proxy_dict_for_requests, timeout=10)
-            response.raise_for_status()
-            logger.info(f"✅ Proxy check successful. IP: {response.text}")
+            # response = requests.get("https://api.ipify.org", proxies=proxy_dict_for_requests, timeout=10)
+            # response.raise_for_status()
+            # logger.info(f"✅ Proxy check successful. IP: {response.text}")
             
             # Use the parsed proxy object
             log_section("STARTING PARSER")
