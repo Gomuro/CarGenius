@@ -68,6 +68,25 @@ def wait_and_find_clickable_element(driver, by, selector, timeout=10, scroll_int
         logger.debug(f"Failed to find clickable element {selector}: {str(e)}")
         return None
 
+def has_contact_button(container):
+    """
+    Check if a container element has a contact button (indicating it's a real car listing)
+    """
+    contact_button_selectors = [
+        'button[data-testid="listing-action-email"]',
+    ]
+    
+    for selector in contact_button_selectors:
+        try:
+            button = container.find_element(By.CSS_SELECTOR, selector)
+            if button and button.is_displayed():
+                logger.debug(f"✅ Found contact button with selector: {selector}")
+                return True
+        except:
+            continue
+    
+    return False
+
 def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
     driver = None
     start_time = datetime.now()
@@ -249,29 +268,46 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                     # time.sleep(600)  # 10 minutes wait
                     # raise Exception("Mobile version detected - switching proxy")
                     
-                    list_of_css_selectors = [
+                    # Find all potential listing containers first
+                    logger.info("🔍 Looking for all potential listing containers...")
+                    potential_containers = []
+                    
+                    # Try different container selectors that might contain car listings
+                    container_selectors = [
                         '[data-testid^="srp-top-ad"]',
-                        '[data-testid^="srp-regular-ad"]',
+                        '[data-testid^="srp-regular-ad"]', 
                         '[data-testid^="srp-eyecatcher-ad"]',
+                        'article[data-testid*="listing"]',
+                        'div[data-testid*="listing"]',
+                        'article[class*="listing"]',
+                        'div[class*="listing"]'
                     ]
                     
-                    search_results = []
-                    for css_selector in list_of_css_selectors:
+                    for selector in container_selectors:
                         try:
-                            results = WebDriverWait(driver, 30).until(
-                                EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_selector))
-                            )
-                            # add results to search_results
-                            search_results.extend(results)
-                            break
+                            containers = driver.find_elements(By.CSS_SELECTOR, selector)
+                            potential_containers.extend(containers)
                         except:
                             continue
-                    if len(search_results) == 0:
-                        logger.error(f"❌ No search results found for {brand}")
-                        continue
-                    logger.info(f"✅ Found {len(search_results)} listings for {brand}")
                     
-                    smart_parser_cooldown = 10
+                    logger.info(f"📦 Found {len(potential_containers)} potential containers")
+                    
+                    # Filter containers to only include those with contact buttons
+                    search_results = []
+                    for container in potential_containers:
+                        if has_contact_button(container):
+                            search_results.append(container)
+                            logger.debug(f"✅ Container has contact button - added to search results")
+                        else:
+                            logger.debug(f"❌ No contact button found in container - skipping")
+                            continue
+                    
+                    if len(search_results) == 0:
+                        logger.error(f"❌ No car listings with contact buttons found for {brand}")
+                        continue
+                    logger.info(f"✅ Found {len(search_results)} actual car listings with contact buttons for {brand}")
+                    
+                    smart_parser_cooldown = 100
                     current_result_parsed = 0
                     
                     for idx, result in enumerate(search_results, 1):
@@ -479,25 +515,53 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             logger.info("📦 Extracted car data:")
                             logger.info(car_data)
                             
+                            # Check for duplicates before validation
+                            is_duplicate = False
+                            
+                            # Check if car already exists in raw data
+                            try:
+                                with open("raw_cars_data.json", "r", encoding="utf-8") as f:
+                                    raw_data = json.load(f)
+                                    if car_data["basic_info"]["url"] in [item["basic_info"]["url"] for item in raw_data]:
+                                        logger.info("🔍 Car already exists in raw_cars_data.json - skipping")
+                                        is_duplicate = True
+                            except (FileNotFoundError, json.JSONDecodeError):
+                                raw_data = []
+                            
+                            # Skip this car if it's a duplicate
+                            if is_duplicate:
+                                continue
+                                
                             # Validate the extracted data
                             try:
                                 logger.info("🔧 Validating extracted data...")
                                 validated_data = validator.validate(car_data)
                                 logger.info("📦 Validated car data:")
                                 logger.info(validated_data)
-                                
-                                # Store both raw and validated data
-                                with open(f"car_data_raw_{brand}_{idx}.json", "w", encoding='utf-8') as f:
-                                    json.dump(car_data, f, ensure_ascii=False, indent=2)
-                                
-                                with open(f"car_data_validated_{brand}_{idx}.json", "w", encoding='utf-8') as f:
-                                    json.dump(validated_data, f, ensure_ascii=False, indent=2)
+
+                                # === RAW DATA ===
+                                raw_data.append(car_data)
+                                with open("raw_cars_data.json", "w", encoding="utf-8") as f:
+                                    json.dump(raw_data, f, ensure_ascii=False, indent=2)
+
+                                # === VALIDATED DATA ===
+                                try:
+                                    with open("validated_cars_data.json", "r", encoding="utf-8") as f:
+                                        validated_list = json.load(f)
+                                except (FileNotFoundError, json.JSONDecodeError):
+                                    validated_list = []
+
+                                validated_list.append(validated_data)
+                                with open("validated_cars_data.json", "w", encoding="utf-8") as f:
+                                    json.dump(validated_list, f, ensure_ascii=False, indent=2)
                                     
                             except Exception as validation_error:
                                 logger.error(f"❌ Validation failed: {str(validation_error)}")
-                                # Still save raw data even if validation fails
-                                with open(f"car_data_raw_{brand}_{idx}.json", "w", encoding='utf-8') as f:
-                                    json.dump(car_data, f, ensure_ascii=False, indent=2)
+                                
+                                # Save only to raw_cars_data.json even on validation failure
+                                raw_data.append(car_data)
+                                with open("raw_cars_data.json", "w", encoding="utf-8") as f:
+                                    json.dump(raw_data, f, ensure_ascii=False, indent=2)
                             #============================================
                             
                             current_result_parsed += 1
@@ -523,12 +587,44 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                     page_source = driver.page_source
                     soup = BeautifulSoup(page_source, "html.parser")
                     
-                    # Find all car listings using Selenium instead of BeautifulSoup
-                    search_results = WebDriverWait(driver, 30).until(
-                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, '[data-testid^="result-listing-"]'))
-                    )
+                    # Find all potential listing containers first
+                    logger.info("🔍 Looking for all potential listing containers...")
+                    potential_containers = []
                     
-                    logger.info(f"✅ Found {len(search_results)} listings for {brand}")
+                    # Try different container selectors that might contain car listings
+                    container_selectors = [
+                        '[data-testid^="result-listing-"]',
+                        'article[data-testid*="listing"]',
+                        'div[data-testid*="listing"]',
+                        'article[class*="listing"]',
+                        'div[class*="listing"]',
+                        'article[data-testid*="result"]',
+                        'div[data-testid*="result"]'
+                    ]
+                    
+                    for selector in container_selectors:
+                        try:
+                            containers = driver.find_elements(By.CSS_SELECTOR, selector)
+                            potential_containers.extend(containers)
+                        except:
+                            continue
+                    
+                    logger.info(f"📦 Found {len(potential_containers)} potential containers")
+                    
+                    # Filter containers to only include those with contact buttons
+                    search_results = []
+                    for container in potential_containers:
+                        if has_contact_button(container):
+                            search_results.append(container)
+                            logger.debug(f"✅ Container has contact button - added to search results")
+                        else:
+                            logger.debug(f"❌ No contact button found in container - skipping")
+                            continue
+                    
+                    if len(search_results) == 0:
+                        logger.error(f"❌ No car listings with contact buttons found for {brand}")
+                        continue
+                    logger.info(f"✅ Found {len(search_results)} actual car listings with contact buttons for {brand}")
                     
                     smart_parser_cooldown = 10
                     current_result_parsed = 0
@@ -777,6 +873,23 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             logger.info("📦 Extracted car data:")
                             logger.info(car_data)
                             
+                            # Check for duplicates before validation
+                            is_duplicate = False
+                            
+                            # Check if car already exists in raw data
+                            try:
+                                with open("raw_cars_data.json", "r", encoding="utf-8") as f:
+                                    raw_data = json.load(f)
+                                    if car_data["basic_info"]["url"] in [item["basic_info"]["url"] for item in raw_data]:
+                                        logger.info("🔍 Car already exists in raw_cars_data.json - skipping")
+                                        is_duplicate = True
+                            except (FileNotFoundError, json.JSONDecodeError):
+                                raw_data = []
+                            
+                            # Skip this car if it's a duplicate
+                            if is_duplicate:
+                                continue
+                                
                             # Validate the extracted data
                             try:
                                 logger.info("🔧 Validating extracted data...")
@@ -785,16 +898,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                                 logger.info(validated_data)
 
                                 # === RAW DATA ===
-                                try:
-                                    with open("raw_cars_data.json", "r", encoding="utf-8") as f:
-                                        raw_data = json.load(f)
-                                        if not isinstance(raw_data, list):
-                                            raw_data = [raw_data]
-                                except (FileNotFoundError, json.JSONDecodeError):
-                                    raw_data = []
-
                                 raw_data.append(car_data)
-
                                 with open("raw_cars_data.json", "w", encoding="utf-8") as f:
                                     json.dump(raw_data, f, ensure_ascii=False, indent=2)
 
@@ -802,30 +906,18 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                                 try:
                                     with open("validated_cars_data.json", "r", encoding="utf-8") as f:
                                         validated_list = json.load(f)
-                                        if not isinstance(validated_list, list):
-                                            validated_list = [validated_list]
                                 except (FileNotFoundError, json.JSONDecodeError):
                                     validated_list = []
 
                                 validated_list.append(validated_data)
-
                                 with open("validated_cars_data.json", "w", encoding="utf-8") as f:
                                     json.dump(validated_list, f, ensure_ascii=False, indent=2)
 
                             except Exception as validation_error:
                                 logger.error(f"❌ Validation failed: {str(validation_error)}")
 
-                                # Запис тільки raw_cars_data.json навіть при помилці
-                                try:
-                                    with open("raw_cars_data.json", "r", encoding="utf-8") as f:
-                                        raw_data = json.load(f)
-                                        if not isinstance(raw_data, list):
-                                            raw_data = [raw_data]
-                                except (FileNotFoundError, json.JSONDecodeError):
-                                    raw_data = []
-
+                                # Save only to raw_cars_data.json even on validation failure
                                 raw_data.append(car_data)
-
                                 with open("raw_cars_data.json", "w", encoding="utf-8") as f:
                                     json.dump(raw_data, f, ensure_ascii=False, indent=2)
 
