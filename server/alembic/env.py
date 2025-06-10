@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine
-from app.models import license, gpt
+from app.models import license, gpt, car
 from app.core.database import Base
 from dotenv import load_dotenv
 
