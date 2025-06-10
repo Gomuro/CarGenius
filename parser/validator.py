@@ -102,6 +102,9 @@ class CarDataValidator:
         # Extract mileage from mileage string
         mileage_str = key_features.get('mileage', '')
         mileage = self._parse_mileage(mileage_str)
+
+        # Extract mobile.de id
+        mobile_de_id = basic_info.get('mobile_de_id', '')
         
         # Extract city/postal code from location
         location = basic_info.get('location', '')
@@ -117,6 +120,7 @@ class CarDataValidator:
             'price': price,
             'currency': 'EUR',
             'url': basic_info.get('url', ''),
+            'mobile_de_id': mobile_de_id,
             'is_active': True
         }
 
@@ -184,6 +188,11 @@ class CarDataValidator:
         """Extract price as integer from price string"""
         if not price_str:
             return 0
+        
+        # Handle multiple prices - take the last one (usually discounted)
+        if '\n' in price_str:
+            price_str = price_str.strip().split('\n')[-1]
+    
         # Remove everything except digits
         numbers = re.findall(r'\d+', price_str.replace('.', '').replace(',', ''))
         return int(''.join(numbers)) if numbers else 0

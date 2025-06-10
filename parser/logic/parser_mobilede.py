@@ -1,5 +1,6 @@
 import json
 import time
+import threading
 from datetime import datetime
 # import atexit # Removed atexit
 
@@ -41,6 +42,70 @@ def log_section(title):
     """Helper function to create section headers in logs"""
     logger.info(f"\n{'='*50}\n{title}\n{'='*50}")
 
+class AccessDeniedMonitor:
+    """Background monitor that checks for access denied every 5 seconds"""
+    
+    def __init__(self, driver):
+        self.driver = driver
+        self.monitoring = False
+        self.thread = None
+        self.access_denied_detected = False
+        self.ref_number = None
+        self.detection_location = None
+        
+    def start_monitoring(self):
+        """Start background monitoring"""
+        if not self.monitoring:
+            self.monitoring = True
+            self.access_denied_detected = False
+            self.thread = threading.Thread(target=self._monitor_loop, daemon=True)
+            self.thread.start()
+            logger.info("🛡️ Started background access denied monitoring (every 5 seconds)")
+    
+    def stop_monitoring(self):
+        """Stop background monitoring"""
+        self.monitoring = False
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=1)
+        logger.info("🛡️ Stopped background access denied monitoring")
+    
+    def _monitor_loop(self):
+        """Background monitoring loop"""
+        while self.monitoring:
+            try:
+                # Check for access denied
+                is_blocked, ref_number = check_access_denied(self.driver)
+                if is_blocked:
+                    self.access_denied_detected = True
+                    self.ref_number = ref_number
+                    self.detection_location = f"Background monitor at {time.strftime('%H:%M:%S')}"
+                    logger.error(f"🚨 BACKGROUND MONITOR: Access denied detected!")
+                    logger.error(f"   Time: {time.strftime('%H:%M:%S')}")
+                    logger.error(f"   Reference: {ref_number}")
+                    logger.error(f"   URL: {self.driver.current_url}")
+                    self.monitoring = False  # Stop monitoring
+                    break
+                    
+                # Wait 5 seconds before next check
+                time.sleep(5)
+                
+            except Exception as e:
+                # If driver is closed or there's an error, stop monitoring
+                logger.debug(f"Background monitor error (likely normal): {str(e)}")
+                break
+    
+    def is_access_denied(self):
+        """Check if access denied was detected by background monitor"""
+        return self.access_denied_detected
+    
+    def get_detection_info(self):
+        """Get information about access denied detection"""
+        return {
+            'detected': self.access_denied_detected,
+            'ref_number': self.ref_number,
+            'location': self.detection_location
+        }
+
 def wait_and_find_clickable_element(driver, by, selector, timeout=10, scroll_into_view=True):
     """
     Helper function to wait for an element to be present, visible, and clickable
@@ -68,6 +133,117 @@ def wait_and_find_clickable_element(driver, by, selector, timeout=10, scroll_int
         logger.debug(f"Failed to find clickable element {selector}: {str(e)}")
         return None
 
+def check_timeout_error(driver):
+    """
+    Check if the page shows a timeout/connection error
+    """
+    try:
+        page_source = driver.page_source.lower()
+        title = driver.title.lower()
+        
+        # Check for timeout/connection error indicators
+        timeout_indicators = [
+            "this site can't be reached",
+            "err_timed_out",
+            "err_connection_timed_out",
+            "took too long to respond",
+            "connection timed out",
+            "site can't be reached",
+            "checking the connection",
+            "checking the proxy"
+        ]
+        
+        for indicator in timeout_indicators:
+            if indicator in page_source or indicator in title:
+                logger.warning(f"⏰ TIMEOUT/CONNECTION ERROR DETECTED!")
+                logger.warning(f"   Indicator: '{indicator}'")
+                logger.warning(f"   URL: {driver.current_url}")
+                logger.warning(f"   Page title: {driver.title}")
+                return True
+                
+        return False
+        
+    except Exception as e:
+        logger.warning(f"⚠️ Error checking for timeout: {str(e)}")
+        return False
+
+def check_access_denied(driver):
+    """
+    More specific check for Access Denied pages (avoiding timeout false positives)
+    """
+    try:
+        page_source = driver.page_source.lower()
+        current_url = driver.current_url
+        title = driver.title.lower()
+        
+        # First check if this is actually a timeout error
+        if check_timeout_error(driver):
+            return False, None  # Not access denied, just a timeout
+        
+        # More specific access denied indicators (avoiding timeout conflicts)
+        access_denied_indicators = [
+            "access denied",
+            "you don't have permission to access",
+            "reference #18.c",  # More specific reference pattern
+            "forbidden",
+            "error 403",
+            "cloudflare ray id:",
+            "why have i been blocked",
+            "bot protection",
+            "please complete the security check",
+            "verify you are human",
+            "security check",
+            "anti-bot"
+        ]
+        
+        # Check for multiple indicators to reduce false positives
+        found_indicators = []
+        for indicator in access_denied_indicators:
+            if indicator in page_source:
+                found_indicators.append(indicator)
+        
+        # Require more evidence for "blocked" detection
+        if "blocked" in page_source:
+            # Only consider it access denied if we also find other indicators
+            blocking_context = [
+                "you have been blocked",
+                "your access has been blocked", 
+                "this website is using a security service",
+                "cloudflare",
+                "reference #"
+            ]
+            if any(context in page_source for context in blocking_context):
+                found_indicators.append("blocked (with context)")
+        
+        if found_indicators:
+            # Try to extract reference number if present
+            ref_number = "Unknown"
+            if "reference #" in page_source:
+                try:
+                    ref_start = page_source.find("reference #") + len("reference #")
+                    ref_end = page_source.find("<", ref_start)
+                    if ref_end == -1:
+                        ref_end = page_source.find(" ", ref_start)
+                    if ref_end == -1:
+                        ref_end = ref_start + 20
+                    ref_number = page_source[ref_start:ref_end].strip()
+                except:
+                    pass
+            
+            logger.error(f"🚫 ACCESS DENIED DETECTED!")
+            logger.error(f"   Indicators: {found_indicators}")
+            logger.error(f"   URL: {current_url}")
+            logger.error(f"   Reference: {ref_number}")
+            logger.error(f"   Page title: {driver.title}")
+            
+            return True, ref_number
+            
+        return False, None
+        
+    except Exception as e:
+        logger.warning(f"⚠️ Error checking for access denied: {str(e)}")
+        return False, None
+
 def has_contact_button(container):
     """
     Check if a container element has a contact button (indicating it's a real car listing)
@@ -89,6 +265,7 @@ def has_contact_button(container):
 
 def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
     driver = None
+    monitor = None
     start_time = datetime.now()
     validator = CarDataValidator()  # Initialize validator
     
@@ -107,7 +284,7 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         driver = BaseSeleniumDriver(
             executable_path=GLOBAL.PATH.CHROMEDRIVER_PATH,
             proxy=proxy,
-            headless=True,
+            headless=False,
             window_size=(1200, 1000),
             logger=logger,
             user_agent=UserAgent().chrome
@@ -117,11 +294,20 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         logger.info("⚙️ Initializing driver instance...")
         driver.create_instance()
         
+        # Initialize and start background access denied monitor
+        monitor = AccessDeniedMonitor(driver)
+        monitor.start_monitoring()
+        
         # Verify proxy is working
         log_section("VERIFYING PROXY CONNECTION")
         logger.info("🌐 Testing proxy connection...")
         driver.get("https://api.ipify.org")
         time.sleep(5)
+        
+        # Check for access denied on IP check page
+        is_blocked, ref_number = check_access_denied(driver)
+        if is_blocked:
+            raise AccessDeniedError(f"Blocked during IP check with reference: {ref_number}")
         
         try:
             # Try to find the IP in a <pre> element first
@@ -181,6 +367,12 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             time.sleep(10)
+            
+            # Check for access denied on main page
+            is_blocked, ref_number = check_access_denied(driver)
+            if is_blocked:
+                raise AccessDeniedError(f"Blocked on main page with reference: {ref_number}")
+            
             logger.info("✅ Page loaded successfully")
             
             # Get page source
@@ -242,9 +434,13 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
             # Process each brand
             for brand, url in car_brands_data['brands'].items():
                 
+                # Check if background monitor detected access denied
+                if monitor.is_access_denied():
+                    detection_info = monitor.get_detection_info()
+                    logger.error(f"🚨 Background monitor detected access denied!")
+                    raise AccessDeniedError(f"Background monitor detection: {detection_info['ref_number']}")
                     
                 log_section(f"PROCESSING BRAND: {brand}")
-                # try:
                 logger.info(f"🌐 Navigating to {brand} at {url}")
                 driver.get(url)
                 
@@ -252,16 +448,16 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 WebDriverWait(driver, 30).until(
                     EC.presence_of_element_located((By.TAG_NAME, "body"))
                 )
-                # Check for access denied page
-                page_source = driver.page_source
-                if "Access Denied" in page_source and "Reference #" in page_source:
-                    ref_start = page_source.find("Reference #") + len("Reference #")
-                    ref_end = page_source.find("<", ref_start)
-                    ref_number = page_source[ref_start:ref_end].strip()
-                    logger.error(f"🚫 Access denied detected (Ref: {ref_number})")
+                time.sleep(10)  # Wait for page to fully load
+                
+                # Check for access denied immediately after navigation
+                is_blocked, ref_number = check_access_denied(driver)
+                if is_blocked:
+                    logger.error(f"🚫 Access denied detected for brand {brand}")
                     time.sleep(10)
-                    raise AccessDeniedError(f"Blocked with reference: {ref_number}")
-                time.sleep(30)  # Increased wait time to ensure page loads completely
+                    raise AccessDeniedError(f"Blocked on {brand} page with reference: {ref_number}")
+                
+                time.sleep(20)  # Additional wait time to ensure page loads completely
                 
                 # Check if we're on mobile version
 
@@ -269,9 +465,22 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 # Get and parse page content
                 page_source = driver.page_source
                 soup = BeautifulSoup(page_source, "html.parser")
-                first_time_parsing = True
-                pagination_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Weiter') or @aria-label='Weiter']")
-                while pagination_button:
+                
+                page_count = 0
+                max_pages = 10  # Limit to 10 pages per brand to prevent infinite loops
+                consecutive_empty_pages = 0
+                max_consecutive_empty = 3  # Break if we hit 3 consecutive pages with no results
+                previous_url = driver.current_url  # Track URL changes to detect successful pagination
+                
+                while page_count < max_pages and consecutive_empty_pages < max_consecutive_empty:
+                    # Check if background monitor detected access denied
+                    if monitor.is_access_denied():
+                        detection_info = monitor.get_detection_info()
+                        logger.error(f"🚨 Background monitor detected access denied while processing {brand}")
+                        raise AccessDeniedError(f"Background monitor detection: {detection_info['ref_number']}")
+                    
+                    page_count += 1
+                    logger.info(f"📄 Processing page {page_count} for {brand}")
                     
                     # Find all potential listing containers first
                     logger.info("🔍 Looking for all potential listing containers...")
@@ -307,15 +516,73 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             logger.debug(f"❌ No contact button found in container - skipping")
                             continue
                     
+                    # Always check for access denied first, regardless of results
+                    is_blocked, ref_number = check_access_denied(driver)
+                    if is_blocked:
+                        logger.error(f"🚫 Access denied detected on page {page_count} for {brand}")
+                        time.sleep(10)
+                        raise AccessDeniedError(f"Blocked on page {page_count} with reference: {ref_number}")
+                    
                     if len(search_results) == 0:
-                        logger.error(f"❌ No car listings with contact buttons found for {brand}")
-                        continue
+                        consecutive_empty_pages += 1
+                        logger.warning(f"⚠️ No car listings with contact buttons found for {brand} on page {page_count} (consecutive empty: {consecutive_empty_pages}/{max_consecutive_empty})")
+                        
+                        # If this is the first page and no results, the brand might not have listings
+                        if page_count == 1:
+                            logger.warning(f"⚠️ No listings found on first page for {brand} - skipping brand")
+                            break
+                        
+                        # If we've hit too many consecutive empty pages, stop
+                        if consecutive_empty_pages >= max_consecutive_empty:
+                            logger.warning(f"⚠️ Hit {max_consecutive_empty} consecutive empty pages for {brand} - stopping search")
+                            break
+                        
+                        # Try to find next page button before giving up on subsequent pages
+                        try:
+                            pagination_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Weiter') or @aria-label='Weiter']")
+                            if pagination_button.is_displayed() and pagination_button.is_enabled():
+                                logger.info("🔄 No results on this page but next page available - continuing...")
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", pagination_button)
+                                time.sleep(2)
+                                driver.execute_script("arguments[0].click();", pagination_button)
+                                time.sleep(10)
+                                
+                                # Check for access denied after empty page pagination
+                                is_blocked, ref_number = check_access_denied(driver)
+                                if is_blocked:
+                                    logger.error(f"🚫 Access denied detected after empty page pagination")
+                                    time.sleep(10)
+                                    raise AccessDeniedError(f"Blocked after empty page pagination with reference: {ref_number}")
+                                
+                                continue
+                            else:
+                                logger.info("📄 No more pages available")
+                                break
+                        except:
+                            logger.info("📄 No pagination button found - ending search for this brand")
+                            break
+                    else:
+                        consecutive_empty_pages = 0  # Reset counter when we find results
                     logger.info(f"✅ Found {len(search_results)} actual car listings with contact buttons for {brand}")
                     
                     smart_parser_cooldown = 100
                     current_result_parsed = 0
                     
                     for idx, result in enumerate(search_results, 1):
+                        # Check background monitor every few listings
+                        if idx % 5 == 0:  # Check every 5 listings
+                            if monitor.is_access_denied():
+                                detection_info = monitor.get_detection_info()
+                                logger.error(f"🚨 Background monitor detected access denied at listing {idx}")
+                                raise AccessDeniedError(f"Background monitor detection: {detection_info['ref_number']}")
+                        
+                        # Reduced periodic explicit check (now background monitor handles most cases)
+                        if idx % 50 == 0:  # Only check every 50 listings explicitly
+                            is_blocked, ref_number = check_access_denied(driver)
+                            if is_blocked:
+                                logger.error(f"🚫 Access denied detected during explicit check at listing {idx}")
+                                time.sleep(10)
+                                raise AccessDeniedError(f"Blocked during explicit check with reference: {ref_number}")
                         
                         try:
                             logger.info(f"📄 Processing listing {idx}/{len(search_results)}")
@@ -339,15 +606,78 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             else:
                                 logger.warning("⚠️ No new tab opened after click. Continuing on main window.")
 
-                            # Wait for detail page to load
-                            WebDriverWait(driver, 30).until(
-                                EC.presence_of_element_located((By.TAG_NAME, "body"))
-                            )
-                            time.sleep(5)
+                            # Wait for detail page to load with retry logic
+                            max_retries = 3
+                            retry_count = 0
+                            page_loaded = False
+                            
+                            while retry_count < max_retries and not page_loaded:
+                                try:
+                                    # Wait for detail page to load (shorter timeout)
+                                    WebDriverWait(driver, 15).until(
+                                        EC.presence_of_element_located((By.TAG_NAME, "body"))
+                                    )
+                                    time.sleep(3)
+                                    
+                                    # Check if it's a timeout error
+                                    if check_timeout_error(driver):
+                                        retry_count += 1
+                                        if retry_count < max_retries:
+                                            logger.warning(f"⏰ Timeout error detected. Retrying... ({retry_count}/{max_retries})")
+                                            driver.refresh()
+                                            time.sleep(5)
+                                            continue
+                                        else:
+                                            logger.error(f"⏰ Failed to load page after {max_retries} retries - skipping listing")
+                                            # Close current tab and switch back to main window
+                                            if driver.current_window_handle != main_window:
+                                                driver.close()
+                                                driver.switch_to.window(main_window)
+                                            continue  # Skip this listing
+                                    
+                                    # Check for access denied on detail page
+                                    is_blocked, ref_number = check_access_denied(driver)
+                                    if is_blocked:
+                                        logger.error(f"🚫 Access denied detected on detail page for listing {idx}")
+                                        # Close current tab and switch back to main window
+                                        if driver.current_window_handle != main_window:
+                                            driver.close()
+                                            driver.switch_to.window(main_window)
+                                        time.sleep(10)
+                                        raise AccessDeniedError(f"Blocked on detail page with reference: {ref_number}")
+                                    
+                                    page_loaded = True
+                                    
+                                except Exception as e:
+                                    retry_count += 1
+                                    if retry_count < max_retries:
+                                        logger.warning(f"⚠️ Error loading detail page. Retrying... ({retry_count}/{max_retries}): {str(e)}")
+                                        time.sleep(5)
+                                        continue
+                                    else:
+                                        logger.error(f"❌ Failed to load detail page after {max_retries} retries: {str(e)}")
+                                        # Close current tab and switch back to main window
+                                        if driver.current_window_handle != main_window:
+                                            driver.close()
+                                            driver.switch_to.window(main_window)
+                                        continue  # Skip this listing
+                            
+                            if not page_loaded:
+                                continue  # Skip to next listing
                             
                             # Get and parse detail page
                             detail_page = driver.page_source
                             detail_soup = BeautifulSoup(detail_page, "html.parser")
+                            
+                            # Final check to ensure we have proper content (not a timeout page)
+                            if check_timeout_error(driver):
+                                logger.warning(f"⏰ Still showing timeout error after retries - skipping listing {idx}")
+                                # Close current tab and switch back to main window
+                                if driver.current_window_handle != main_window:
+                                    driver.close()
+                                    driver.switch_to.window(main_window)
+                                continue
+                            
                             logger.info("✅ Successfully loaded detail page")
                             #===============================================
                             #=================KEY FEATURES==================
@@ -368,12 +698,15 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                                         break
                                 title_model = title.replace(title_brand, "").strip()
                                 price = driver.find_element(By.XPATH, "//div[@data-testid='vip-price-label']").text.strip()
+                                # extract mobile.de id from url and convert to int example: https://suchen.mobile.de/fahrzeuge/details.html?id=426053058&cn=DE&isSearchRequest=true&ms=1900%3B%3B%3B&od=up&pageNumber=2&ref=srp&refId=666a8756-1eae-924a-abc3-a76b00ec3f62&s=Car&sb=rel&searchId=666a8756-1eae-924a-abc3-a76b00ec3f62&vc=Car
+                                mobile_de_id = int(driver.current_url.split("id=")[1].split("&")[0])
                                 car_data["basic_info"] = {
                                     "brand": title_brand,
                                     "model": title_model,
                                     "title": title,
                                     "price": price,
-                                    "url": driver.current_url
+                                    "url": driver.current_url,
+                                    "mobile_de_id": mobile_de_id
                                 }
                             except Exception as e:
                                 logger.error(f"❌ Error extracting basic info: {str(e)}")
@@ -563,50 +896,49 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             # Check for duplicates before validation
                             is_duplicate = False
                             
-                            # Check if car already exists in raw data
+                            # Check if car already exists in raw data by mobile_de_id
                             try:
                                 with open("raw_cars_data.json", "r", encoding="utf-8") as f:
                                     raw_data = json.load(f)
-                                    if car_data["basic_info"]["url"] in [item["basic_info"]["url"] for item in raw_data]:
+                                    if car_data["basic_info"]["mobile_de_id"] in [item["basic_info"]["mobile_de_id"] for item in raw_data]:
                                         logger.info("🔍 Car already exists in raw_cars_data.json - skipping")
                                         is_duplicate = True
                             except (FileNotFoundError, json.JSONDecodeError):
                                 raw_data = []
                             
                             # Skip this car if it's a duplicate
-                            if is_duplicate:
-                                continue
+                            if not is_duplicate:
                                 
-                            # Validate the extracted data
-                            try:
-                                logger.info("🔧 Validating extracted data...")
-                                validated_data = validator.validate(car_data)
-                                logger.info("📦 Validated car data:")
-                                logger.info(validated_data)
-
-                                # === RAW DATA ===
-                                raw_data.append(car_data)
-                                with open("raw_cars_data.json", "w", encoding="utf-8") as f:
-                                    json.dump(raw_data, f, ensure_ascii=False, indent=2)
-
-                                # === VALIDATED DATA ===
+                                # Validate the extracted data
                                 try:
-                                    with open("validated_cars_data.json", "r", encoding="utf-8") as f:
-                                        validated_list = json.load(f)
-                                except (FileNotFoundError, json.JSONDecodeError):
-                                    validated_list = []
+                                    logger.info("🔧 Validating extracted data...")
+                                    validated_data = validator.validate(car_data)
+                                    logger.info("📦 Validated car data:")
+                                    logger.info(validated_data)
 
-                                validated_list.append(validated_data)
-                                with open("validated_cars_data.json", "w", encoding="utf-8") as f:
-                                    json.dump(validated_list, f, ensure_ascii=False, indent=2)
+                                    # === RAW DATA ===
+                                    raw_data.append(car_data)
+                                    with open("raw_cars_data.json", "w", encoding="utf-8") as f:
+                                        json.dump(raw_data, f, ensure_ascii=False, indent=2)
 
-                            except Exception as validation_error:
-                                logger.error(f"❌ Validation failed: {str(validation_error)}")
+                                    # === VALIDATED DATA ===
+                                    try:
+                                        with open("validated_cars_data.json", "r", encoding="utf-8") as f:
+                                            validated_list = json.load(f)
+                                    except (FileNotFoundError, json.JSONDecodeError):
+                                        validated_list = []
 
-                                # Save only to raw_cars_data.json even on validation failure
-                                raw_data.append(car_data)
-                                with open("raw_cars_data.json", "w", encoding="utf-8") as f:
-                                    json.dump(raw_data, f, ensure_ascii=False, indent=2)
+                                    validated_list.append(validated_data)
+                                    with open("validated_cars_data.json", "w", encoding="utf-8") as f:
+                                        json.dump(validated_list, f, ensure_ascii=False, indent=2)
+
+                                except Exception as validation_error:
+                                    logger.error(f"❌ Validation failed: {str(validation_error)}")
+
+                                    # Save only to raw_cars_data.json even on validation failure
+                                    raw_data.append(car_data)
+                                    with open("raw_cars_data.json", "w", encoding="utf-8") as f:
+                                        json.dump(raw_data, f, ensure_ascii=False, indent=2)
 
                             #============================================
                             
@@ -620,7 +952,15 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             current_result_parsed += 1
                             if current_result_parsed >= smart_parser_cooldown:
                                 logger.info("⏳ Cooldown period reached. Waiting 120 seconds...")
-                                time.sleep(120)
+                                
+                                # Check background monitor during cooldown (every 10 seconds)
+                                for i in range(12):  # 12 * 10 = 120 seconds
+                                    time.sleep(10)
+                                    if monitor.is_access_denied():
+                                        detection_info = monitor.get_detection_info()
+                                        logger.error(f"🚨 Background monitor detected access denied during cooldown")
+                                        raise AccessDeniedError(f"Background monitor detection during cooldown: {detection_info['ref_number']}")
+                                
                                 current_result_parsed = 0
                                 
                         except Exception as e:
@@ -633,21 +973,41 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             except:
                                 pass
                             continue
-                    logger.info(f"✅ Successfully processed {brand}")
-                    
-                    # find pagination button with text "Weiter" or aria-label="Weiter"
+                    # Try to find and click next page button
                     try:
                         pagination_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Weiter') or @aria-label='Weiter']")
-                        # is pagination button on view area?
-                        if pagination_button.is_displayed():
-                            # click pagination button using javascript
+                        # Check if pagination button is displayed and enabled
+                        if pagination_button.is_displayed() and pagination_button.is_enabled():
+                            # Scroll to pagination button
+                            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", pagination_button)
+                            time.sleep(2)
+                            # Click pagination button using javascript
                             driver.execute_script("arguments[0].click();", pagination_button)
+                            logger.info(f"🔄 Clicked next page button, waiting for page {page_count + 1} to load...")
                             time.sleep(10)
+                            
+                            # Check for access denied after pagination
+                            is_blocked, ref_number = check_access_denied(driver)
+                            if is_blocked:
+                                logger.error(f"🚫 Access denied detected after pagination click")
+                                time.sleep(10)
+                                raise AccessDeniedError(f"Blocked after pagination with reference: {ref_number}")
+                            
+                            # Verify page actually changed by checking URL
+                            current_url = driver.current_url
+                            if current_url == previous_url:
+                                logger.warning("⚠️ URL didn't change after pagination click - may have reached the end")
+                                break
+                            previous_url = current_url
+                            continue
                         else:
+                            logger.info(f"📄 Next page button not available - reached end of results for {brand}")
                             break
-                    except:
+                    except Exception as e:
+                        logger.info(f"📄 No more pages available for {brand}: {str(e)}")
                         break
-                logger.info(f"✅ Successfully processed {brand}")
+                
+                logger.info(f"✅ Successfully processed {brand} ({page_count} pages)")
                     
         except Exception as e:
             logger.error(f"❌ Error waiting for page load: {str(e)}")
@@ -657,6 +1017,10 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         logger.error(f"❌ Fatal error: {str(e)}")
         raise
     finally:
+        # Stop background monitor first
+        if monitor:
+            monitor.stop_monitoring()
+            
         if driver:
             logger.info("🔄 Cleaning up driver...")
             try:
