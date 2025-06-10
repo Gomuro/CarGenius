@@ -23,19 +23,31 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
             data = json.load(file)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"{file_path} not found")
-    created = 0
-    try:
-        combined_data = {**data.get("listing", {}),
-                         "technical_details": data.get("technical_details", {}),
-                         "equipment": data.get("equipment", {})}
 
-        listing = ListingCreateRequestSchema(**combined_data)
-        await listings_json_to_db(db=db, data=listing)
-        created += 1
-    except Exception as e:
-        print(f"Error processing item {data}: {e}")
+    if isinstance(data, list):
+        listing_data = data
+    elif isinstance(data, dict):
+        listing_data = [data]
+    else:
+        raise HTTPException(status=400, detail="Invalid data format. Expected a list or a dictionary.")
+    created = 0
+    for item in listing_data:
+        try:
+            combined_data = {
+                **item.get("listing", {}),
+                "technical_details": item.get("technical_details", {}),
+                "equipment": item.get("equipment", {})
+            }
+
+            listing = ListingCreateRequestSchema(**combined_data)
+            await listings_json_to_db(db=db, data=listing)
+            created += 1
+        except Exception as e:
+            print(f"Error processing item {item}: {e}")
 
     return {"message": f"Successfully saved {created} listings to the database."}
+
+
 
 
 @router.get("/filter-search", response_model=list[ListingOut])

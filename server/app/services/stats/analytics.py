@@ -54,11 +54,11 @@ async def listings_json_to_db(db: AsyncSession, data:ListingCreateRequestSchema)
         url = data.url,
     )
 
-    technical_details = TechnicalDetails(**data.technical_details.dict() if data.technical_details else {})
-    equipment = Equipment(**data.equipment.dict() if data.equipment else {})
+    technical_details = TechnicalDetails(**data.technical_details.dict() if data.technical_details else {})   # Show how to create TechnicalDetails from the schema
+    equipment = Equipment(**data.equipment.dict() if data.equipment else {})                                  # Show how to create Equipment from the schema
 
-    listing.technical_details = technical_details
-    listing.equipment = equipment
+    listing.technical_details = technical_details   # Add technical details to the listing
+    listing.equipment = equipment                   # Add equipment to the listing
 
     db.add(listing)            # Add the listing to the session
     await db.commit()          # Commit the session to save the listing
