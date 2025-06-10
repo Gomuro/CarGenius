@@ -38,7 +38,6 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
                 "technical_details": item.get("technical_details", {}),
                 "equipment": item.get("equipment", {})
             }
-
             listing = ListingCreateRequestSchema(**combined_data)
             await listings_json_to_db(db=db, data=listing)
             created += 1
@@ -46,7 +45,6 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
             print(f"Error processing item {item}: {e}")
 
     return {"message": f"Successfully saved {created} listings to the database."}
-
 
 
 
