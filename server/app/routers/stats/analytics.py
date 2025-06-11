@@ -2,10 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingOut, ListingSchema, TechnicalDetailsSchema, \
-    EquipmentSchema, ListingCreateRequestSchema
+from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, \
+    EquipmentSchema, ListingCreateRequestSchema, ListingFilteredResponse
 from app.services.stats.analytics import get_avg_price_by_brand, get_filterd, listings_json_to_db
-from app.services.stats.filter_mobilde import filtered_listings
 import json
 
 router = APIRouter()
@@ -47,14 +46,13 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
     return {"message": f"Successfully saved {created} listings to the database."}
 
 
-
-@router.get("/filter-search", response_model=list[ListingOut])
+@router.get("/filter-search", response_model=ListingFilteredResponse)
 async def search_listings(
         db: AsyncSession = Depends(get_db),
         listing_filters: ListingSchema = Depends(),
         tech_filters: TechnicalDetailsSchema = Depends(),
         equipment_filters: EquipmentSchema = Depends()
-) -> list[ListingOut]:
+) -> {ListingFilteredResponse}:
     """
     Search for car listings based on various filters.
     """

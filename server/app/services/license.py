@@ -36,8 +36,8 @@ async def validate_license_key(key: str, client_info: str, db: AsyncSession) -> 
 
 
 async def validate_license_key_device(key: str, device_id: str, client_info: str, db: AsyncSession) -> Tuple[bool, str]:
-    result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
-    licens_obj = result.scalar_one_or_none()   # expect a maximum of one entry. Object or None or MultipleResultsFound.
+    result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))  # Fetch the license key by its key
+    licens_obj = result.scalar_one_or_none()  # expect a maximum of one entry. Object or None or MultipleResultsFound.
     if not licens_obj:
         return False, "License key not found"
     if not licens_obj.is_active:
@@ -48,10 +48,8 @@ async def validate_license_key_device(key: str, device_id: str, client_info: str
         # First time activation — bind device
         licens_obj.device_id = device_id
         licens_obj.client_info = client_info
-        await db.commit()
+        await db.commit()  # Save the device binding
         return True, "License activated and device bound"
     if licens_obj.device_id != device_id:
         return False, "Device mismatch. This license is bound to another device"
     return True, "License key is valid"
-
-
