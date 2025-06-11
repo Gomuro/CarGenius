@@ -37,7 +37,6 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
                 "technical_details": item.get("technical_details", {}),
                 "equipment": item.get("equipment", {})
             }
-
             listing = ListingCreateRequestSchema(**combined_data)
             await listings_json_to_db(db=db, data=listing)
             created += 1
@@ -66,7 +65,7 @@ async def search_listings(
 
 
 @router.get("/average_price", response_model=list[AvgPriceByBrand])
-async def get_average_price(limit: int = 20, db: AsyncSession = Depends(get_db)):
+async def get_average_price(limit: int=20, db: AsyncSession = Depends(get_db)):
     """
     Get average price, max price, min price, and count of car listings grouped by title.
     """
