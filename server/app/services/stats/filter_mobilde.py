@@ -1,6 +1,7 @@
 # app/services/stats/filters/filter_mobilde.py
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema
+from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
+    ListingCreateRequestSchema
 
 
 def filtered_listings(filters: ListingSchema) -> list[ListingMobileDe]:
@@ -9,21 +10,21 @@ def filtered_listings(filters: ListingSchema) -> list[ListingMobileDe]:
     """
     conditions = [ListingMobileDe.is_active.is_(True)]
 
-    if filters.brand:
+    if filters.brand is not None:
         conditions.append(ListingMobileDe.brand.ilike(f"%{filters.brand}%"))
-    if filters.model:
+    if filters.model is not None:
         conditions.append(ListingMobileDe.model.ilike(f"%{filters.model}%"))
-    if filters.registration_year:
+    if filters.registration_year is not None:
         conditions.append(ListingMobileDe.registration_year == filters.registration_year)
-    if filters.mileage:
+    if filters.mileage is not None:
         conditions.append(ListingMobileDe.mileage <= filters.mileage)
-    if filters.city_or_postal_code:
+    if filters.city_or_postal_code is not None:
         conditions.append(ListingMobileDe.city_or_postal_code.ilike(f"%{filters.city_or_postal_code}%"))
-    if filters.color:
+    if filters.color is not None:
         conditions.append(ListingMobileDe.color.ilike(f"%{filters.color}%"))
-    if filters.price_lte:
+    if filters.price_lte is not None:
         conditions.append(ListingMobileDe.price <= filters.price_lte)
-    if filters.price_gte:
+    if filters.price_gte is not None:
         conditions.append(ListingMobileDe.price >= filters.price_gte)
     return conditions
 
@@ -34,65 +35,65 @@ def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[TechnicalDeta
     """
     conditions = []
 
-    if filters.damage_condition:
+    if filters.damage_condition is not None:
         conditions.append(TechnicalDetails.damage_condition.ilike(f"%{filters.damage_condition}%"))
-    if filters.category:
+    if filters.category is not None:
         conditions.append(TechnicalDetails.category.ilike(f"%{filters.category}%"))
-    if filters.trim_line:
+    if filters.trim_line is not None:
         conditions.append(TechnicalDetails.trim_line.ilike(f"%{filters.trim_line}%"))
-    if filters.sku:
+    if filters.sku is not None:
         conditions.append(TechnicalDetails.sku.ilike(f"%{filters.sku}%"))
-    if filters.country_version:
+    if filters.country_version is not None:
         conditions.append(TechnicalDetails.country_version.ilike(f"%{filters.country_version}%"))
-    if filters.power:
+    if filters.power is not None:
         conditions.append(TechnicalDetails.power == filters.power)
-    if filters.engine_type:
+    if filters.engine_type is not None:
         conditions.append(TechnicalDetails.engine_type.ilike(f"%{filters.engine_type}%"))
-    if filters.other_energy_source:
+    if filters.other_energy_source is not None:
         conditions.append(TechnicalDetails.other_energy_source.ilike(f"%{filters.other_energy_source}%"))
-    if filters.battery:
+    if filters.battery is not None:
         conditions.append(TechnicalDetails.battery.ilike(f"%{filters.battery}%"))
-    if filters.battery_capacity:
+    if filters.battery_capacity is not None:
         conditions.append(TechnicalDetails.battery_capacity == filters.battery_capacity)
-    if filters.battery_certificate:
+    if filters.battery_certificate is not None:
         conditions.append(TechnicalDetails.battery_certificate.ilike(f"{filters.battery_capacity}"))
-    if filters.battery_range:
+    if filters.battery_range is not None:
         conditions.append(TechnicalDetails.battery_range == filters.battery_range)
-    if filters.num_seats:
+    if filters.num_seats is not None:
         conditions.append(TechnicalDetails.num_seats == filters.num_seats)
-    if filters.door_count:
+    if filters.door_count is not None:
         conditions.append(TechnicalDetails.door_count == filters.door_count)
-    if filters.transmission:
+    if filters.transmission is not None:
         conditions.append(TechnicalDetails.transmission.ilike(f"%{filters.transmission}%"))
-    if filters.emissions_sticker:
+    if filters.emissions_sticker is not None:
         conditions.append(TechnicalDetails.emissions_sticker.ilike(f"%{filters.emissions_sticker}%"))
-    if filters.first_year_registration:
+    if filters.first_year_registration is not None:
         conditions.append(TechnicalDetails.first_year_registration == filters.first_year_registration)
-    if filters.first_month_registration:
+    if filters.first_month_registration is not None:
         conditions.append(TechnicalDetails.first_month_registration == filters.first_month_registration)
-    if filters.number_of_previous_owners:
+    if filters.number_of_previous_owners is not None:
         conditions.append(TechnicalDetails.number_of_previous_owners.ilike(f"%{filters.number_of_previous_owners}%"))
-    if filters.hu_year:
+    if filters.hu_year is not None:
         conditions.append(TechnicalDetails.hu_year == filters.hu_year)
-    if filters.hu_month:
+    if filters.hu_month is not None:
         conditions.append(TechnicalDetails.hu_month == filters.hu_month)
-    if filters.climatisation:
+    if filters.climatisation is not None:
         conditions.append(TechnicalDetails.climatisation.ilike(f"%{filters.climatisation}%"))
-    if filters.park_assists:
+    if filters.park_assists is not None:
         conditions.append(TechnicalDetails.park_assists.ilike(f"%{filters.park_assists}%"))
-    if filters.airbags:
+    if filters.airbags is not None:
         conditions.append(TechnicalDetails.airbags.ilike(f"%{filters.airbags}%"))
-    if filters.manufacturer_color_name:
+    if filters.manufacturer_color_name is not None:
         conditions.append(TechnicalDetails.manufacturer_color_name.ilike(f"%{filters.manufacturer_color_name}%"))
-    if filters.interior:
+    if filters.interior is not None:
         conditions.append(TechnicalDetails.interior.ilike(f"%{filters.interior}%"))
-    if filters.trailer_load_braked:
+    if filters.trailer_load_braked is not None:
         conditions.append(TechnicalDetails.trailer_load_braked == filters.trailer_load_braked)
-    if filters.trailer_load_unbraked:
+    if filters.trailer_load_unbraked is not None:
         conditions.append(TechnicalDetails.trailer_load_unbraked == filters.trailer_load_unbraked)
-    if filters.net_weight:
+    if filters.net_weight is not None:
         conditions.append(TechnicalDetails.net_weight == filters.net_weight)
-    if filters.waranty_registration:
+    if filters.waranty_registration is not None:
         conditions.append(TechnicalDetails.waranty_registration == filters.waranty_registration)
     return conditions
 

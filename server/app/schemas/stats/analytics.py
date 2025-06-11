@@ -4,6 +4,8 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 """Schemas for car technical details and equipment, used in the analytics module."""
+
+
 class TechnicalDetailsSchema(BaseModel):
     damage_condition: Optional[str] = Field(None, description="damageCondition-item")  # Gebrauchtfahrzeug, Unfallfrei
     category: Optional[str] = Field(None, description="category-item")  # SUV / Geländewagen / Pickup
@@ -43,6 +45,8 @@ class TechnicalDetailsSchema(BaseModel):
 
 
 """Schemas for car equipment, used in the analytics module."""
+
+
 class EquipmentSchema(BaseModel):
     abs: Optional[bool] = Field(None, description="Antiblockiersystem")
     adaptive_cruise_control: Optional[bool] = Field(None, description="Abstandstempomat")
@@ -105,6 +109,8 @@ class EquipmentSchema(BaseModel):
 
 
 """Schemas for json to fill the database with car listings."""
+
+
 class ListingCreateRequestSchema(BaseModel):
     brand: str = Field(..., description="Brand of the car")
     model: str = Field(..., description="Model of the car")
@@ -123,6 +129,8 @@ class ListingCreateRequestSchema(BaseModel):
 
 
 """Filtering scheme for GET requests with query parameters."""
+
+
 class ListingSchema(BaseModel):
     brand: Optional[str] = Field(None, description="Filter by car brand")
     model: Optional[str] = Field(None, description="Filter by car model")
@@ -135,6 +143,8 @@ class ListingSchema(BaseModel):
 
 
 """Schemas for car listings, used in the analytics module."""
+
+
 class ListingOut(BaseModel):
     id: int = Field(..., description="Unique identifier for the car listing")
     created_at: datetime = Field(..., description="Timestamp when the car listing was created")
@@ -150,6 +160,20 @@ class ListingOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class ListingStats(BaseModel):
+    avg_price: Optional[float] = Field(None, description="Average price of the car listings")
+    min_price: Optional[float] = Field(None, description="Minimum price of the car listings")
+    max_price: Optional[float] = Field(None, description="Maximum price of the car listings")
+    count: Optional[int] = Field(None, description="Total number of car listings found")
+
+
+class ListingFilteredResponse(BaseModel):
+    Listings: List[ListingOut]
+    TechnicalDetails: Optional[TechnicalDetailsSchema]
+    Equipment: Optional[EquipmentSchema]
+    Stats: ListingStats
 
 
 class AvgPriceByBrand(BaseModel):
