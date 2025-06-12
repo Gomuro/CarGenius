@@ -13,8 +13,9 @@ class ListingMobileDe(TimestampMixin, Base):
     id = Column(Integer, primary_key=True, index=True)
     # Relationships
     technical_details = relationship("TechnicalDetails", uselist=False, back_populates="listing_mobilede",
-                                     passive_deletes=True)
-    equipment = relationship("Equipment", uselist=False, back_populates="listing_mobilede", passive_deletes=True)
+                                     passive_deletes=True)  # One-to-one relationship with TechnicalDetails    (uselist=False means this is a single object, not a list.)
+    equipment = relationship("Equipment", uselist=False, back_populates="listing_mobilede",
+                             passive_deletes=True)  # One-to-one relationship with Equipment
 
     is_active = Column(Boolean, default=True, index=True)
     # Basic Info
@@ -34,8 +35,10 @@ class TechnicalDetails(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     # Relationships
-    listing_id = Column(Integer, ForeignKey("listing_mobilede.id", ondelete="CASCADE"), unique=True)
-    listing_mobilede = relationship("ListingMobileDe", back_populates="technical_details")
+    listing_id = Column(Integer, ForeignKey("listing_mobilede.id", ondelete="CASCADE"),
+                        unique=True)  # One-to-one relationship with ListingMobileDe
+    listing_mobilede = relationship("ListingMobileDe",
+                                    back_populates="technical_details")  # Back-reference to ListingMobileDe
 
     damage_condition = Column(String, index=True, nullable=True)
     category = Column(String, index=True, nullable=True)
@@ -74,8 +77,10 @@ class Equipment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     # Relationships
-    listing_id = Column(Integer, ForeignKey("listing_mobilede.id", ondelete="CASCADE"), unique=True)
-    listing_mobilede = relationship("ListingMobileDe", back_populates="equipment", uselist=False)
+    listing_id = Column(Integer, ForeignKey("listing_mobilede.id", ondelete="CASCADE"),
+                        unique=True)  # One-to-one relationship with ListingMobileDe (uselist=False means this is a single object, not a list.)
+    listing_mobilede = relationship("ListingMobileDe", back_populates="equipment",
+                                    uselist=False)  # Back-reference to ListingMobileDe
 
     abs = Column(Boolean, default=False)
     adaptive_cruise_control = Column(Boolean, default=False)

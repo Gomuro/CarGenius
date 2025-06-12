@@ -1,11 +1,11 @@
 # app/routers/stats/analytics.py
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingOut, ListingSchema, TechnicalDetailsSchema, \
-    EquipmentSchema, ListingCreateRequestSchema
+from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, \
+    EquipmentSchema, ListingCreateRequestSchema, ListingFilteredResponse
 from app.services.stats.analytics import get_avg_price_by_brand, get_filterd, listings_json_to_db
-from app.services.stats.filter_mobilde import filtered_listings
 import json
 
 router = APIRouter()
@@ -23,28 +23,37 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
             data = json.load(file)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"{file_path} not found")
-    created = 0
-    try:
-        combined_data = {**data.get("listing", {}),
-                         "technical_details": data.get("technical_details", {}),
-                         "equipment": data.get("equipment", {})}
 
-        listing = ListingCreateRequestSchema(**combined_data)
-        await listings_json_to_db(db=db, data=listing)
-        created += 1
-    except Exception as e:
-        print(f"Error processing item {data}: {e}")
+    if isinstance(data, list):
+        listing_data = data
+    elif isinstance(data, dict):
+        listing_data = [data]
+    else:
+        raise HTTPException(status=400, detail="Invalid data format. Expected a list or a dictionary.")
+    created = 0
+    for item in listing_data:
+        try:
+            combined_data = {
+                **item.get("listing", {}),
+                "technical_details": item.get("technical_details", {}),
+                "equipment": item.get("equipment", {})
+            }
+            listing = ListingCreateRequestSchema(**combined_data)
+            await listings_json_to_db(db=db, data=listing)
+            created += 1
+        except Exception as e:
+            print(f"Error processing item {item}: {e}")
 
     return {"message": f"Successfully saved {created} listings to the database."}
 
 
-@router.get("/filter-search", response_model=list[ListingOut])
+@router.get("/filter-search", response_model=ListingFilteredResponse)
 async def search_listings(
         db: AsyncSession = Depends(get_db),
         listing_filters: ListingSchema = Depends(),
         tech_filters: TechnicalDetailsSchema = Depends(),
         equipment_filters: EquipmentSchema = Depends()
-) -> list[ListingOut]:
+) -> {ListingFilteredResponse}:
     """
     Search for car listings based on various filters.
     """
@@ -57,8 +66,24 @@ async def search_listings(
 
 
 @router.get("/average_price", response_model=list[AvgPriceByBrand])
-async def get_average_price(limit: int=20, db: AsyncSession = Depends(get_db)):
+async def get_average_price(limit: int = 20, db: AsyncSession = Depends(get_db)):
     """
     Get average price, max price, min price, and count of car listings grouped by title.
     """
     return await get_avg_price_by_brand(limit, db)
+
+
+from ml.predict import predict_price
+import pandas as pd
+
+# @router.get("/profitable-ml", response_model=List[ListingOut])
+# async def get_profitable_offers(db: AsyncSession = Depends(get_db)):
+#     listings = await get_recent_listings(db)  # отримай з БД
+#     df = pd.DataFrame([listing.dict() for listing in listings])
+#
+#     predictions = predict_price(df)
+#     df["predicted_price"] = predictions
+#     df["is_profitable"] = df["price"] < df["predicted_price"] * 0.85
+#
+#     profitable = df[df["is_profitable"]]
+#     return profitable.to_dict(orient="records")
