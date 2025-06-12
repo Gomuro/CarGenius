@@ -15,6 +15,7 @@ import logging
 from fake_useragent import UserAgent
 from parser.exceptions.driver import AccessDeniedError, NoProxyProvidedError  # Add at top
 from parser.validator import CarDataValidator  # Add validator import
+from parser.state_manager import StateManager
 
 # Set up logging with a more readable format
 logging.basicConfig(
@@ -244,30 +245,32 @@ def check_access_denied(driver):
         logger.warning(f"⚠️ Error checking for access denied: {str(e)}")
         return False, None
 
-def has_contact_button(container):
-    """
-    Check if a container element has a contact button (indicating it's a real car listing)
-    """
-    contact_button_selectors = [
-        'button[data-testid="listing-action-email"]',
-    ]
-    
-    for selector in contact_button_selectors:
-        try:
-            button = container.find_element(By.CSS_SELECTOR, selector)
-            if button and button.is_displayed():
-                logger.debug(f"✅ Found contact button with selector: {selector}")
-                return True
-        except:
-            continue
-    
-    return False
+# DISABLED - Contact button check no longer needed
+# def has_contact_button(container):
+#     """
+#     Check if a container element has a contact button (indicating it's a real car listing)
+#     """
+#     contact_button_selectors = [
+#         'button[data-testid="listing-action-email"]',
+#     ]
+#     
+#     for selector in contact_button_selectors:
+#         try:
+#             button = container.find_element(By.CSS_SELECTOR, selector)
+#             if button and button.is_displayed():
+#                 logger.debug(f"✅ Found contact button with selector: {selector}")
+#                 return True
+#         except:
+#             continue
+#     
+#     return False
 
 def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
     driver = None
     monitor = None
     start_time = datetime.now()
     validator = CarDataValidator()  # Initialize validator
+    state_manager = StateManager()
     
     try:
         log_section("INITIALIZING PARSER")
@@ -298,6 +301,11 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         monitor = AccessDeniedMonitor(driver)
         monitor.start_monitoring()
         
+        # Load resume state
+        resume_state = state_manager.load_state()
+        if resume_state:
+            logger.info(f"🔄 Resume state loaded: {resume_state}")
+
         # Verify proxy is working
         log_section("VERIFYING PROXY CONNECTION")
         logger.info("🌐 Testing proxy connection...")
@@ -362,8 +370,8 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         driver.get("https://mobile.de/")
         print("Waiting for page to load...")
         try:
-            # Wait for page to load
-            WebDriverWait(driver, 30).until(
+            # Wait for page to load with increased timeout
+            WebDriverWait(driver, 120).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             time.sleep(10)
@@ -416,14 +424,14 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                     car_brands[brand_name] = brand_url
             
             logger.info(f"✅ Found {len(car_brands)} car brands")
-            for brand, url in car_brands.items():
-                logger.info(f"{brand}: {url}")
-            
             for brand in car_brands_names:
                 # also add aditional brands that are not in the list
                 if brand not in car_brands.keys():
                     #url example for 2 words brand https://suchen.mobile.de/auto/alfa-romeo.html
                     car_brands[brand] = f"https://suchen.mobile.de/auto/{brand.lower().replace(' ', '-')}.html"
+
+            # Remove duplicates and sort alphabetically
+            car_brands = dict(sorted(car_brands.items(), key=lambda x: x[0]))
                 
             # Store the results in a more structured format if needed
             car_brands_data = {
@@ -431,8 +439,22 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 'brands': car_brands
             }
             
-            # Process each brand
             for brand, url in car_brands_data['brands'].items():
+                logger.info(f"{brand}: {url}")
+            # Process each brand
+            brands_to_process = list(car_brands_data['brands'].items())
+            start_index = 0
+            if resume_state:
+                try:
+                    resume_brand_name = resume_state['resume_brand']
+                    all_brands = [b[0] for b in brands_to_process]
+                    start_index = all_brands.index(resume_brand_name)
+                    logger.info(f"Found resume brand '{resume_brand_name}' at index {start_index}.")
+                except ValueError:
+                    logger.warning(f"Resume brand '{resume_state['resume_brand']}' not found in the current list. Starting from beginning.")
+                    resume_state = None  # Invalidate state if brand not found
+
+            for brand, url in brands_to_process[start_index:]:
                 
                 # Check if background monitor detected access denied
                 if monitor.is_access_denied():
@@ -442,13 +464,22 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                     
                 log_section(f"PROCESSING BRAND: {brand}")
                 logger.info(f"🌐 Navigating to {brand} at {url}")
+                
+                # Debug: Check if this is the resume brand
+                if resume_state and brand == resume_state.get('resume_brand'):
+                    logger.info(f"🎯 This is the resume brand: {brand}, resume page: {resume_state.get('resume_page')}")
                 driver.get(url)
                 
-                # Wait for page load
-                WebDriverWait(driver, 30).until(
-                    EC.presence_of_element_located((By.TAG_NAME, "body"))
-                )
-                time.sleep(10)  # Wait for page to fully load
+                # Wait for page load with increased timeout
+                try:
+                    WebDriverWait(driver, 120).until(
+                        EC.presence_of_element_located((By.TAG_NAME, "body"))
+                    )
+                    time.sleep(15)  # Wait for page to fully load
+                    logger.info("✅ Page body loaded successfully")
+                except Exception as e:
+                    logger.warning(f"⚠️ Timeout waiting for page body, but continuing: {str(e)}")
+                    time.sleep(10)  # Still wait a bit even if timeout
                 
                 # Check for access denied immediately after navigation
                 is_blocked, ref_number = check_access_denied(driver)
@@ -457,7 +488,9 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                     time.sleep(10)
                     raise AccessDeniedError(f"Blocked on {brand} page with reference: {ref_number}")
                 
-                time.sleep(20)  # Additional wait time to ensure page loads completely
+                # Additional wait time to ensure page loads completely with dynamic content
+                logger.info("⏳ Waiting for dynamic content to load...")
+                time.sleep(30)  # Increased wait time for slow-loading content
                 
                 # Check if we're on mobile version
 
@@ -472,6 +505,39 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                 max_consecutive_empty = 3  # Break if we hit 3 consecutive pages with no results
                 previous_url = driver.current_url  # Track URL changes to detect successful pagination
                 
+                # Skip to the resume page if necessary
+                if resume_state and brand == resume_state.get('resume_brand'):
+                    driver.get(f"https://suchen.mobile.de/auto/{brand.lower().replace(' ', '-')}.html")
+                    resume_page = resume_state.get('resume_page', 1)
+                    if resume_page > 1:
+                        log_section(f"RESUMING: Skipping to page {resume_page} for brand '{brand}'")
+                        # We are on page 1, so we need to click resume_page - 1 times
+                        for i in range(resume_page - 1):
+                            try:
+                                pagination_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Weiter') or @aria-label='Weiter']")
+                                if pagination_button.is_displayed() and pagination_button.is_enabled():
+                                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", pagination_button)
+                                    time.sleep(2)
+                                    driver.execute_script("arguments[0].click();", pagination_button)
+                                    time.sleep(10)
+                                    page_count = i + 1
+                                    logger.info(f"   ...skipped to page {page_count + 1}")
+                                else:
+                                    logger.warning(f"⚠️ Could not find 'Next' button to resume. Starting from page 1.")
+                                    page_count = 0 # Reset page count
+                                    break
+                            except Exception as e:
+                                logger.error(f"❌ Error while skipping to resume page: {str(e)}. Starting brand '{brand}' from page 1.")
+                                page_count = 0 # Reset page count
+                                break
+                        logger.info(f"✅ Successfully resumed at page {page_count + 1}.")
+                    else:
+                        logger.info(f"🔄 Resuming from page 1 for brand '{brand}'")
+                        page_count = 0
+                
+                # Invalidate state after using it once
+                resume_state = None
+                
                 while page_count < max_pages and consecutive_empty_pages < max_consecutive_empty:
                     # Check if background monitor detected access denied
                     if monitor.is_access_denied():
@@ -480,41 +546,54 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                         raise AccessDeniedError(f"Background monitor detection: {detection_info['ref_number']}")
                     
                     page_count += 1
+                    state_manager.save_state(brand, page_count)  # Save state at start of page processing
                     logger.info(f"📄 Processing page {page_count} for {brand}")
                     
                     # Find all potential listing containers first
                     logger.info("🔍 Looking for all potential listing containers...")
                     potential_containers = []
                     
-                    # Try different container selectors that might contain car listings
+                    # Use a more specific selector for car listings
                     container_selectors = [
-                        '[data-testid^="result-listing-"]',
-                        'article[data-testid*="listing"]',
-                        'div[data-testid*="listing"]',
-                        'article[class*="listing"]',
-                        'div[class*="listing"]',
-                        'article[data-testid*="result"]',
-                        'div[data-testid*="result"]'
+                        'span[data-testid^="result-listing-"]',  # Primary selector for listings
+                        'span[data-testid*="listing"]',          # Fallback for listings
+                        'a[data-testid^="result-listing-"]',
+                        'a[data-testid*="listing"]'
                     ]
+                    
+                    # Track unique listings by their mobile.de IDs
+                    unique_listings = {}
                     
                     for selector in container_selectors:
                         try:
                             containers = driver.find_elements(By.CSS_SELECTOR, selector)
-                            potential_containers.extend(containers)
+                            for container in containers:
+                                try:
+                                    # Extract mobile.de ID from the container
+                                    listing_id = container.get_attribute('data-testid')
+                                    if listing_id and listing_id not in unique_listings:
+                                        unique_listings[listing_id] = container
+                                except:
+                                    continue
                         except:
                             continue
                     
-                    logger.info(f"📦 Found {len(potential_containers)} potential containers")
+                    # Convert unique listings back to list
+                    potential_containers = list(unique_listings.values())
+                    logger.info(f"📦 Found {len(potential_containers)} unique potential containers")
                     
-                    # Filter containers to only include those with contact buttons
-                    search_results = []
-                    for container in potential_containers:
-                        if has_contact_button(container):
-                            search_results.append(container)
-                            logger.debug(f"✅ Container has contact button - added to search results")
-                        else:
-                            logger.debug(f"❌ No contact button found in container - skipping")
-                            continue
+                    # Filter containers to only include those with contact buttons - DISABLED
+                    # search_results = []
+                    # for container in potential_containers:
+                    #     if has_contact_button(container):
+                    #         search_results.append(container)
+                    #         logger.debug(f"✅ Container has contact button - added to search results")
+                    #     else:
+                    #         logger.debug(f"❌ No contact button found in container - skipping")
+                    #         continue
+                    
+                    # Use all potential containers as search results (contact button check disabled)
+                    search_results = potential_containers
                     
                     # Always check for access denied first, regardless of results
                     is_blocked, ref_number = check_access_denied(driver)
@@ -613,8 +692,8 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
                             
                             while retry_count < max_retries and not page_loaded:
                                 try:
-                                    # Wait for detail page to load (shorter timeout)
-                                    WebDriverWait(driver, 15).until(
+                                    # Wait for detail page to load with increased timeout
+                                    WebDriverWait(driver, 60).until(
                                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                                     )
                                     time.sleep(3)
@@ -1012,6 +1091,9 @@ def logic_mobilede(PROXY: ProxyABC = EmptyProxy()):
         except Exception as e:
             logger.error(f"❌ Error waiting for page load: {str(e)}")
             raise
+
+        # If we reach here, it means we finished successfully
+        state_manager.clear_state()
 
     except Exception as e:
         logger.error(f"❌ Fatal error: {str(e)}")

@@ -141,7 +141,7 @@ class BaseSeleniumDriver(uc.Chrome):
                 except Exception as e:
                     self.logger.error(f"Could not verify user agent: {e}")
 
-                self.set_page_load_timeout(60)
+                self.set_page_load_timeout(120)
                 self.set_window_size(*self.window_size)
                 self.instance_exist = True
 
