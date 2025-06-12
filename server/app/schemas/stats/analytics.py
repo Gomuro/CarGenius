@@ -42,6 +42,7 @@ class TechnicalDetailsSchema(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+        orm_mode = True
 
 
 """Schemas for car equipment, used in the analytics module."""
@@ -106,6 +107,7 @@ class EquipmentSchema(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+        orm_mode = True
 
 
 """Schemas for json to fill the database with car listings."""
@@ -126,6 +128,7 @@ class ListingCreateRequestSchema(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+        orm_mode = True
 
 
 """Filtering scheme for GET requests with query parameters."""
@@ -140,6 +143,9 @@ class ListingSchema(BaseModel):
     color: Optional[str] = Field(None, description="Filter by car color")
     price_lte: Optional[int] = Field(None, description="Filter by maximum price")
     price_gte: Optional[int] = Field(None, description="Filter by minimum price")
+
+    class Config:
+        orm_mode = True
 
 
 """Schemas for car listings, used in the analytics module."""
@@ -157,6 +163,8 @@ class ListingOut(BaseModel):
     price: float = Field(..., description="Price of the car in the specified currency")
     currency: Optional[str] = Field(..., description="Currency of the price, e.g., EUR")
     url: str = Field(..., description="URL of the car listing")
+    technical_details: Optional[TechnicalDetailsSchema]
+    equipment: Optional[EquipmentSchema]
 
     class Config:
         orm_mode = True
@@ -168,12 +176,16 @@ class ListingStats(BaseModel):
     max_price: Optional[float] = Field(None, description="Maximum price of the car listings")
     count: Optional[int] = Field(None, description="Total number of car listings found")
 
+    class Config:
+        orm_mode = True
+
 
 class ListingFilteredResponse(BaseModel):
     Listings: List[ListingOut]
-    TechnicalDetails: Optional[TechnicalDetailsSchema]
-    Equipment: Optional[EquipmentSchema]
     Stats: ListingStats
+
+    class Config:
+        orm_mode = True
 
 
 class AvgPriceByBrand(BaseModel):
