@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 
 from app.models.car import ListingMobileDe, Equipment, TechnicalDetails
 from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
-    ListingCreateRequestSchema
+    ListingCreateRequestSchema, ListingOut, ListingFilteredResponse, ListingStats
 from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment
 
 
@@ -14,7 +14,7 @@ async def get_filterd(
         listing_filters: ListingSchema,
         tech_filters: TechnicalDetailsSchema,
         equipment_filters: EquipmentSchema
-) -> dict:
+) -> ListingFilteredResponse:
     """Filtering listings with JOIN on TechnicalDetails and Equipment."""
     listing_conditions = filtered_listings(listing_filters)
     techdetails_conditions = filtered_tech_details(tech_filters)
@@ -37,6 +37,8 @@ async def get_filterd(
     result = await db.execute(stmt)
 
     listings = list(result.scalars().all())  # Return a list of ListingMobileDe objects
+    listing_out = [ListingOut.from_orm(item) for item in listings]
+
     if listings:
         price_stmt = (
             select(
@@ -56,17 +58,16 @@ async def get_filterd(
         avg_price, min_price, max_price, count = stats_result.one_or_none()  # return a single row (tuple)  with aggregated stats or None if no listings found
     else:
         avg_price = min_price = max_price = count = 0
-    return {
-        "Listings": listings,
-        "TechnicalDetails": tech_filters,
-        "Equipment": equipment_filters,
-        "Stats": {
-            "avg_price": round(avg_price, 2) if avg_price else 0,
-            "min_price": round(min_price, 2) if min_price else 0,
-            "max_price": round(max_price, 2) if max_price else 0,
-            "count": count
-        }
-    }
+
+    return ListingFilteredResponse(
+        Listings=listing_out,
+        Stats=ListingStats(
+            avg_price=round(avg_price, 2) if avg_price else 0,
+            min_price=round(min_price, 2) if min_price else 0,
+            max_price=round(max_price, 2) if max_price else 0,
+            count=count
+        )
+    )
 
 
 async def listings_json_to_db(db: AsyncSession, data: ListingCreateRequestSchema) -> ListingMobileDe:

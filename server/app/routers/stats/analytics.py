@@ -1,4 +1,5 @@
 # app/routers/stats/analytics.py
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -65,8 +66,24 @@ async def search_listings(
 
 
 @router.get("/average_price", response_model=list[AvgPriceByBrand])
-async def get_average_price(limit: int=20, db: AsyncSession = Depends(get_db)):
+async def get_average_price(limit: int = 20, db: AsyncSession = Depends(get_db)):
     """
     Get average price, max price, min price, and count of car listings grouped by title.
     """
     return await get_avg_price_by_brand(limit, db)
+
+
+from ml.predict import predict_price
+import pandas as pd
+
+# @router.get("/profitable-ml", response_model=List[ListingOut])
+# async def get_profitable_offers(db: AsyncSession = Depends(get_db)):
+#     listings = await get_recent_listings(db)  # отримай з БД
+#     df = pd.DataFrame([listing.dict() for listing in listings])
+#
+#     predictions = predict_price(df)
+#     df["predicted_price"] = predictions
+#     df["is_profitable"] = df["price"] < df["predicted_price"] * 0.85
+#
+#     profitable = df[df["is_profitable"]]
+#     return profitable.to_dict(orient="records")
