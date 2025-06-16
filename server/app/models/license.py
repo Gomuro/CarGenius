@@ -1,5 +1,6 @@
 # app/models/license.py
 from sqlalchemy import Column, DateTime, String, Boolean
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
 from uuid import uuid4
 from app.core.database import Base
@@ -14,3 +15,4 @@ class LicenseKey(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     expires_at = Column(DateTime(timezone=True), nullable=True)
     client_info = Column(String, nullable=True)
+    filters = Column(JSONB, nullable=True, default=lambda: [])
