@@ -1,8 +1,12 @@
 # app/routers/license.py
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.license import LicenseValidateRequest, LicenseValidateResponse, LicenseCreateRequest, \
-    LicenseCreateResponse, UpdateFiltersRequest, FiltersResponse
+
+from app.schemas.license import ListingFilter, LicenseCreateResponse, LicenseCreateRequest, LicenseValidateResponse, \
+    LicenseValidateRequest
+
 from app.services.license import generate_license_key, validate_license_key, validate_license_key_device, \
     get_license_by_key, update_license_filters
 from app.core.database import get_db
@@ -10,6 +14,7 @@ from app.core.logger import logger
 from app.core.rate_limiter import limiter
 
 router = APIRouter()
+
 
 @router.post("/generate", response_model=LicenseCreateResponse)
 @limiter.limit("3/minute")
@@ -23,12 +28,14 @@ async def generate_license(request: Request, payload: LicenseCreateRequest, db: 
         logger.error("Failed to generate license key: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to create license")
 
+
 @router.post("/validate", response_model=LicenseValidateResponse)
 async def validate_license_route(data: LicenseValidateRequest, db: AsyncSession = Depends(get_db)):
     is_valid = await validate_license_key(data.key, data.client_info, db)
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid license key")
     return LicenseValidateResponse(is_valid=is_valid)
+
 
 @router.post("/validate_key_device", response_model=LicenseValidateResponse)
 async def validate_license_route_device(data: LicenseValidateRequest, db: AsyncSession = Depends(get_db)):
@@ -37,27 +44,37 @@ async def validate_license_route_device(data: LicenseValidateRequest, db: AsyncS
         raise HTTPException(status_code=400, detail=message)
     return LicenseValidateResponse(is_valid=is_valid, message=message)
 
-@router.get("/{key}/filters", response_model=FiltersResponse)
+
+@router.get("/{key}/filters", response_model=List[ListingFilter])
+
 async def get_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
     if not license_key:
         raise HTTPException(status_code=404, detail="License key not found")
-    return FiltersResponse(filter=license_key.filters)
 
-@router.put("/{key}/filters", response_model=FiltersResponse)
-async def update_filters(key: str, payload: UpdateFiltersRequest, db: AsyncSession = Depends(get_db)):
+    return [f for f in license_key.filters if isinstance(f, dict)]
+
+
+@router.put("/{key}/filters", response_model=List[ListingFilter])
+async def update_filters(
+        key: str,
+        payload: List[ListingFilter],
+        db: AsyncSession = Depends(get_db)
+):
     license_key = await get_license_by_key(db, key)
     if not license_key:
         raise HTTPException(status_code=404, detail="License key not found")
-    # Convert Pydantic models to dictionaries for JSONB storage
-    filters_as_dicts = [f.dict(exclude_unset=True) for f in payload.filters]
-    updated_license = await update_license_filters(db, license_key, filters_as_dicts)
-    return FiltersResponse(filter=updated_license.filters)
+    updated_license = await update_license_filters(db, license_key, payload)
+    return updated_license.filters
 
-@router.delete("/{key}/filters", response_model=FiltersResponse)
+
+@router.delete("/{key}/filters", response_model=List[ListingFilter])
+
 async def clear_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
     if not license_key:
         raise HTTPException(status_code=404, detail="License key not found")
-    updated_license = await update_license_filters(db, license_key, [])
-    return FiltersResponse(filter=updated_license.filters)
+
+    await update_license_filters(db, license_key, [])
+    return [f for f in license_key.filters if isinstance(f, dict)]
+

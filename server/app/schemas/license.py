@@ -5,17 +5,6 @@ from datetime import datetime
 from .stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSchema
 
 
-class ListingFilter(ListingSchema, TechnicalDetailsSchema, EquipmentSchema):
-    # This class inherits all fields from the other schemas.
-    # Pydantic will ensure all fields are optional by default when they are defined with Optional[...]
-    # or have a default value in the parent schemas.
-    # We can add a Config class if we need to override behavior.
-    class Config:
-        allow_population_by_field_name = True
-        orm_mode = True
-        extra = "forbid"  # This will reject any fields not defined in the schema
-
-
 class LicenseCreateRequest(BaseModel):
     client_info: Optional[str] = None
 
@@ -40,13 +29,12 @@ class LicenseValidateResponse(BaseModel):
     message: Optional[str] = None
 
 
-class UpdateFiltersRequest(BaseModel):
-    filters: List[ListingFilter]
-
-
-class FiltersResponse(BaseModel):
-    filters: List[ListingFilter] = Field(..., alias="filter")
-
+class ListingFilter(ListingSchema, TechnicalDetailsSchema, EquipmentSchema):
+    # This class inherits all fields from the other schemas.
+    # Pydantic will ensure all fields are optional by default when they are defined with Optional[...]
+    # or have a default value in the parent schemas.
+    # We can add a Config class if we need to override behavior.
     class Config:
         allow_population_by_field_name = True
         orm_mode = True
+        extra = "forbid"  # This will reject any fields not defined in the schema

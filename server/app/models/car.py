@@ -69,7 +69,7 @@ class TechnicalDetails(Base):
     trailer_load_braked = Column(Integer, nullable=True)  # 1.200 kg
     trailer_load_unbraked = Column(Integer, nullable=True)  # 750 kg
     net_weight = Column(Integer, nullable=True)  # 2.235 kg
-    waranty_registration = Column(String, nullable=True)  # Garantie ab Erstzulassung
+    warranty_registration = Column(String, nullable=True)  # Garantie ab Erstzulassung
 
 
 class Equipment(Base):

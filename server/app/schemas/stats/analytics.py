@@ -37,7 +37,7 @@ class TechnicalDetailsSchema(BaseModel):
     trailer_load_braked: Optional[int] = Field(None, description="trailerLoadBraked-item")  # 1.200 kg
     trailer_load_unbraked: Optional[int] = Field(None, description="trailerLoadUnbraked-item")  # 750 kg
     net_weight: Optional[int] = Field(None, description="netWeight-item")  # 2.235 kg
-    waranty_registration: Optional[str] = Field(None,
+    warranty_registration: Optional[str] = Field(None,
                                                 description="warrantyRegistration-item")  # Garantie ab Erstzulassung\nNicht angegeben
 
     class Config:
