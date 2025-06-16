@@ -98,16 +98,31 @@ class BaseSeleniumDriver(uc.Chrome):
                     options.add_argument('--headless')
 
                 if isinstance(self.proxy, Proxy):
-                    proxy_connector = ProxyConnectorExtension(self.proxy)
-                    options.add_argument(f'--load-extension={proxy_connector.get_extension_dir()}')
-                    # Universal proxy argument that works for both types
-                    options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
+                    # For authenticated proxies, use proxy extension
+                    if self.proxy.username and self.proxy.userpass:
+                        proxy_connector = ProxyConnectorExtension(self.proxy)
+                        ext_dir = proxy_connector.get_extension_dir()
+                        options.add_argument(f'--load-extension={ext_dir}')
+                        
+                        # Additional arguments to ensure proxy is used
+                        options.add_argument('--disable-extensions-except=' + ext_dir)
+                        options.add_argument('--enable-logging')
+                        options.add_argument('--log-level=0')
+                        options.add_argument('--no-proxy-server')  # Prevent default proxy conflicts
+                        
+                        self.logger.info(f"Using proxy extension for authenticated proxy: {self.proxy.host}:{self.proxy.port}")
+                        self.logger.info(f"Extension directory: {ext_dir}")
+                    else:
+                        # For non-authenticated proxies, use --proxy-server only
+                        options.add_argument(f'--proxy-server=http://{self.proxy.host}:{self.proxy.port}')
+                        self.logger.info(f"Using --proxy-server for non-authenticated proxy: {self.proxy.host}:{self.proxy.port}")
+
                 else:
-                    print("No proxy provided ")
-                    print(f"type(self.proxy): {type(self.proxy)}")
-                    print(f"Proxy: {Proxy}")
-                    print(f"self.proxy.__class__ == Proxy: {self.proxy.__class__ == Proxy}")
-                    print(f"isinstance(self.proxy, Proxy): {isinstance(self.proxy, Proxy)}")
+                    self.logger.info("No proxy provided")
+                    self.logger.debug(f"type(self.proxy): {type(self.proxy)}")
+                    self.logger.debug(f"Proxy: {Proxy}")
+                    self.logger.debug(f"self.proxy.__class__ == Proxy: {self.proxy.__class__ == Proxy}")
+                    self.logger.debug(f"isinstance(self.proxy, Proxy): {isinstance(self.proxy, Proxy)}")
 
                     
 
@@ -126,7 +141,7 @@ class BaseSeleniumDriver(uc.Chrome):
                 except Exception as e:
                     self.logger.error(f"Could not verify user agent: {e}")
 
-                self.set_page_load_timeout(60)
+                self.set_page_load_timeout(120)
                 self.set_window_size(*self.window_size)
                 self.instance_exist = True
 

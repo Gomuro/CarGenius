@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPainterPath, QColor, QCursor
 from .toast_notification import ToastNotification
 from .analytics_dialog import AnalyticsDialog
+from desktop.services.main_api_service import APIService
 
 class MainWindow(QMainWindow):
     theme_changed = pyqtSignal(str)
@@ -14,6 +15,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("CarGenius")
         self.current_theme = "dark"  # Set dark theme as the only theme
         self.tracked_models_criteria = [] # Initialize list for tracked models
+        self.api_service = APIService()
         
         # Set minimum window size for usability
         self.setMinimumSize(800, 600)
@@ -196,8 +198,8 @@ class MainWindow(QMainWindow):
     def _open_analytics_dialog(self):
         """Opens the Car Analytics dialog."""
         # Pass the list of tracked models and self as parent
-        dialog = AnalyticsDialog(self.tracked_models_criteria, parent=self) 
-        dialog.exec() # Show as a modal dialog
+        dialog = AnalyticsDialog(self.tracked_models_criteria, self.api_service, parent=self)
+        dialog.exec()  # Show as a modal dialog
     
     def handle_chat_close(self, event):
         """Handle the chat window close event to update button state"""

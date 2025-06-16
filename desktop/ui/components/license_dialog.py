@@ -110,9 +110,10 @@ class LicenseDialog(QDialog):
         # API validation
         try:
             response = requests.post(
-                f"{GLOBAL.API_BASE_URL}{GLOBAL.LICENSE_VALIDATE_ENDPOINT}",
+                f"{GLOBAL.API_BASE_URL}{GLOBAL.API_PREFIX}{GLOBAL.LICENSE_VALIDATE_ENDPOINT}",
                 json={
                     "key": license_key,
+                    "device_id": "string",
                     "client_info": "string"
                 },
                 timeout=5
@@ -130,7 +131,8 @@ class LicenseDialog(QDialog):
                         "This license key is not valid or has expired")
             else:
                 QMessageBox.critical(self, "Validation Error", 
-                    f"License server error: {response.text}")
+                    f"License server error: {response.json()}")
+                print(response.json())
                 
         except requests.exceptions.RequestException as e:
             QMessageBox.critical(self, "Connection Error",

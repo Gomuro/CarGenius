@@ -2,8 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.license import LicenseValidateRequest, LicenseValidateResponse, LicenseCreateRequest, \
-    LicenseCreateResponse
-from app.services.license import generate_license_key, validate_license_key, validate_license_key_device
+    LicenseCreateResponse, UpdateFiltersRequest, FiltersResponse
+from app.services.license import generate_license_key, validate_license_key, validate_license_key_device, \
+    get_license_by_key, update_license_filters
 from app.core.database import get_db
 from app.core.logger import logger
 from app.core.rate_limiter import limiter
@@ -15,14 +16,8 @@ router = APIRouter()
 async def generate_license(request: Request, payload: LicenseCreateRequest, db: AsyncSession = Depends(get_db)):
     try:
         logger.info("Generating license key for client: %s", payload.client_info)
-        license = await generate_license_key(db, client_info=payload.client_info)
-        return {
-            "key": license.key,
-            "is_active": license.is_active,
-            "created_at": license.created_at,
-            "expires_at": license.expires_at,
-            "client_info": license.client_info
-        }
+        license_key = await generate_license_key(db, client_info=payload.client_info)
+        return license_key
     except Exception as e:
         await db.rollback()
         logger.error("Failed to generate license key: %s", str(e))
@@ -41,3 +36,28 @@ async def validate_license_route_device(data: LicenseValidateRequest, db: AsyncS
     if not is_valid:
         raise HTTPException(status_code=400, detail=message)
     return LicenseValidateResponse(is_valid=is_valid, message=message)
+
+@router.get("/{key}/filters", response_model=FiltersResponse)
+async def get_filters(key: str, db: AsyncSession = Depends(get_db)):
+    license_key = await get_license_by_key(db, key)
+    if not license_key:
+        raise HTTPException(status_code=404, detail="License key not found")
+    return FiltersResponse(filter=license_key.filters)
+
+@router.put("/{key}/filters", response_model=FiltersResponse)
+async def update_filters(key: str, payload: UpdateFiltersRequest, db: AsyncSession = Depends(get_db)):
+    license_key = await get_license_by_key(db, key)
+    if not license_key:
+        raise HTTPException(status_code=404, detail="License key not found")
+    # Convert Pydantic models to dictionaries for JSONB storage
+    filters_as_dicts = [f.dict(exclude_unset=True) for f in payload.filters]
+    updated_license = await update_license_filters(db, license_key, filters_as_dicts)
+    return FiltersResponse(filter=updated_license.filters)
+
+@router.delete("/{key}/filters", response_model=FiltersResponse)
+async def clear_filters(key: str, db: AsyncSession = Depends(get_db)):
+    license_key = await get_license_by_key(db, key)
+    if not license_key:
+        raise HTTPException(status_code=404, detail="License key not found")
+    updated_license = await update_license_filters(db, license_key, [])
+    return FiltersResponse(filter=updated_license.filters)

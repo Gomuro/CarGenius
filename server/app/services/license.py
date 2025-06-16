@@ -1,7 +1,7 @@
 # app/services/license.py
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Tuple
+from typing import Tuple, List, Dict, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -53,3 +53,17 @@ async def validate_license_key_device(key: str, device_id: str, client_info: str
     if licens_obj.device_id != device_id:
         return False, "Device mismatch. This license is bound to another device"
     return True, "License key is valid"
+
+
+async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]:
+    """Retrieve a license by its key."""
+    result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
+    return result.scalar_one_or_none()
+
+
+async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filters: List[Dict]) -> LicenseKey:
+    """Update filters for a given license key."""
+    license_key.filters = filters
+    await db.commit()
+    await db.refresh(license_key)
+    return license_key
