@@ -15,6 +15,7 @@ class LicenseCreateResponse(BaseModel):
     created_at: datetime
     expires_at: Optional[datetime]
     client_info: Optional[str]
+    filters: Optional[List[ListingFilter]] = []
 
 
 class LicenseValidateRequest(BaseModel):

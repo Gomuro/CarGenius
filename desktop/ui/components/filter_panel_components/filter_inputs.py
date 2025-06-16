@@ -24,7 +24,7 @@ class FilterInputs(QWidget):
         
         self.model_input = QComboBox()
         self.model_input.setObjectName("dark_filter_input")
-        self.model_input.addItems(["Any Model"])
+        self.model_input.addItems(["Any Model", "A1", "A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "Q2", "Q4", "Q6", "Q8", "Q2", "Q4", "Q6", "Q8", "Q2", "Q4", "Q6", "Q8"])
         
         self.reg_date_input = QComboBox() # Renamed to avoid conflict with a potential QDate object
         self.reg_date_input.setObjectName("dark_filter_input")
