@@ -1,8 +1,10 @@
 # app/routers/stats/analytics.py
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
+from app.models.car import ListingMobileDe
+from app.models.license import LicenseKey
 from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, \
     EquipmentSchema, ListingCreateRequestSchema, ListingFilteredResponse
 from app.services.stats.analytics import get_avg_price_by_brand, get_filterd, listings_json_to_db
@@ -87,3 +89,28 @@ import pandas as pd
 #
 #     profitable = df[df["is_profitable"]]
 #     return profitable.to_dict(orient="records")
+
+
+from sqlalchemy import select
+
+async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]:
+    """Fetch license key object from DB"""
+    result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
+    return result.scalar_one_or_none()
+
+async def get_listings_by_filters(db: AsyncSession, filters: List[dict]) -> List[ListingMobileDe]:
+    """Query listings from DB applying multiple filters"""
+    query = select(ListingMobileDe)
+    for f in filters:
+        for key, val in f.items():
+            # Build dynamic filter conditions
+            if key.endswith("_lte"):
+                col_name = key[:-4]
+                query = query.where(getattr(ListingMobileDe, col_name) <= val)
+            elif key.endswith("_gte"):
+                col_name = key[:-4]
+                query = query.where(getattr(ListingMobileDe, col_name) >= val)
+            else:
+                query = query.where(getattr(ListingMobileDe, key) == val)
+    result = await db.execute(query)
+    return result.scalars().all()

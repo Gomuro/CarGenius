@@ -22,7 +22,7 @@ CATEGORICAL_COLS = [
     "airbags",
     "manufacturer_color_name",
     "interior",
-    "waranty_registration",
+    "warranty_registration",
 ]
 
 NUMERIC_COLS = [

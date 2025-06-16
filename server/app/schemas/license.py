@@ -9,15 +9,6 @@ class LicenseCreateRequest(BaseModel):
     client_info: Optional[str] = None
 
 
-class LicenseCreateResponse(BaseModel):
-    key: str
-    is_active: bool
-    created_at: datetime
-    expires_at: Optional[datetime]
-    client_info: Optional[str]
-    filters: Optional[List[ListingFilter]] = []
-
-
 class LicenseValidateRequest(BaseModel):
     key: str
     device_id: Optional[str] = None
@@ -38,3 +29,24 @@ class ListingFilter(ListingSchema, TechnicalDetailsSchema, EquipmentSchema):
         allow_population_by_field_name = True
         orm_mode = True
         extra = "forbid"  # This will reject any fields not defined in the schema
+
+
+class LicenseCreateResponse(BaseModel):
+    key: str
+    is_active: bool
+    created_at: datetime
+    expires_at: Optional[datetime]
+    client_info: Optional[str]
+    filters: Optional[List[ListingFilter]] = []
+
+
+
+class ListingMlOut(BaseModel):
+    id: int
+    brand: str
+    model: str
+    price: float
+    mileage: int
+
+    class Config:
+        orm_mode = True
