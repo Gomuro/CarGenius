@@ -3,8 +3,10 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.schemas.license import ListingFilter, LicenseCreateResponse, LicenseCreateRequest, LicenseValidateResponse, \
     LicenseValidateRequest
+
 from app.services.license import generate_license_key, validate_license_key, validate_license_key_device, \
     get_license_by_key, update_license_filters
 from app.core.database import get_db
@@ -19,14 +21,8 @@ router = APIRouter()
 async def generate_license(request: Request, payload: LicenseCreateRequest, db: AsyncSession = Depends(get_db)):
     try:
         logger.info("Generating license key for client: %s", payload.client_info)
-        license = await generate_license_key(db, client_info=payload.client_info)
-        return {
-            "key": license.key,
-            "is_active": license.is_active,
-            "created_at": license.created_at,
-            "expires_at": license.expires_at,
-            "client_info": license.client_info
-        }
+        license_key = await generate_license_key(db, client_info=payload.client_info)
+        return license_key
     except Exception as e:
         await db.rollback()
         logger.error("Failed to generate license key: %s", str(e))
@@ -50,10 +46,12 @@ async def validate_license_route_device(data: LicenseValidateRequest, db: AsyncS
 
 
 @router.get("/{key}/filters", response_model=List[ListingFilter])
+
 async def get_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
     if not license_key:
         raise HTTPException(status_code=404, detail="License key not found")
+
     return [f for f in license_key.filters if isinstance(f, dict)]
 
 
@@ -71,9 +69,12 @@ async def update_filters(
 
 
 @router.delete("/{key}/filters", response_model=List[ListingFilter])
+
 async def clear_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
     if not license_key:
         raise HTTPException(status_code=404, detail="License key not found")
+
     await update_license_filters(db, license_key, [])
     return [f for f in license_key.filters if isinstance(f, dict)]
+

@@ -29,6 +29,7 @@ class GLOBAL:
 
     # Add API configuration
     API_BASE_URL = "http://localhost:8000"  # This can be changed for production
+    API_PREFIX = "/api/v1"
     LICENSE_VALIDATE_ENDPOINT = "/license/validate"
 
     class LOG:

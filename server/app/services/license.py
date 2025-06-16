@@ -1,8 +1,10 @@
 # app/services/license.py
 import uuid
 from datetime import datetime, timedelta, timezone
+
 from fastapi import HTTPException
 from typing import Tuple, Optional, List, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.license import LicenseKey
@@ -78,6 +80,7 @@ async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filt
             )
 
     license_key.filters = [f.dict(exclude_unset=True) for f in filters]
+
     await db.commit()
     await db.refresh(license_key)
     return license_key
