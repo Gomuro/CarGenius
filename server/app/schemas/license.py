@@ -37,3 +37,16 @@ class ListingFilter(ListingSchema, TechnicalDetailsSchema, EquipmentSchema):
         allow_population_by_field_name = True
         orm_mode = True
         extra = "forbid"  # This will reject any fields not defined in the schema
+
+
+
+
+class ListingMlOut(BaseModel):
+    id: int
+    brand: str
+    model: str
+    price: float
+    mileage: int
+
+    class Config:
+        orm_mode = True

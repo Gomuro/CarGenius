@@ -59,7 +59,7 @@ async def validate_license_key_device(key: str, device_id: str, client_info: str
 async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]:
     """Retrieve a license by its key."""
     result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
-    return result.scalar_one_or_none()
+    return result.scalar_one_or_none()   # Expecting a single LicenseKey object or None if not found
 
 
 async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filters: List[ListingFilter]) -> LicenseKey:

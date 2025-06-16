@@ -139,7 +139,7 @@ def upgrade() -> None:
     sa.Column('trailer_load_braked', sa.Integer(), nullable=True),
     sa.Column('trailer_load_unbraked', sa.Integer(), nullable=True),
     sa.Column('net_weight', sa.Integer(), nullable=True),
-    sa.Column('waranty_registration', sa.String(), nullable=True),
+    sa.Column('warranty_registration', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['listing_id'], ['listing_mobilede.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('listing_id'),

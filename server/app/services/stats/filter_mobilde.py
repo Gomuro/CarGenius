@@ -93,8 +93,8 @@ def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[TechnicalDeta
         conditions.append(TechnicalDetails.trailer_load_unbraked == filters.trailer_load_unbraked)
     if filters.net_weight is not None:
         conditions.append(TechnicalDetails.net_weight == filters.net_weight)
-    if filters.waranty_registration is not None:
-        conditions.append(TechnicalDetails.waranty_registration == filters.waranty_registration)
+    if filters.warranty_registration is not None:
+        conditions.append(TechnicalDetails.warranty_registration == filters.warranty_registration)
     return conditions
 
 

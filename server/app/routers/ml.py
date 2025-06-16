@@ -1,10 +1,13 @@
 # # app/routers/ml.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.routers.stats.analytics import get_listings_by_filters
+from app.schemas.license import ListingFilter
 from app.schemas.stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSchema, ListingOut, ListingStats
-from app.services.ml import evaluate_offer
+from app.services.license import get_license_by_key
+from app.services.ml import evaluate_offer, rank_listings_by_price
 from app.services.stats.analytics import get_filterd
 
 router = APIRouter()
@@ -86,3 +89,33 @@ async def suggest_price(
         "similar_listings": response.Listings,
         "stats": response.Stats
     }
+
+
+
+
+
+@router.get("/{license_key}/best-price", response_model=List[ListingFilter])
+async def get_best_price_listings(
+    license_key: str,
+    db: AsyncSession = Depends(get_db),
+):
+    # Step 1: Get License and filters
+    license_obj = await get_license_by_key(db, license_key)
+    if not license_obj:
+        raise HTTPException(status_code=404, detail="License key not found")
+
+    filters = license_obj.filters or []
+    if not filters:
+        raise HTTPException(status_code=400, detail="No filters saved for this license key")
+
+    # Step 2: Query listings applying filters
+    listings = await get_listings_by_filters(db, filters)
+    if not listings:
+        return []  # no matches
+
+    # Step 3: Rank listings with ML or heuristic
+    ranked_listings = rank_listings_by_price(listings)
+
+    # Step 4: Return top N results (e.g., top 10)
+    top_results = ranked_listings[:10]
+    return top_results
