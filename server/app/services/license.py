@@ -1,11 +1,12 @@
 # app/services/license.py
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Tuple
-
+from fastapi import HTTPException
+from typing import Tuple, Optional, List, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.license import LicenseKey
+from app.schemas.license import ListingFilter
 
 
 async def generate_license_key(db: AsyncSession, client_info: str = None, expires_in_days: int = 30) -> LicenseKey:
@@ -53,3 +54,30 @@ async def validate_license_key_device(key: str, device_id: str, client_info: str
     if licens_obj.device_id != device_id:
         return False, "Device mismatch. This license is bound to another device"
     return True, "License key is valid"
+
+
+async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]:
+    """Retrieve a license by its key."""
+    result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
+    return result.scalar_one_or_none()
+
+
+async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filters: List[ListingFilter]) -> LicenseKey:
+    """Update filters for a given license key with validation."""
+
+    allowed_keys = set(ListingFilter.__fields__.keys())
+
+    for i, f in enumerate(filters):
+        print(f"[DEBUG] Type of filter[{i}]:", type(f), f)
+        filter_dict = f.dict(exclude_unset=True)
+        invalid_keys = set(filter_dict.keys()) - allowed_keys
+        if invalid_keys:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid filter keys: {', '.join(invalid_keys)}. Allowed keys: {', '.join(allowed_keys)}"
+            )
+
+    license_key.filters = [f.dict(exclude_unset=True) for f in filters]
+    await db.commit()
+    await db.refresh(license_key)
+    return license_key
