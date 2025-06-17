@@ -15,14 +15,13 @@ from app.core.rate_limiter import limiter
 
 router = APIRouter()
 
-
 @router.post("/generate", response_model=LicenseCreateResponse)
 @limiter.limit("3/minute")
 async def generate_license(request: Request, payload: LicenseCreateRequest, db: AsyncSession = Depends(get_db)):
     try:
         logger.info("Generating license key for client: %s", payload.client_info)
         license_key = await generate_license_key(db, client_info=payload.client_info)
-        return license_key
+        return LicenseCreateResponse.from_orm(license_key)
     except Exception as e:
         await db.rollback()
         logger.error("Failed to generate license key: %s", str(e))

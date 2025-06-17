@@ -8,16 +8,25 @@ from .stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSch
 class LicenseCreateRequest(BaseModel):
     client_info: Optional[str] = None
 
+    class Config:
+        orm_mode = True
+
 
 class LicenseValidateRequest(BaseModel):
     key: str
     device_id: Optional[str] = None
     client_info: str
 
+    class Config:
+        orm_mode = True
+
 
 class LicenseValidateResponse(BaseModel):
     is_valid: bool
     message: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 
 class ListingFilter(ListingSchema, TechnicalDetailsSchema, EquipmentSchema):
@@ -39,6 +48,8 @@ class LicenseCreateResponse(BaseModel):
     client_info: Optional[str]
     filters: Optional[List[ListingFilter]] = []
 
+    class Config:
+        orm_mode = True
 
 
 class ListingMlOut(BaseModel):
