@@ -17,6 +17,7 @@ async def test_generate_license_key(session):
     assert license.is_active is True, f"Expected is_active to be True, got {license.is_active}"
     assert license.created_at <= datetime.now(timezone.utc), f"Created at {license.created_at} is in the future"
     assert license.expires_at is not None, "Expected expires_at to be set"
+    assert license.filters == [], "Expected filters to be an empty list by default"
 
 
 @pytest.mark.asyncio
