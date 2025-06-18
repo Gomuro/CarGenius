@@ -185,15 +185,47 @@ class MainWindow(QMainWindow):
     
     def _handle_model_tracking_request(self, criteria):
         """Handles the request to track a new model based on criteria."""
-        # Basic check for duplicates to avoid adding the exact same criteria multiple times
+        # Check if we have a valid license key
+        from desktop.GLOBAL import GLOBAL
+        license_key = GLOBAL.LICENSE.get_license_key()
+        
+        if not license_key:
+            print("[MainWindow] No license key found, cannot track filters")
+            self._show_custom_notification("Error", "No valid license found. Please enter a license key first.")
+            return
+        
+        # Add to API directly
+        try:
+            # Get current filters from API
+            response = self.api_service.get_tracked_filters_sync(license_key)
+            current_filters = response.get("filters", []) if response else []
+            
+            # Add new criteria if not duplicate
+            if criteria not in current_filters:
+                current_filters.append(criteria)
+                
+                # Save to API
+                update_response = self.api_service.update_tracked_filters_sync(license_key, current_filters)
+                print("response---->",update_response)
+                if update_response:
+                    print(f"[MainWindow] Successfully added filter to tracking: {criteria}")
+                    # Show success notification
+                    filter_display = ", ".join([f"{k}: {v}" for k, v in criteria.items() if v])
+                    self._show_custom_notification("Filter Added", f"Tracking: {filter_display}")
+                else:
+                    print("[MainWindow] Failed to save filter to API")
+                    self._show_custom_notification("Error", "Failed to save filter. Please try again.")
+            else:
+                print(f"[MainWindow] Filter already tracked: {criteria}")
+                self._show_custom_notification("Info", "This filter is already being tracked.")
+                
+        except Exception as e:
+            print(f"[MainWindow] Error tracking filter: {e}")
+            self._show_custom_notification("Error", f"Error saving filter: {str(e)}")
+            
+        # Also keep local copy for backwards compatibility
         if criteria not in self.tracked_models_criteria:
             self.tracked_models_criteria.append(criteria)
-            print(f"[MainWindow] Added to tracked models: {criteria}")
-            print(f"[MainWindow] Current tracked list: {self.tracked_models_criteria}")
-            # Optionally, provide feedback to the user (e.g., a toast notification)
-            # self.show_toast_notification("Model Added", f"'{criteria.get('brand','')} {criteria.get('model','')}' added to tracking.")
-        else:
-            print(f"[MainWindow] Model criteria {criteria} already tracked.")
 
     def _open_analytics_dialog(self):
         """Opens the Car Analytics dialog."""
@@ -209,6 +241,11 @@ class MainWindow(QMainWindow):
         self.chat_fab.style().unpolish(self.chat_fab)
         self.chat_fab.style().polish(self.chat_fab)
         event.accept()  # Allow the window to close
+
+    def _show_custom_notification(self, title, message):
+        """Show a custom toast notification with given title and message"""
+        toast = ToastNotification(title=title, message=message)
+        toast.show_notification()
 
     def show_test_notification(self):
         # Create and show a toast notification
