@@ -28,18 +28,18 @@ class AnalyticsDialog(QDialog):
             return
             
         try:
+            # The API is the source of truth, so we clear the list first.
+            self.tracked_models_criteria.clear()
             response = self.api_service.get_tracked_filters_sync(self.license_key)
-            if response and "filters" in response:
-                # Merge API filters with local ones, avoiding duplicates
-                api_filters = response["filters"]
-                for filter_criteria in api_filters:
-                    if filter_criteria not in self.tracked_models_criteria:
-                        self.tracked_models_criteria.append(filter_criteria)
-                print(f"[AnalyticsDialog] Loaded {len(api_filters)} filters from API")
+            
+            if response is not None:
+                self.tracked_models_criteria.extend(response)
+                print(f"[AnalyticsDialog] Loaded {len(self.tracked_models_criteria)} filters from API")
             else:
                 print("[AnalyticsDialog] No filters found in API response")
         except Exception as e:
             print(f"[AnalyticsDialog] Error loading filters from API: {e}")
+            self.tracked_models_criteria.clear() # Ensure list is empty on error
 
     def _save_tracked_filters_to_api(self):
         """Save current tracked filters to the API"""
@@ -49,7 +49,7 @@ class AnalyticsDialog(QDialog):
             
         try:
             response = self.api_service.update_tracked_filters_sync(self.license_key, self.tracked_models_criteria)
-            if response:
+            if response is not None:
                 print(f"[AnalyticsDialog] Successfully saved {len(self.tracked_models_criteria)} filters to API")
                 return True
             else:

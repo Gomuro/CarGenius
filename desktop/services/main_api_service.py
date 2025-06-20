@@ -20,7 +20,8 @@ class APIService:
         try:
             async with aiohttp.ClientSession() as session:
                 if method.upper() == "GET":
-                    async with session.get(url, params=data) as response:
+                    params = {k: v for k, v in data.items() if v is not None} if data else None
+                    async with session.get(url, params=params) as response:
                         response.raise_for_status()
                         return await response.json()
                 elif method.upper() == "POST":

@@ -198,7 +198,7 @@ class MainWindow(QMainWindow):
         try:
             # Get current filters from API
             response = self.api_service.get_tracked_filters_sync(license_key)
-            current_filters = response.get("filters", []) if response else []
+            current_filters = response if response else []
             
             # Add new criteria if not duplicate
             if criteria not in current_filters:
