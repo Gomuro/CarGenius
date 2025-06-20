@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, 
-                             QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QFrame, QHBoxLayout)
+                             QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QFrame, QHBoxLayout, QGridLayout, QSpacerItem, QSizePolicy)
 from PyQt6.QtCore import Qt, QRectF, QPointF
+from PyQt6.QtGui import QFont, QPalette
 import random
 import math
 
@@ -10,11 +11,168 @@ from desktop.services.main_api_service import APIService
 from .result_table_components.car_listing_widget import CarListingWidget
 from desktop.GLOBAL import GLOBAL
 
+class FilterSummaryCard(QFrame):
+    """Custom widget for displaying filter information in a card format"""
+    
+    def __init__(self, criteria, stats, index, parent_dialog):
+        super().__init__()
+        self.criteria = criteria
+        self.stats = stats
+        self.index = index
+        self.parent_dialog = parent_dialog
+        self.setObjectName("filter_summary_card")
+        self._create_ui()
+    
+    def _create_ui(self):
+        self.setFrameStyle(QFrame.Shape.Box)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 15, 20, 15)
+        layout.setSpacing(12)
+        
+        # Header with filter name and remove button
+        header_layout = QHBoxLayout()
+        
+        # Filter title
+        filter_title = self._create_filter_title()
+        title_label = QLabel(filter_title)
+        title_label.setObjectName("filter_card_title")
+        title_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        header_layout.addWidget(title_label)
+        
+        header_layout.addStretch()
+        
+        # Remove button
+        remove_btn = QPushButton("✕")
+        remove_btn.setObjectName("filter_remove_btn")
+        remove_btn.setFixedSize(24, 24)
+        remove_btn.clicked.connect(self._remove_filter)
+        remove_btn.setToolTip("Remove this filter")
+        header_layout.addWidget(remove_btn)
+        
+        layout.addLayout(header_layout)
+        
+        # Filter details
+        details_layout = QHBoxLayout()
+        details_text = self._create_filter_details()
+        details_label = QLabel(details_text)
+        details_label.setObjectName("filter_card_details")
+        details_label.setWordWrap(True)
+        details_layout.addWidget(details_label)
+        layout.addLayout(details_layout)
+        
+        # Statistics grid
+        if self.stats and "Stats" in self.stats:
+            stats_data = self.stats["Stats"]
+            stats_layout = QGridLayout()
+            stats_layout.setSpacing(8)
+            
+            # Price statistics
+            self._add_stat_item(stats_layout, 0, 0, "Average Price", f"€{stats_data.get('avg_price', 0):,.0f}")
+            self._add_stat_item(stats_layout, 0, 1, "Min Price", f"€{stats_data.get('min_price', 0):,.0f}")
+            self._add_stat_item(stats_layout, 1, 0, "Max Price", f"€{stats_data.get('max_price', 0):,.0f}")
+            self._add_stat_item(stats_layout, 1, 1, "Total Count", str(stats_data.get('count', 0)))
+            
+            layout.addLayout(stats_layout)
+            
+            # Status indicator
+            status_label = QLabel("✓ Data loaded successfully")
+            status_label.setObjectName("filter_card_status_success")
+            layout.addWidget(status_label)
+        else:
+            # Error state
+            error_label = QLabel("⚠ No data available")
+            error_label.setObjectName("filter_card_status_error")
+            layout.addWidget(error_label)
+    
+    def _create_filter_title(self):
+        """Create a concise title for the filter"""
+        parts = []
+        if self.criteria.get('brand'):
+            parts.append(self.criteria['brand'])
+        if self.criteria.get('model'):
+            parts.append(self.criteria['model'])
+        if self.criteria.get('registration_year'):
+            parts.append(str(self.criteria['registration_year']))
+        
+        return " ".join(parts) if parts else "Custom Filter"
+    
+    def _create_filter_details(self):
+        """Create detailed filter information"""
+        details = []
+        if self.criteria.get('price_lte'):
+            details.append(f"Max Price: €{self.criteria['price_lte']:,}")
+        if self.criteria.get('city_or_postal_code'):
+            details.append(f"Location: {self.criteria['city_or_postal_code']}")
+        if self.criteria.get('color'):
+            details.append(f"Color: {self.criteria['color']}")
+        
+        return " • ".join(details) if details else "No additional filters"
+    
+    def _add_stat_item(self, layout, row, col, label, value):
+        """Add a statistic item to the grid"""
+        label_widget = QLabel(label)
+        label_widget.setObjectName("stat_label")
+        
+        value_widget = QLabel(value)
+        value_widget.setObjectName("stat_value")
+        value_widget.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        
+        item_layout = QVBoxLayout()
+        item_layout.setSpacing(2)
+        item_layout.addWidget(label_widget)
+        item_layout.addWidget(value_widget)
+        
+        item_widget = QWidget()
+        item_widget.setLayout(item_layout)
+        item_widget.setObjectName("stat_item")
+        
+        layout.addWidget(item_widget, row, col)
+    
+    def _remove_filter(self):
+        """Remove this filter from tracking"""
+        self.parent_dialog.remove_tracked_filter(self.index)
+
+class EmptyStateWidget(QWidget):
+    """Widget to show when there are no tracked filters"""
+    
+    def __init__(self, message, action_text=None):
+        super().__init__()
+        self.message = message
+        self.action_text = action_text
+        self._create_ui()
+    
+    def _create_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setSpacing(20)
+        
+        # Empty state icon
+        icon_label = QLabel("📊")
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_label.setStyleSheet("font-size: 48px;")
+        layout.addWidget(icon_label)
+        
+        # Message
+        message_label = QLabel(self.message)
+        message_label.setObjectName("empty_state_message")
+        message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        message_label.setWordWrap(True)
+        message_label.setFont(QFont("Segoe UI", 14))
+        layout.addWidget(message_label)
+        
+        if self.action_text:
+            action_label = QLabel(self.action_text)
+            action_label.setObjectName("empty_state_action")
+            action_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            action_label.setWordWrap(True)
+            layout.addWidget(action_label)
+
 class AnalyticsDialog(QDialog):
     def __init__(self, tracked_models_criteria, api_service: APIService, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Car Analytics & Price Trends")
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(900, 700)
+        self.resize(1200, 800)
         self.tracked_models_criteria = tracked_models_criteria.copy() if tracked_models_criteria else []
         self.api_service = api_service
         self.license_key = GLOBAL.LICENSE.get_license_key()
@@ -116,9 +274,9 @@ class AnalyticsDialog(QDialog):
         self.price_trends_tab_content = self._create_price_trends_tab()
         self.profitable_offers_tab_content = self._create_profitable_offers_tab()
 
-        self.tab_widget.addTab(self.average_prices_tab_content, "Average Prices")
-        self.tab_widget.addTab(self.price_trends_tab_content, "Price Trends")
-        self.tab_widget.addTab(self.profitable_offers_tab_content, "Profitable Offers")
+        self.tab_widget.addTab(self.average_prices_tab_content, "📊 Price Overview")
+        self.tab_widget.addTab(self.price_trends_tab_content, "📈 Trends")
+        self.tab_widget.addTab(self.profitable_offers_tab_content, "💰 Hot Deals")
         
         # Restore current tab
         if current_index < self.tab_widget.count():
@@ -126,22 +284,47 @@ class AnalyticsDialog(QDialog):
 
     def _create_ui(self):
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(20)
+        
+        # Header section
+        header_layout = QHBoxLayout()
+        
+        # Title and subtitle
+        title_layout = QVBoxLayout()
+        title_label = QLabel("Analytics Dashboard")
+        title_label.setObjectName("analytics_title")
+        title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        title_layout.addWidget(title_label)
+        
+        subtitle_label = QLabel("Track and analyze car market trends")
+        subtitle_label.setObjectName("analytics_subtitle")
+        subtitle_label.setFont(QFont("Segoe UI", 12))
+        title_layout.addWidget(subtitle_label)
+        
+        header_layout.addLayout(title_layout)
+        header_layout.addStretch()
+        
+        main_layout.addLayout(header_layout)
+        
+        # Tab widget
         self.tab_widget = QTabWidget()
+        self.tab_widget.setObjectName("analytics_tabs")
         main_layout.addWidget(self.tab_widget)
 
         self.average_prices_tab_content = self._create_average_prices_tab()
         self.price_trends_tab_content = self._create_price_trends_tab()
         self.profitable_offers_tab_content = self._create_profitable_offers_tab()
 
-        self.tab_widget.addTab(self.average_prices_tab_content, "Average Prices")
-        self.tab_widget.addTab(self.price_trends_tab_content, "Price Trends")
-        self.tab_widget.addTab(self.profitable_offers_tab_content, "Profitable Offers")
+        self.tab_widget.addTab(self.average_prices_tab_content, "📊 Price Overview")
+        self.tab_widget.addTab(self.price_trends_tab_content, "📈 Trends")
+        self.tab_widget.addTab(self.profitable_offers_tab_content, "💰 Hot Deals")
 
         # Bottom buttons layout
         button_layout = QHBoxLayout()
         
         # Clear All Filters button
-        clear_all_button = QPushButton("Clear All Filters")
+        clear_all_button = QPushButton("🗑 Clear All Filters")
         clear_all_button.setObjectName("danger_button")
         clear_all_button.clicked.connect(self.clear_all_tracked_filters)
         button_layout.addWidget(clear_all_button)
@@ -151,6 +334,7 @@ class AnalyticsDialog(QDialog):
         
         # Close button
         close_button = QPushButton("Close")
+        close_button.setObjectName("primary_button")
         close_button.clicked.connect(self.accept)
         button_layout.addWidget(close_button)
         
@@ -168,89 +352,60 @@ class AnalyticsDialog(QDialog):
     def _create_average_prices_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
-
-        table = QTableWidget()
-        table.setColumnCount(7)
-        table.setHorizontalHeaderLabels(["Tracked Filters", "Avg Price", "Min Price", "Max Price", "Count", "Status", "Actions"])
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
 
         if not self.tracked_models_criteria:
-            # Show message when no filters are tracked
-            table.setRowCount(1)
-            item = QTableWidgetItem("No tracked filters. Use the main page to add filters and track specific models.")
-            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            table.setSpan(0, 0, 1, 7)
-            table.setItem(0, 0, item)
+            # Show empty state
+            empty_widget = EmptyStateWidget(
+                "No tracked filters yet",
+                "Use the main page to add filters and track specific car models for analysis."
+            )
+            layout.addWidget(empty_widget)
         else:
-            # Show statistics for each tracked criteria
-            table.setRowCount(len(self.tracked_models_criteria))
+            # Create scroll area for filter cards
+            scroll_area = QScrollArea()
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setFrameShape(QFrame.Shape.NoFrame)
             
+            scroll_widget = QWidget()
+            scroll_layout = QVBoxLayout(scroll_widget)
+            scroll_layout.setContentsMargins(0, 0, 0, 0)
+            scroll_layout.setSpacing(15)
+            
+            # Show statistics for each tracked criteria
             for i, criteria in enumerate(self.tracked_models_criteria):
-                # Create filter display text
-                filter_parts = {}
-                if criteria.get('price_lte') and criteria.get('price_lte') != None:
-                    filter_parts['max_price'] = f"≤ €{criteria.get('price_lte'):,}"
-                if criteria.get('brand') and criteria.get('brand') != None:
-                    filter_parts['brand'] = criteria.get('brand')
-                if criteria.get('model') and criteria.get('model') != None:
-                    filter_parts['model'] = criteria.get('model')
-                if criteria.get('registration_year') and criteria.get('registration_year') != None:
-                    filter_parts['year'] = str(criteria.get('registration_year'))
-                if criteria.get('city_or_postal_code') and criteria.get('city_or_postal_code') != None:
-                    filter_parts['location'] = criteria.get('city_or_postal_code')
-                if criteria.get('color') and criteria.get('color') != None:
-                    filter_parts['color'] = criteria.get('color')
-                
-                filter_text = " | ".join([f"{k}: {v}" for k, v in filter_parts.items()]) if filter_parts else "No filters"
-                
-                table.setItem(i, 0, QTableWidgetItem(filter_text))
-
                 # Fetch statistics for this criteria
                 try:
                     response = self.api_service.search_listings_sync(criteria)
-                    if response and "Stats" in response:
-                        stats = response["Stats"]
-                        table.setItem(i, 1, QTableWidgetItem(f"€{stats.get('avg_price', 0):,.2f}"))
-                        table.setItem(i, 2, QTableWidgetItem(f"€{stats.get('min_price', 0):,.2f}"))
-                        table.setItem(i, 3, QTableWidgetItem(f"€{stats.get('max_price', 0):,.2f}"))
-                        table.setItem(i, 4, QTableWidgetItem(str(stats.get('count', 0))))
-                        table.setItem(i, 5, QTableWidgetItem("✓ Data loaded"))
-                    else:
-                        table.setItem(i, 1, QTableWidgetItem("No data"))
-                        table.setItem(i, 2, QTableWidgetItem("No data"))
-                        table.setItem(i, 3, QTableWidgetItem("No data"))
-                        table.setItem(i, 4, QTableWidgetItem("0"))
-                        table.setItem(i, 5, QTableWidgetItem("✗ No data"))
+                    stats = response if response else None
                 except Exception as e:
-                    # Handle API errors
-                    table.setItem(i, 1, QTableWidgetItem("Error"))
-                    table.setItem(i, 2, QTableWidgetItem("Error"))
-                    table.setItem(i, 3, QTableWidgetItem("Error"))
-                    table.setItem(i, 4, QTableWidgetItem("Error"))
-                    table.setItem(i, 5, QTableWidgetItem(f"✗ Error: {str(e)[:30]}..."))
+                    print(f"Error fetching stats for filter {i}: {e}")
+                    stats = None
+                
+                # Create filter card
+                filter_card = FilterSummaryCard(criteria, stats, i, self)
+                scroll_layout.addWidget(filter_card)
+            
+            scroll_layout.addStretch()
+            scroll_area.setWidget(scroll_widget)
+            layout.addWidget(scroll_area)
 
-                # Add delete button
-                delete_button = QPushButton("🗑️ Remove")
-                delete_button.setObjectName("small_danger_button")
-                delete_button.clicked.connect(lambda checked, idx=i: self.remove_tracked_filter(idx))
-                table.setCellWidget(i, 6, delete_button)
-
-        layout.addWidget(table)
         return widget
 
     def _create_price_trends_tab(self):
         # This tab will now hold a scrollable list of individual graphs
         scroll_widget = QWidget() # Widget to hold the layout of graphs
         scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setContentsMargins(10,10,10,10)
-        scroll_layout.setSpacing(20)
+        scroll_layout.setContentsMargins(20, 20, 20, 20)
+        scroll_layout.setSpacing(30)
 
         if not self.tracked_models_criteria:
-            info_label = QLabel("No models are currently tracked for price trends. "
-                                "Add models using the main page filters and 'Track Specific Models' mode.")
-            info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            info_label.setWordWrap(True)
-            scroll_layout.addWidget(info_label)
+            empty_widget = EmptyStateWidget(
+                "No price trends available",
+                "Add tracked filters to see price trend analysis over time."
+            )
+            scroll_layout.addWidget(empty_widget)
         else:
             for criteria in self.tracked_models_criteria:
                 model_name_parts = []
@@ -261,12 +416,6 @@ class AnalyticsDialog(QDialog):
                 if criteria.get("registration_year") and criteria.get("registration_year") != "N/A":
                     model_name_parts.append(str(criteria.get("registration_year")))
                 model_display_name = " ".join(model_name_parts) if model_name_parts else "Unknown Model"
-
-                # Graph Title (could also be part of the graph widget itself)
-                # graph_title_label = QLabel(f"Price Trend: {model_display_name}")
-                # graph_title_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-                # graph_title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                # scroll_layout.addWidget(graph_title_label)
 
                 # Generate mock data for this model
                 # Adjust base_price and volatility based on criteria if desired
@@ -288,8 +437,8 @@ class AnalyticsDialog(QDialog):
     def _create_profitable_offers_tab(self):
         container = QWidget()
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
 
         # Mock data for profitable offers
         profitable_cars = [
@@ -344,9 +493,11 @@ class AnalyticsDialog(QDialog):
         ]
 
         if not profitable_cars:
-            info_label = QLabel("No profitable offers found based on current criteria.")
-            info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.addWidget(info_label)
+            empty_widget = EmptyStateWidget(
+                "No profitable offers found",
+                "Based on your current tracked filters, we couldn't find any below-market deals."
+            )
+            layout.addWidget(empty_widget)
         else:
             for car_data in profitable_cars:
                 listing_widget = CarListingWidget(car_data)
