@@ -5,7 +5,8 @@ from .filter_panel_components.filter_inputs import FilterInputs
 from .filter_panel_components.filter_options import FilterOptions
 
 class FilterPanel(BaseComponent):
-    model_tracking_requested = pyqtSignal(dict)
+    # Signal to emit complete filter criteria for tracking
+    model_tracking_requested = pyqtSignal(dict)  # Now emits complete filter criteria
 
     def _create_ui(self):
         self.is_tracking_mode = False
@@ -48,22 +49,17 @@ class FilterPanel(BaseComponent):
             self.filter_inputs_widget.set_search_button_text("Add to Tracked List")
         else:
             self.is_tracking_mode = False
-            self.filter_inputs_widget.set_search_button_text(self.filter_inputs_widget.original_search_button_text)
+            self.filter_inputs_widget.restore_auto_button_updates()
 
     def _on_search_button_clicked(self):
         if self.is_tracking_mode:
             criteria = self.filter_inputs_widget.get_criteria()
-            # For tracking, we might only care about brand, model, year
-            model_criteria = {
-                "brand": criteria.get("brand"),
-                "model": criteria.get("model"),
-                "year": criteria.get("year"),
-            }
-            if any(model_criteria.values()): 
-                print(f"[FilterPanel] Tracking requested for: {model_criteria}")
-                self.model_tracking_requested.emit(model_criteria)
+            # Include all available filter criteria for tracking
+            if criteria:  # If any criteria is set
+                print(f"[FilterPanel] Tracking requested for: {criteria}")
+                self.model_tracking_requested.emit(criteria)
             else:
-                print("[FilterPanel] Tracking requested, but no specific criteria set.")
+                print("[FilterPanel] Tracking requested, but no criteria set.")
         else:
             print("[FilterPanel] Normal search button clicked.")
             # Implement actual search logic here based on self.filter_inputs_widget.get_criteria()

@@ -1,17 +1,67 @@
-/* Modern Dark Theme */
+/* ============================================================================
+   CARGENIUS DESKTOP APPLICATION - DARK THEME STYLESHEET
+   ============================================================================
+   
+   This stylesheet provides a modern dark theme for the CarGenius desktop app.
+   Organized into logical sections for easy navigation and maintenance.
+   
+   TABLE OF CONTENTS:
+   1. BASE & GLOBAL STYLES
+   2. WINDOW & LAYOUT COMPONENTS  
+   3. FORM CONTROLS & INPUTS
+   4. BUTTONS & INTERACTIVE ELEMENTS
+   5. TABLES & DATA DISPLAY
+   6. NAVIGATION & TABS
+   7. NOTIFICATIONS & ALERTS
+   8. CHAT & MESSAGING
+   9. ANALYTICS & DASHBOARD
+   10. DIALOGS & MODALS
+   11. SPECIALIZED COMPONENTS
+   
+   ============================================================================ */
+
+/* ============================================================================
+   1. BASE & GLOBAL STYLES
+   ============================================================================ */
+
+/* Base widget styling */
 QWidget {
     color: #f8f9fa;
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 13px;
 }
 
-/* Main Window and Scrolling */
+/* Main application window */
 QMainWindow {
     background-color: #212529;
     min-width: 800px;
     min-height: 600px;
 }
 
+/* Basic labels and text */
+QLabel {
+    color: #adb5bd;
+    font-weight: 500;
+}
+
+QLabel#section_title, QLabel#filter_title {
+    color: #f8f9fa;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+QLabel#slider_value {
+    color: #4dabf7;
+    font-weight: bold;
+    padding: 2px 0;
+}
+
+/* ============================================================================
+   2. WINDOW & LAYOUT COMPONENTS
+   ============================================================================ */
+
+/* Scroll areas and scrollbars */
 QScrollArea {
     background-color: #212529;
     border: none;
@@ -57,7 +107,7 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     width: 0px;
 }
 
-/* Header Styling */
+/* Header sections */
 #header_frame {
     background-color: #343a40;
     border-radius: 10px;
@@ -73,7 +123,7 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     letter-spacing: -0.5px;
 }
 
-/* Cards and Containers */
+/* Card containers and frames */
 #filter_card, #notification_frame {
     background-color: #343a40;
     border-radius: 10px;
@@ -90,7 +140,11 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     margin: 5px 0 15px 0;
 }
 
-/* Form Controls */
+/* ============================================================================
+   3. FORM CONTROLS & INPUTS
+   ============================================================================ */
+
+/* Text inputs, dropdowns, and date controls */
 QLineEdit, QComboBox, QDateEdit {
     border: 1px solid #495057;
     border-radius: 6px;
@@ -109,7 +163,7 @@ QLineEdit:hover, QComboBox:hover {
     border-color: #6c757d;
 }
 
-/* ComboBox Styling */
+/* ComboBox specific styling */
 QComboBox {
     padding-right: 20px;
 }
@@ -137,7 +191,7 @@ QComboBox QAbstractItemView {
     outline: none;
 }
 
-/* DateEdit Styling */
+/* DateEdit specific styling */
 QDateEdit {
     padding-right: 20px;
 }
@@ -163,7 +217,7 @@ QDateEdit::up-button, QDateEdit::down-button {
     border: none;
 }
 
-/* Calendar Widget */
+/* Calendar widget */
 QCalendarWidget {
     background-color: #343a40;
     color: #f8f9fa;
@@ -195,92 +249,6 @@ QCalendarWidget QAbstractItemView:disabled {
     color: #6c757d;
 }
 
-QLabel {
-    color: #adb5bd;
-    font-weight: 500;
-}
-
-QLabel#section_title, QLabel#filter_title {
-    color: #f8f9fa;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 5px 0;
-}
-
-QLabel#slider_value {
-    color: #4dabf7;
-    font-weight: bold;
-    padding: 2px 0;
-}
-
-/* Buttons */
-QPushButton {
-    background-color: #4dabf7;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-weight: bold;
-    font-size: 13px;
-}
-
-QPushButton:hover {
-    background-color: #339af0;
-}
-
-QPushButton:pressed {
-    background-color: #228be6;
-}
-
-#action_button {
-    background-color: #20c997;
-    font-size: 14px;
-    padding: 10px 18px;
-}
-
-#action_button:hover {
-    background-color: #12b886;
-}
-
-#theme_button {
-    background-color: #fd7e14;
-    padding: 6px 12px;
-    font-size: 12px;
-}
-
-#small_button {
-    padding: 6px 10px;
-    font-size: 11px;
-    background-color: #6c757d;
-}
-
-/* Table Styling */
-QTableWidget {
-    background-color: #343a40;
-    border: 1px solid #495057;
-    border-radius: 8px;
-    padding: 2px;
-    gridline-color: #495057;
-}
-
-QTableWidget::item {
-    padding: 8px;
-    border-bottom: 1px solid #495057;
-}
-
-QTableWidget::item:selected {
-    background-color: #4c6ef5;
-    color: #f8f9fa;
-}
-
-QHeaderView::section {
-    background-color: #495057;
-    color: #f8f9fa;
-    padding: 8px;
-    border: none;
-    font-weight: bold;
-}
-
 /* Sliders */
 QSlider::groove:horizontal {
     height: 6px;
@@ -301,7 +269,987 @@ QSlider::sub-page:horizontal {
     border-radius: 3px;
 }
 
-/* Clean filter panel styling */
+/* ============================================================================
+   4. BUTTONS & INTERACTIVE ELEMENTS
+   ============================================================================ */
+
+/* Default button styling */
+QPushButton {
+    background-color: #4dabf7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+QPushButton:hover {
+    background-color: #339af0;
+}
+
+QPushButton:pressed {
+    background-color: #228be6;
+}
+
+/* Primary action buttons */
+#primary_button {
+    background-color: #4dabf7;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    min-width: 100px;
+}
+
+#primary_button:hover {
+    background-color: #339af0;
+}
+
+#primary_button:pressed {
+    background-color: #228be6;
+}
+
+/* Secondary buttons */
+#secondary_button {
+    background-color: #495057;
+    color: #e9ecef;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#secondary_button:hover {
+    background-color: #6c757d;
+}
+
+#secondary_button:pressed {
+    background-color: #495057;
+}
+
+/* Action buttons */
+#action_button {
+    background-color: #20c997;
+    font-size: 14px;
+    padding: 10px 18px;
+}
+
+#action_button:hover {
+    background-color: #12b886;
+}
+
+/* Theme toggle button */
+#theme_button {
+    background-color: #fd7e14;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Small utility buttons */
+#small_button {
+    padding: 6px 10px;
+    font-size: 11px;
+    background-color: #6c757d;
+}
+
+/* Danger/destructive buttons */
+#danger_button {
+    background-color: #dc3545;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    min-width: 100px;
+}
+
+#danger_button:hover {
+    background-color: #bb2d3b;
+}
+
+#danger_button:pressed {
+    background-color: #a02834;
+}
+
+#small_danger_button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    min-width: 60px;
+}
+
+#small_danger_button:hover {
+    background-color: #c82333;
+}
+
+#small_danger_button:pressed {
+    background-color: #bd2130;
+}
+
+/* Text-based buttons */
+#text_button {
+    background-color: transparent;
+    border: none;
+    color: #4dabf7;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#text_button:hover {
+    color: #74c0fc;
+    text-decoration: underline;
+}
+
+#dark_text_button {
+    background-color: transparent;
+    border: none;
+    color: #4dabf7;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#dark_text_button:hover {
+    color: #74c0fc;
+    text-decoration: underline;
+}
+
+/* Floating Action Button */
+#chat_fab {
+    background-color: #5D94FB;
+    color: white;
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#chat_fab:hover {
+    background-color: #4A7DD9;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+}
+
+#chat_fab:pressed {
+    background-color: #3A6AC7;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#chat_fab_active {
+    background-color: #E83E32;
+    color: white;
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#chat_fab_active:hover {
+    background-color: #C0392B;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+}
+
+#chat_fab_active:pressed {
+    background-color: #A93226;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+   5. TABLES & DATA DISPLAY
+   ============================================================================ */
+
+/* Table widgets */
+QTableWidget {
+    background-color: #343a40;
+    border: 1px solid #495057;
+    border-radius: 8px;
+    padding: 2px;
+    gridline-color: #495057;
+}
+
+QTableWidget::item {
+    padding: 8px;
+    border-bottom: 1px solid #495057;
+}
+
+QTableWidget::item:selected {
+    background-color: #4c6ef5;
+    color: #f8f9fa;
+}
+
+/* Table headers */
+QHeaderView::section {
+    background-color: #495057;
+    color: #f8f9fa;
+    padding: 8px;
+    border: none;
+    font-weight: bold;
+}
+
+/* ============================================================================
+   6. NAVIGATION & TABS
+   ============================================================================ */
+
+/* Tab widgets for analytics and other sections */
+#analytics_tabs QTabWidget::pane {
+    border: 1px solid #495057;
+    border-radius: 8px;
+    background-color: #343a40;
+}
+
+#analytics_tabs QTabBar::tab {
+    background-color: #495057;
+    color: #adb5bd;
+    padding: 12px 20px;
+    margin-right: 2px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    min-width: 120px;
+    font-weight: 500;
+}
+
+#analytics_tabs QTabBar::tab:selected {
+    background-color: #4dabf7;
+    color: white;
+    font-weight: bold;
+}
+
+#analytics_tabs QTabBar::tab:hover:!selected {
+    background-color: #6c757d;
+    color: #f8f9fa;
+}
+
+/* ============================================================================
+   7. NOTIFICATIONS & ALERTS
+   ============================================================================ */
+
+/* Notification panel */
+#notification_panel {
+    background-color: #1E2228;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px;
+}
+
+#section_title {
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* Notification toasts */
+#notification_toast {
+    background: #2D2D2D;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    border-left: 4px solid #4CAF50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#notification_toast:hover {
+    background: #333333;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Notification content styling */
+#match_title {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#match_subtitle {
+    color: #AAAAAA;
+    font-size: 12px;
+}
+
+#match_price {
+    color: #4CAF50;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#timestamp {
+    color: #888888;
+    font-size: 12px;
+}
+
+/* Different notification types */
+#notification_toast[type="match"] {
+    border-left-color: #4CAF50;
+}
+
+#notification_toast[type="price_drop"] {
+    border-left-color: #2196F3;
+}
+
+#notification_toast[type="new_arrival"] {
+    border-left-color: #FF9800;
+}
+
+/* ============================================================================
+   8. CHAT & MESSAGING - PREMIUM MODERN DESIGN
+   ============================================================================ */
+
+/* Chat window main container with premium glass effect */
+#ai_chat_window {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
+                               stop:0 rgba(26, 29, 35, 0.95), 
+                               stop:0.5 rgba(45, 52, 66, 0.95), 
+                               stop:1 rgba(55, 65, 81, 0.95));
+    backdrop-filter: blur(40px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4),
+                0 15px 35px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Chat splitter styling */
+#chat_splitter {
+    border: none;
+    background: transparent;
+}
+
+#chat_splitter::handle {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin: 10px 0;
+}
+
+#chat_splitter::handle:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+/* Main chat widget container */
+#chat_main_widget {
+    background: transparent;
+    border-radius: 20px;
+}
+
+/* Premium header frame */
+#chat_header_frame {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(102, 126, 234, 0.1),
+                               stop:1 rgba(118, 75, 162, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Chat window header with premium gradient text */
+#chat_header {
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.8px;
+    margin: 0;
+    padding: 0;
+    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Online status indicator */
+#chat_status {
+    color: #10B981;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    padding: 4px 8px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Premium chat scroll area */
+#chat_scroll_area {
+    background: transparent;
+    border: none;
+    border-radius: 20px;
+}
+
+/* Messages container with advanced glass morphism */
+#messages_container {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                               stop:0 rgba(45, 52, 66, 0.08),
+                               stop:0.5 rgba(55, 65, 81, 0.12),
+                               stop:1 rgba(45, 52, 66, 0.08));
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px 15px;
+    margin: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25),
+                0 4px 16px rgba(102, 126, 234, 0.1),
+                inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Ultra modern scrollbar for chat */
+#chat_scroll_area QScrollBar:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                               stop:0 rgba(255, 255, 255, 0.03),
+                               stop:1 rgba(102, 126, 234, 0.05));
+    width: 8px;
+    margin: 12px 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#chat_scroll_area QScrollBar::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                               stop:0 #667eea, 
+                               stop:0.5 #764ba2, 
+                               stop:1 #f093fb);
+    min-height: 40px;
+    border-radius: 4px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4),
+                0 2px 6px rgba(118, 75, 162, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+#chat_scroll_area QScrollBar::handle:vertical:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                               stop:0 #5a67d8, 
+                               stop:0.5 #553c9a, 
+                               stop:1 #e081fc);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6),
+                0 4px 12px rgba(118, 75, 162, 0.4);
+    transform: scaleX(1.2);
+}
+
+#chat_scroll_area QScrollBar::add-line:vertical,
+#chat_scroll_area QScrollBar::sub-line:vertical {
+    height: 0px;
+    border: none;
+    background: transparent;
+}
+
+/* Premium message bubbles with advanced styling */
+#user_bubble {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
+    color: white;
+    border-radius: 22px;
+    border-bottom-right-radius: 6px;
+    max-width: 70%;
+    margin: 12px 20px 12px 80px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4), 
+                0 6px 20px rgba(118, 75, 162, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.4);
+}
+
+#user_bubble::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 #667eea, stop:1 #764ba2);
+    border-radius: 22px;
+    z-index: -1;
+}
+
+#ai_bubble {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(45, 52, 66, 0.95), 
+                               stop:1 rgba(55, 65, 81, 0.95));
+    backdrop-filter: blur(25px);
+    color: #F8FAFC;
+    border-radius: 22px;
+    border-bottom-left-radius: 6px;
+    max-width: 70%;
+    margin: 12px 80px 12px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35),
+                0 8px 20px rgba(0, 0, 0, 0.25),
+                inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+
+#user_bubble:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4), 
+                0 8px 20px rgba(118, 75, 162, 0.3);
+}
+
+#ai_bubble:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4),
+                0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Message bubble content with better typography */
+#user_bubble #sender_label, #ai_bubble #sender_label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 16px 4px 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#user_bubble #message_content, #ai_bubble #message_content {
+    padding: 4px 16px 16px 16px;
+    line-height: 1.6;
+    font-size: 14px;
+    font-weight: 400;
+    word-wrap: break-word;
+}
+
+#user_bubble #message_content {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium chat input frame with advanced glass morphism */
+#premium_input_frame {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(45, 52, 66, 0.95),
+                               stop:0.5 rgba(55, 65, 81, 0.98),
+                               stop:1 rgba(45, 52, 66, 0.95));
+    backdrop-filter: blur(40px);
+    border-radius: 24px;
+    margin: 20px 0 10px 0;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+                0 6px 20px rgba(0, 0, 0, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.15),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+#premium_input_frame:focus-within {
+    border: 2px solid rgba(102, 126, 234, 0.7);
+    box-shadow: 0 16px 48px rgba(102, 126, 234, 0.25),
+                0 8px 24px rgba(118, 75, 162, 0.15),
+                0 0 0 6px rgba(102, 126, 234, 0.08),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Input container with glass effect */
+#input_container {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Premium text input with enhanced styling */
+#premium_input_text {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                               stop:0 rgba(255, 255, 255, 0.04),
+                               stop:0.5 rgba(255, 255, 255, 0.06),
+                               stop:1 rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    color: #F8FAFC;
+    padding: 16px 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    font-weight: 400;
+    selection-background-color: rgba(102, 126, 234, 0.4);
+    selection-color: white;
+    backdrop-filter: blur(15px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#premium_input_text:focus {
+    border: 1px solid rgba(102, 126, 234, 0.6);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                               stop:0 rgba(255, 255, 255, 0.08),
+                               stop:0.5 rgba(102, 126, 234, 0.05),
+                               stop:1 rgba(255, 255, 255, 0.08));
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12),
+                inset 0 1px 3px rgba(0, 0, 0, 0.1),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#premium_input_text::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+    font-style: normal;
+    font-weight: 300;
+}
+
+/* Premium input text scrollbar */
+#premium_input_text QScrollBar:vertical {
+    background: rgba(255, 255, 255, 0.05);
+    width: 6px;
+    margin: 4px 2px;
+    border-radius: 3px;
+    border: none;
+}
+
+#premium_input_text QScrollBar::handle:vertical {
+    background: rgba(102, 126, 234, 0.6);
+    min-height: 20px;
+    border-radius: 3px;
+    border: none;
+}
+
+#premium_input_text QScrollBar::handle:vertical:hover {
+    background: rgba(102, 126, 234, 0.8);
+}
+
+/* Premium circular send button with stunning effects */
+#premium_send_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 #667eea, 
+                               stop:0.3 #764ba2, 
+                               stop:0.7 #f093fb,
+                               stop:1 #667eea);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 28px;  /* Perfect circle */
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4),
+                0 4px 16px rgba(118, 75, 162, 0.3),
+                0 2px 8px rgba(240, 147, 251, 0.2),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+}
+
+#premium_send_button:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 #5a67d8, 
+                               stop:0.3 #553c9a, 
+                               stop:0.7 #e081fc,
+                               stop:1 #5a67d8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.5),
+                0 6px 24px rgba(118, 75, 162, 0.4),
+                0 3px 12px rgba(240, 147, 251, 0.3),
+                0 0 0 4px rgba(102, 126, 234, 0.1);
+    transform: translateY(-3px) scale(1.05);
+}
+
+#premium_send_button:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 #4c63d2, 
+                               stop:0.3 #4a3b8a, 
+                               stop:0.7 #c975e8,
+                               stop:1 #4c63d2);
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4),
+                0 3px 12px rgba(118, 75, 162, 0.3),
+                inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Disabled state for send button */
+#premium_send_button_disabled {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(107, 114, 128, 0.6), 
+                               stop:1 rgba(75, 85, 99, 0.6));
+    color: rgba(255, 255, 255, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 28px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+#premium_send_button_disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium hint label with better styling */
+#premium_hint_label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: 0.4px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    padding: 4px 0;
+}
+
+/* Character counter styling */
+#char_counter {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 20px;
+}
+
+#char_counter_caution {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 4px 8px;
+    min-width: 20px;
+}
+
+#char_counter_warning {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 4px 8px;
+    min-width: 20px;
+}
+
+/* Context panel with glass effect */
+#context_panel {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(34, 39, 46, 0.9),
+                               stop:1 rgba(45, 52, 66, 0.9));
+    backdrop-filter: blur(20px);
+    padding: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0 20px 20px 0;
+}
+
+/* Premium prompt buttons */
+#prompt_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(51, 65, 85, 0.8),
+                               stop:1 rgba(71, 85, 105, 0.8));
+    backdrop-filter: blur(10px);
+    color: #E2E8F0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: left;
+    margin-bottom: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+#prompt_button:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(71, 85, 105, 0.9),
+                               stop:1 rgba(99, 102, 241, 0.3));
+    border-color: rgba(102, 126, 234, 0.4);
+    color: #F1F5F9;
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Stunning loading animation */
+#loading_dot {
+    color: #94A3B8;
+    padding: 0 3px;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(102, 126, 234, 0.6);
+}
+
+/* Loading bubble enhancement */
+LoadingBubble {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                               stop:0 rgba(45, 52, 66, 0.9), 
+                               stop:1 rgba(55, 65, 81, 0.9));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    border-bottom-left-radius: 4px;
+    margin: 8px 60px 8px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   9. ANALYTICS & DASHBOARD
+   ============================================================================ */
+
+/* Analytics dialog main styling */
+#analytics_title {
+    color: #f8f9fa;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#analytics_subtitle {
+    color: #adb5bd;
+    font-size: 12px;
+    margin-bottom: 20px;
+}
+
+/* Filter summary cards */
+#filter_summary_card {
+    background-color: #343a40;
+    border: 1px solid #495057;
+    border-radius: 12px;
+    margin: 5px 0;
+    padding: 0;
+}
+
+#filter_summary_card:hover {
+    border-color: #6c757d;
+    background-color: #3a4046;
+}
+
+#filter_card_title {
+    color: #f8f9fa;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0;
+}
+
+#filter_card_details {
+    color: #adb5bd;
+    font-size: 11px;
+    margin: 0;
+}
+
+#filter_remove_btn {
+    background-color: #dc3545;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0;
+}
+
+#filter_remove_btn:hover {
+    background-color: #bb2d3b;
+}
+
+#filter_remove_btn:pressed {
+    background-color: #a02834;
+}
+
+/* Statistics display items */
+#stat_item {
+    background-color: #495057;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 2px;
+}
+
+#stat_label {
+    color: #adb5bd;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+#stat_value {
+    color: #f8f9fa;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 2px 0 0 0;
+}
+
+/* Status indicators */
+#filter_card_status_success {
+    color: #20c997;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+#filter_card_status_error {
+    color: #fd7e14;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+/* Empty state styling */
+#empty_state_message {
+    color: #6c757d;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+}
+
+#empty_state_action {
+    color: #adb5bd;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ============================================================================
+   10. DIALOGS & MODALS
+   ============================================================================ */
+
+/* License dialog */
+QDialog#LicenseDialog {
+    background-color: #212529;
+}
+
+#license_subtitle {
+    color: #e9ecef;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+#license_frame {
+    background-color: #343a40;
+    border-radius: 10px;
+    border: 1px solid #495057;
+    margin: 10px 0;
+}
+
+#instructions {
+    color: #adb5bd;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+#license_input {
+    border: 1px solid #495057;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    background-color: #2b3035;
+    color: #e9ecef;
+}
+
+#license_input:focus {
+    border-color: #228be6;
+}
+
+#note_text {
+    color: #adb5bd;
+    font-size: 12px;
+}
+
+#note_text a {
+    color: #4dabf7;
+    text-decoration: none;
+}
+
+#note_text a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================================
+   11. SPECIALIZED COMPONENTS
+   ============================================================================ */
+
+/* Vehicle sidebar and filter panel */
 #vehicle_sidebar {
     background-color: #1e2228;
     border-right: none;
@@ -331,6 +1279,7 @@ QSlider::sub-page:horizontal {
     background-color: #343a40;
 }
 
+/* Filter content and controls */
 #filter_content {
     background-color: #212529;
     padding: 0;
@@ -343,6 +1292,14 @@ QSlider::sub-page:horizontal {
     margin-bottom: 5px;
     padding-left: 2px;
     min-height: 18px;
+}
+
+#filter_header_light {
+    color: #adb5bd;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 5px;
+    padding-left: 2px;
 }
 
 #filter_input {
@@ -358,6 +1315,20 @@ QSlider::sub-page:horizontal {
     border-color: #4dabf7;
 }
 
+#dark_filter_input {
+    background-color: #212529;
+    border: 1px solid #343a40;
+    border-radius: 4px;
+    color: #e9ecef;
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+#dark_filter_input:focus {
+    border-color: #4dabf7;
+}
+
+/* Search buttons */
 #search_button {
     background-color: #e83e32;
     color: white;
@@ -372,6 +1343,21 @@ QSlider::sub-page:horizontal {
     background-color: #c0392b;
 }
 
+#search_button_red {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#search_button_red:hover {
+    background-color: #c0392b;
+}
+
+/* Filter options and toggles */
 #filter_option {
     background-color: transparent;
     border: 1px solid #495057;
@@ -388,22 +1374,29 @@ QSlider::sub-page:horizontal {
     border-color: #4dabf7;
 }
 
-#text_button {
-    background-color: transparent;
-    border: none;
-    color: #4dabf7;
-    padding: 0 10px;
+#dark_filter_option {
+    background-color: #212529;
+    border: 1px solid #343a40;
+    border-radius: 3px;
+    color: #adb5bd;
+    padding: 6px 12px;
     font-size: 13px;
     font-weight: normal;
+    text-align: center;
 }
 
-#text_button:hover {
-    color: #74c0fc;
-    text-decoration: underline;
+#dark_filter_option:checked {
+    background-color: #212529;
+    border-color: #4dabf7;
 }
 
-/* Payment option buttons */
+/* Payment method frames and options */
 #payment_method_frame {
+    background-color: transparent;
+    border: none;
+}
+
+#payment_method_frame_dark {
     background-color: transparent;
     border: none;
 }
@@ -428,9 +1421,38 @@ QSlider::sub-page:horizontal {
     background-color: #343a40;
 }
 
-/* Add these styles to dark.qss for the car listings */
+#payment_option_dark {
+    border: 1px solid #343a40;
+    background-color: #212529;
+    color: #adb5bd;
+    font-weight: normal;
+    padding: 8px 15px;
+    border-radius: 0;
+    margin: 0;
+}
 
-/* Results section styling */
+#payment_option_selected_purple {
+    background-color: #6c5ce7;
+    color: white;
+    border: 1px solid #6c5ce7;
+    font-weight: normal;
+    padding: 8px 15px;
+    border-radius: 0;
+    margin: 0;
+}
+
+#payment_option_dark:hover {
+    background-color: #343a40;
+}
+
+/* Dark theme specific filter frames */
+#dark_filter_frame {
+    background-color: #1e2228;
+    border-radius: 10px;
+    border: 1px solid #343a40;
+}
+
+/* Results and listings */
 #results_header {
     background-color: #1c2228;
     border-bottom: 1px solid #495057;
@@ -448,6 +1470,7 @@ QSlider::sub-page:horizontal {
     padding: 10px 0;
 }
 
+/* Car listing components */
 #car_listing {
     background-color: #343a40;
     border-radius: 4px;
@@ -507,6 +1530,7 @@ QSlider::sub-page:horizontal {
     font-size: 12px;
 }
 
+/* Car listing buttons */
 #contact_button, #share_button {
     background-color: #7952b3;
     color: white;
@@ -520,334 +1544,71 @@ QSlider::sub-page:horizontal {
     background-color: #673ab7;
 }
 
-/* License Dialog Styling */
-QDialog#LicenseDialog {
-    background-color: #212529;
-}
-
-#license_subtitle {
-    color: #e9ecef;
-    font-size: 18px;
+#view_listing_button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
     font-weight: 500;
-    margin-bottom: 10px;
+    min-width: 140px;
+    transition: all 0.2s ease-in-out;
 }
 
-#license_frame {
-    background-color: #343a40;
-    border-radius: 10px;
-    border: 1px solid #495057;
-    margin: 10px 0;
+#view_listing_button:hover {
+    background-color: #43A047;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-#instructions {
-    color: #adb5bd;
-    font-size: 14px;
-    margin-bottom: 5px;
+#view_listing_button:pressed {
+    background-color: #388E3C;
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-#license_input {
-    border: 1px solid #495057;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 16px;
-    letter-spacing: 2px;
-    background-color: #2b3035;
-    color: #e9ecef;
+#view_listing_button:disabled {
+    background-color: #BDBDBD;
+    cursor: not-allowed;
 }
 
-#license_input:focus {
-    border-color: #228be6;
+/* Margin indicator bars */
+#margin_bar_filled {
+    background-color: #38A37A;
+    min-width: 20px; 
+    max-width: 20px; 
+    min-height: 10px;
+    max-height: 10px;
+    border-radius: 2px;
 }
 
-#primary_button {
-    background-color: #228be6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    font-weight: bold;
-    font-size: 14px;
+#margin_bar_empty {
+    background-color: #4A5568;
+    min-width: 20px; 
+    max-width: 20px; 
+    min-height: 10px;
+    max-height: 10px;
+    border-radius: 2px;
 }
 
-#primary_button:hover {
-    background-color: #1c7ed6;
+#margin_text_label {
+    color: #E2E8F0;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px;
 }
 
-#primary_button:pressed {
-    background-color: #1971c2;
-}
-
-#secondary_button {
-    background-color: #495057;
-    color: #e9ecef;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-#secondary_button:hover {
-    background-color: #6c757d;
-}
-
-#secondary_button:pressed {
-    background-color: #495057;
-}
-
-#note_text {
-    color: #adb5bd;
+#margin_percentage_label {
+    color: #A0AEC0;
     font-size: 12px;
+    font-style: italic;
+    margin-top: 1px;
+    padding-left: 1px;
 }
 
-#note_text a {
-    color: #4dabf7;
-    text-decoration: none;
-}
-
-#note_text a:hover {
-    text-decoration: underline;
-}
-
-/* Dark Filter Panel Specific Styling */
-#dark_filter_frame {
-    background-color: #1e2228;
-    border-radius: 10px;
-    border: 1px solid #343a40;
-}
-
-#filter_header_light {
-    color: #adb5bd;
-    font-size: 13px;
-    font-weight: 400;
-    margin-bottom: 5px;
-    padding-left: 2px;
-}
-
-#dark_filter_input {
-    background-color: #212529;
-    border: 1px solid #343a40;
-    border-radius: 4px;
-    color: #e9ecef;
-    font-size: 13px;
-    padding: 8px 12px;
-}
-
-#dark_filter_input:focus {
-    border-color: #4dabf7;
-}
-
-#payment_method_frame_dark {
-    background-color: transparent;
-    border: none;
-}
-
-#payment_option_dark {
-    border: 1px solid #343a40;
-    background-color: #212529;
-    color: #adb5bd;
-    font-weight: normal;
-    padding: 8px 15px;
-    border-radius: 0;
-    margin: 0;
-}
-
-#payment_option_selected_purple {
-    background-color: #6c5ce7;
-    color: white;
-    border: 1px solid #6c5ce7;
-    font-weight: normal;
-    padding: 8px 15px;
-    border-radius: 0;
-    margin: 0;
-}
-
-#payment_option_dark:hover {
-    background-color: #343a40;
-}
-
-#search_button_red {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 15px;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-#search_button_red:hover {
-    background-color: #c0392b;
-}
-
-#dark_filter_option {
-    background-color: #212529;
-    border: 1px solid #343a40;
-    border-radius: 3px;
-    color: #adb5bd;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: normal;
-    text-align: center;
-}
-
-#dark_filter_option:checked {
-    background-color: #212529;
-    border-color: #4dabf7;
-}
-
-#dark_text_button {
-    background-color: transparent;
-    border: none;
-    color: #4dabf7;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: normal;
-}
-
-#dark_text_button:hover {
-    color: #74c0fc;
-    text-decoration: underline;
-}
-
-#notification_panel {
-    background-color: #1E2228;
-    border-radius: 10px;
-    padding: 15px;
-    margin: 10px;
-}
-
-#section_title {
-    color: #FFFFFF;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
-
-#notification_toast {
-    background: #2D2D2D;
-    border-radius: 8px;
-    padding: 12px;
-    margin: 8px 0;
-    border-left: 4px solid #4CAF50;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-#notification_toast:hover {
-    background: #333333;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-#match_title {
-    color: #FFFFFF;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-#match_subtitle {
-    color: #AAAAAA;
-    font-size: 12px;
-}
-
-#match_price {
-    color: #4CAF50;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-#timestamp {
-    color: #888888;
-    font-size: 12px;
-}
-
-/* Different notification types */
-#notification_toast[type="match"] {
-    border-left-color: #4CAF50;  /* Green for matches */
-}
-
-#notification_toast[type="price_drop"] {
-    border-left-color: #2196F3;  /* Blue for price drops */
-}
-
-#notification_toast[type="new_arrival"] {
-    border-left-color: #FF9800;  /* Orange for new arrivals */
-}
-
-/* AI Chat Window Styles */
-#chat_header {
-    color: #FFFFFF;
-    margin-bottom: 15px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-
-#messages_container {
-    background-color: transparent;
-    border-radius: 8px;
-}
-
-/* Custom scrollbar for chat */
-#messages_container QScrollBar:vertical {
-    background: #2A2A2A;
-    width: 8px;
-    margin: 0px;
-    border-radius: 4px;
-}
-
-#messages_container QScrollBar::handle:vertical {
-    background: #4A4A4A;
-    min-height: 30px;
-    border-radius: 4px;
-}
-
-#messages_container QScrollBar::handle:vertical:hover {
-    background: #5D94FB;
-}
-
-#messages_container QScrollBar::add-line:vertical,
-#messages_container QScrollBar::sub-line:vertical {
-    height: 0px;
-}
-
-/* Floating Action Button */
-#chat_fab {
-    background-color: #5D94FB;
-    color: white;
-    border: none;
-    border-radius: 28px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-#chat_fab:hover {
-    background-color: #4A7DD9;
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
-}
-
-#chat_fab:pressed {
-    background-color: #3A6AC7;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Active state for chat button */
-#chat_fab_active {
-    background-color: #E83E32; /* Red to indicate active state */
-    color: white;
-    border: none;
-    border-radius: 28px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-#chat_fab_active:hover {
-    background-color: #C0392B; /* Darker red on hover */
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
-}
-
-#chat_fab_active:pressed {
-    background-color: #A93226; /* Even darker red when pressed */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
+/* Panel headers and sections */
 #panel_header {
     color: #FFFFFF;
     margin: 5px 0;
@@ -860,211 +1621,6 @@ QDialog#LicenseDialog {
     margin-bottom: 5px;
 }
 
-/* Modern message bubbles */
-#user_bubble {
-    background-color: #5D94FB;
-    color: white;
-    border-radius: 18px;
-    border-top-right-radius: 4px;
-    max-width: 80%;
-    padding: 4px;
-    margin: 2px 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-}
-
-#ai_bubble {
-    background-color: #2D2D2D;
-    color: #F0F0F0;
-    border-radius: 18px;
-    border-top-left-radius: 4px;
-    max-width: 80%;
-    padding: 4px;
-    margin: 2px 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-}
-
-#user_bubble:hover, #ai_bubble:hover {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-#user_bubble #sender_label {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 10px;
-    font-weight: 500;
-    padding-left: 12px;
-    padding-top: 6px;
-}
-
-#ai_bubble #sender_label {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 10px;
-    font-weight: 500;
-    padding-left: 12px;
-    padding-top: 6px;
-}
-
-#user_bubble #message_content, #ai_bubble #message_content {
-    padding: 8px 12px;
-    line-height: 1.4;
-    font-size: 14px;
-}
-
-/* Modern input area */
-#input_frame {
-    background-color: #2D2D2D;
-    border-radius: 12px;
-    margin-top: 10px;
-    border: 1px solid #3D3D3D;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-}
-
-#input_frame:focus-within {
-    border-color: #5D94FB;
-    box-shadow: 0 3px 8px rgba(93, 148, 251, 0.2);
-}
-
-#input_text {
-    background-color: #333333;
-    border-radius: 8px;
-    color: #FFFFFF;
-    padding: 10px 12px;
-    border: 1px solid #444444;
-    font-size: 14px;
-    line-height: 1.4;
-    selection-background-color: #5D94FB;
-    selection-color: white;
-}
-
-#input_text:focus {
-    border-color: #5D94FB;
-    background-color: #383838;
-}
-
-#input_text::placeholder {
-    color: #888888;
-    font-style: italic;
-}
-
-#send_button {
-    background-color: #5D94FB;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-weight: 600;
-    min-width: 70px;
-    min-height: 30px;
-}
-
-#send_button:hover {
-    background-color: #4A7DD9;
-}
-
-#send_button:pressed {
-    background-color: #3A6AC7;
-}
-
-#hint_label {
-    color: #888888;
-    font-size: 11px;
-    font-style: italic;
-}
-
-#context_panel {
-    background-color: #222222;
-    padding: 15px;
-    border-left: 1px solid #333333;
-}
-
-#prompt_button {
-    background-color: #333333;
-    color: #DDDDDD;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: left;
-    margin-bottom: 8px;
-}
-
-#prompt_button:hover {
-    background-color: #444444;
-}
-
-/* Loading animation */
-#loading_dot {
-    color: #AAAAAA;
-    padding: 0 2px;
-    font-size: 20px;
-}
-
-#view_listing_button {
-    background-color: #4CAF50;  /* Green color for website action */
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    min-width: 140px;  /* Slightly wider for the new text */
-    transition: all 0.2s ease-in-out;
-}
-
-#view_listing_button:hover {
-    background-color: #43A047;  /* Darker green on hover */
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-#view_listing_button:pressed {
-    background-color: #388E3C;  /* Even darker green when pressed */
-    transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-#view_listing_button:disabled {
-    background-color: #BDBDBD;
-    cursor: not-allowed;
-}
-
-/* Icon styling */
-#view_listing_button QIcon {
-    margin-right: 8px;
-}
-
-/* Margin Indicator Styles */
-#margin_bar_filled {
-    background-color: #38A37A; /* Green color from image */
-    min-width: 20px; 
-    max-width: 20px; 
-    min-height: 10px;
-    max-height: 10px;
-    border-radius: 2px;
-}
-
-#margin_bar_empty {
-    background-color: #4A5568; /* Darker gray for empty state */
-    min-width: 20px; 
-    max-width: 20px; 
-    min-height: 10px;
-    max-height: 10px;
-    border-radius: 2px;
-}
-
-#margin_text_label {
-    color: #E2E8F0; /* Light text color */
-    font-size: 13px;
-    font-weight: 500;
-    margin-top: 2px; /* Small space above text */
-}
-
-#margin_percentage_label {
-    color: #A0AEC0; /* Slightly dimmer/grayer than the main margin text */
-    font-size: 12px;
-    font-style: italic;
-    margin-top: 1px; /* Little space from the label above */
-    padding-left: 1px; /* Optional: slight indent if needed */
-} 
+/* ============================================================================
+   END OF STYLESHEET
+   ============================================================================ */ 
