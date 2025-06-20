@@ -48,27 +48,42 @@ class AIChatWindow(QWidget):
         self._create_ui()
         
     def _create_ui(self):
+        self.setObjectName("ai_chat_window")
         main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(0)
         
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setObjectName("chat_splitter")
         main_layout.addWidget(splitter)
         
         chat_widget = QWidget()
+        chat_widget.setObjectName("chat_main_widget")
         chat_layout = QVBoxLayout(chat_widget)
-        chat_layout.setContentsMargins(15, 15, 15, 15)
+        chat_layout.setContentsMargins(25, 25, 25, 25)
+        chat_layout.setSpacing(20)
         splitter.addWidget(chat_widget)
         
-        header_layout = QHBoxLayout()
-        chat_header = QLabel("AI Chat Assistant")
+        # Enhanced header with premium styling
+        header_frame = QFrame()
+        header_frame.setObjectName("chat_header_frame")
+        header_layout = QHBoxLayout(header_frame)
+        header_layout.setContentsMargins(20, 15, 20, 15)
+        
+        chat_header = QLabel("🤖 CarGenius AI Assistant")
         chat_header.setObjectName("chat_header")
-        chat_header.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        chat_header.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
         header_layout.addWidget(chat_header)
+        
+        status_label = QLabel("● Online")
+        status_label.setObjectName("chat_status")
         header_layout.addStretch()
-        chat_layout.addLayout(header_layout)
+        header_layout.addWidget(status_label)
+        
+        chat_layout.addWidget(header_frame)
         
         self.scroll_area = QScrollArea()
+        self.scroll_area.setObjectName("chat_scroll_area")
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -83,14 +98,19 @@ class AIChatWindow(QWidget):
         self.messages_layout.setContentsMargins(0, 10, 0, 10)
         self.scroll_area.setWidget(self.messages_widget)
         
-        self.add_message("Welcome to CarGenius AI Assistant. How can I help you today?", False)
+        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", False)
         
-        # Use the new ChatInputArea component
+        # Use the new premium ChatInputArea component
         self.chat_input_area = ChatInputArea()
         self.chat_input_area.send_button.clicked.connect(self.send_message)
         # Install event filter on the QTextEdit within ChatInputArea
-        self.chat_input_area.input_text.installEventFilter(self) 
+        self.chat_input_area.input_text.installEventFilter(self)
+        # Connect text change to update send button state
+        self.chat_input_area.input_text.textChanged.connect(self._update_send_button_state)
         chat_layout.addWidget(self.chat_input_area)
+        
+        # Initialize send button state
+        self._update_send_button_state()
         
         splitter.setSizes([int(self.width() * 0.8), int(self.width() * 0.2)])
         
@@ -162,6 +182,12 @@ class AIChatWindow(QWidget):
             scrollbar = self.scroll_area.verticalScrollBar()
             if scrollbar:
                 scrollbar.setValue(scrollbar.maximum())
+        
+    def _update_send_button_state(self):
+        """Update send button state based on input text"""
+        if hasattr(self, 'chat_input_area'):
+            has_text = bool(self.chat_input_area.get_text())
+            self.chat_input_area.set_send_enabled(has_text)
         
     def resizeEvent(self, event):
         super().resizeEvent(event)
