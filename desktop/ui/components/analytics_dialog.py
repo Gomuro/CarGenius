@@ -251,7 +251,7 @@ class AnalyticsDialog(QDialog):
             
         try:
             response = self.api_service.clear_tracked_filters_sync(self.license_key)
-            if response:
+            if response is not None:
                 self.tracked_models_criteria.clear()
                 print("[AnalyticsDialog] Successfully cleared all filters")
                 self._refresh_tabs()
