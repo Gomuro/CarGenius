@@ -89,6 +89,13 @@ class APIService:
         """Clear all tracked filters for a license"""
         return await self._request("DELETE", f"/license/{license_key}/filters")
 
+    # GPT endpoints
+    async def ask_gpt(self, user_id: str, prompt: str) -> Optional[Dict]:
+        """Ask a question to the GPT model."""
+        endpoint = "/gpt/ask"
+        data = {"user_id": user_id, "gpt_prompt": prompt}
+        return await self._request("POST", endpoint, data)
+
     # Sync wrapper methods
     def validate_license_sync(self, key: str, client_info: str, device_id: Optional[str] = None) -> Optional[Dict]:
         return asyncio.run(self.validate_license(key, client_info, device_id))
@@ -113,6 +120,10 @@ class APIService:
 
     def clear_tracked_filters_sync(self, license_key: str) -> Optional[list]:
         return asyncio.run(self.clear_tracked_filters(license_key))
+
+    def ask_gpt_sync(self, user_id: str, prompt: str) -> Optional[Dict]:
+        """Synchronous wrapper for ask_gpt"""
+        return asyncio.run(self.ask_gpt(user_id, prompt))
 
     def get_is_loading(self) -> bool:
         return self.is_loading

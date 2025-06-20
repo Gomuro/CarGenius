@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, QSize, QTimer, QEvent
+from PyQt6.QtCore import Qt, QSize, QTimer, QEvent, QRunnable, QThreadPool, pyqtSignal, QObject
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                            QTextEdit, QLabel, QFrame, QScrollArea, 
                            QSizePolicy, QSpacerItem, QSplitter)
@@ -6,7 +6,30 @@ from PyQt6.QtGui import QIcon, QFont, QColor, QPalette, QKeyEvent
 
 from .ai_chat_components.message_bubbles import MessageBubble, LoadingBubble
 from .ai_chat_components.chat_input_area import ChatInputArea
-import random # For generating random AI responses
+from desktop.services.main_api_service import APIService
+from desktop.GLOBAL import GLOBAL
+
+# Worker for running API calls in a separate thread
+class GptWorkerSignals(QObject):
+    finished = pyqtSignal(object)
+    error = pyqtSignal(str)
+
+class GptWorker(QRunnable):
+    def __init__(self, api_service, user_id, prompt):
+        super().__init__()
+        self.api_service = api_service
+        self.user_id = user_id
+        self.prompt = prompt
+        self.signals = GptWorkerSignals()
+
+    def run(self):
+        try:
+            if not self.user_id:
+                raise ValueError("User ID is not set. Please ensure you have a valid license.")
+            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt)
+            self.signals.finished.emit(response)
+        except Exception as e:
+            self.signals.error.emit(str(e))
 
 
 class AIChatWindow(QWidget):
@@ -17,6 +40,10 @@ class AIChatWindow(QWidget):
         self.setWindowTitle("CarGenius AI Chat")
         self.resize(800, 600)
         self.setMinimumSize(400, 300)
+        
+        self.api_service = APIService()
+        self.user_id = GLOBAL.LICENSE.get_license_key()
+        self.threadpool = QThreadPool()
         
         self._create_ui()
         
@@ -85,7 +112,10 @@ class AIChatWindow(QWidget):
         
         loading_bubble = self.add_loading()
         
-        QTimer.singleShot(1500, lambda: self.receive_ai_response(loading_bubble))
+        worker = GptWorker(self.api_service, self.user_id, message)
+        worker.signals.finished.connect(lambda response: self.receive_ai_response(loading_bubble, response))
+        worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
+        self.threadpool.start(worker)
         
     def add_message(self, text, is_user=False):
         bubble = MessageBubble(text, is_user)
@@ -105,20 +135,27 @@ class AIChatWindow(QWidget):
         QTimer.singleShot(100, self.scroll_to_bottom)
         return loading
         
-    def receive_ai_response(self, loading_bubble):
-        if loading_bubble.parent() is not None: # Check if bubble hasn't been removed elsewhere
+    def receive_ai_response(self, loading_bubble, response):
+        if loading_bubble.parent() is not None:
             loading_bubble.setParent(None)
-            loading_bubble.deleteLater() # Ensure it's properly deleted
+            loading_bubble.deleteLater()
         
-        responses = [
-            "I can help you with that. Let me find some information for you.",
-            "Based on your interest, I'd recommend looking at the latest sedan models with hybrid options.",
-            "Great question! The average lifespan of modern car batteries is typically 3-5 years, depending on usage and climate conditions.",
-            "I found several SUV options that match your criteria. Would you like me to compare their features?"
-        ]
+        if response and response.get("gpt_response"):
+            ai_message = response["gpt_response"]
+            self.add_message(ai_message, False)
+        else:
+            error_message = "Sorry, I couldn't get a valid response from the server."
+            if response and "detail" in response:
+                error_message += f"\nDetails: {response['detail']}"
+            self.add_message(error_message, False)
         
-        response = random.choice(responses)
-        self.add_message(response, False)
+    def handle_ai_error(self, loading_bubble, error_message):
+        if loading_bubble.parent() is not None:
+            loading_bubble.setParent(None)
+            loading_bubble.deleteLater()
+        
+        print(f"[AIChatWindow] Error from GPT API: {error_message}")
+        self.add_message(f"An error occurred: {error_message}", False)
         
     def scroll_to_bottom(self):
         if hasattr(self, 'scroll_area') and self.scroll_area:
