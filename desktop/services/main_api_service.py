@@ -90,10 +90,10 @@ class APIService:
         return await self._request("DELETE", f"/license/{license_key}/filters")
 
     # GPT endpoints
-    async def ask_gpt(self, user_id: str, prompt: str) -> Optional[Dict]:
+    async def ask_gpt(self, user_id: str, prompt: str, context: Optional[Dict] = None) -> Optional[Dict]:
         """Ask a question to the GPT model."""
         endpoint = "/gpt/ask"
-        data = {"user_id": user_id, "gpt_prompt": prompt}
+        data = {"user_id": user_id, "gpt_prompt": prompt, "context": context}
         return await self._request("POST", endpoint, data)
 
     # Sync wrapper methods
@@ -121,9 +121,9 @@ class APIService:
     def clear_tracked_filters_sync(self, license_key: str) -> Optional[list]:
         return asyncio.run(self.clear_tracked_filters(license_key))
 
-    def ask_gpt_sync(self, user_id: str, prompt: str) -> Optional[Dict]:
+    def ask_gpt_sync(self, user_id: str, prompt: str, context: Optional[Dict] = None) -> Optional[Dict]:
         """Synchronous wrapper for ask_gpt"""
-        return asyncio.run(self.ask_gpt(user_id, prompt))
+        return asyncio.run(self.ask_gpt(user_id, prompt, context))
 
     def get_is_loading(self) -> bool:
         return self.is_loading

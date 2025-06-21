@@ -15,18 +15,19 @@ class GptWorkerSignals(QObject):
     error = pyqtSignal(str)
 
 class GptWorker(QRunnable):
-    def __init__(self, api_service, user_id, prompt):
+    def __init__(self, api_service, user_id, prompt, context=None):
         super().__init__()
         self.api_service = api_service
         self.user_id = user_id
         self.prompt = prompt
         self.signals = GptWorkerSignals()
+        self.context = context
 
     def run(self):
         try:
             if not self.user_id:
                 raise ValueError("User ID is not set. Please ensure you have a valid license.")
-            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt)
+            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt, self.context)
             self.signals.finished.emit(response)
         except Exception as e:
             self.signals.error.emit(str(e))
@@ -44,6 +45,7 @@ class AIChatWindow(QWidget):
         self.api_service = APIService()
         self.user_id = GLOBAL.LICENSE.get_license_key()
         self.threadpool = QThreadPool()
+        self.chat_context = {}
         
         self._create_ui()
         
@@ -132,7 +134,10 @@ class AIChatWindow(QWidget):
         
         loading_bubble = self.add_loading()
         
-        worker = GptWorker(self.api_service, self.user_id, message)
+        # Pass context to the worker and then clear it
+        worker = GptWorker(self.api_service, self.user_id, message, self.chat_context)
+        self.chat_context = {}  # Clear context after sending
+
         worker.signals.finished.connect(lambda response: self.receive_ai_response(loading_bubble, response))
         worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
         self.threadpool.start(worker)
