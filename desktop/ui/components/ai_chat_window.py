@@ -6,6 +6,8 @@ from PyQt6.QtGui import QIcon, QFont, QColor, QPalette, QKeyEvent
 
 from .ai_chat_components.message_bubbles import MessageBubble, LoadingBubble
 from .ai_chat_components.chat_input_area import ChatInputArea
+from .ai_chat_components.context_display_widget import ContextDisplayWidget
+from .ai_chat_components.add_context_dialog import AddContextDialog
 from desktop.services.main_api_service import APIService
 from desktop.GLOBAL import GLOBAL
 
@@ -105,10 +107,17 @@ class AIChatWindow(QWidget):
         # Use the new premium ChatInputArea component
         self.chat_input_area = ChatInputArea()
         self.chat_input_area.send_button.clicked.connect(self.send_message)
+        self.chat_input_area.add_context_button.clicked.connect(self.open_add_context_dialog)
         # Install event filter on the QTextEdit within ChatInputArea
         self.chat_input_area.input_text.installEventFilter(self)
         # Connect text change to update send button state
         self.chat_input_area.input_text.textChanged.connect(self._update_send_button_state)
+
+        # Context display widget
+        self.context_display = ContextDisplayWidget()
+        self.context_display.clear_context_signal.connect(self.clear_context)
+        chat_layout.addWidget(self.context_display)
+        
         chat_layout.addWidget(self.chat_input_area)
         
         # Initialize send button state
@@ -212,11 +221,40 @@ class AIChatWindow(QWidget):
             if scrollbar:
                 scrollbar.setValue(scrollbar.maximum())
         
+    def clear_context(self):
+        """Clears the chat context and updates the UI."""
+        self.chat_context = {}
+        self.context_display.update_context(self.chat_context)
+        print("Context cleared")
+        
     def _update_send_button_state(self):
         """Update send button state based on input text"""
         if hasattr(self, 'chat_input_area'):
             has_text = bool(self.chat_input_area.get_text())
             self.chat_input_area.set_send_enabled(has_text)
+        
+    def open_add_context_dialog(self):
+        dialog = AddContextDialog(self)
+        dialog.add_filters_context_signal.connect(self.add_filters_context)
+        dialog.exec()
+
+    def set_context(self, context_type: str, data: dict):
+        """
+        Sets a specific type of context for the chat.
+        This method updates the chat_context dictionary and refreshes the context display.
+        """
+        self.chat_context[context_type] = data
+        self.context_display.update_context(self.chat_context)
+        print(f"Context added: {context_type}")
+
+    def add_car_context(self):
+        # This method is now obsolete and will be replaced in Phase 3
+        # Placeholder for Phase 3 - will be replaced with real data fetching
+        self.set_context('car', {"id": "123", "name": "Audi A4"})
+
+    def add_filters_context(self):
+        # Placeholder for Phase 3 - will be replaced with real filter data
+        self.set_context('filters', {"brand": "Audi", "price_max": 20000})
         
     def resizeEvent(self, event):
         super().resizeEvent(event)
