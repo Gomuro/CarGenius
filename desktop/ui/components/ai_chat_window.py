@@ -139,26 +139,49 @@ class AIChatWindow(QWidget):
         
     def add_message(self, text, is_user=False):
         bubble = MessageBubble(text, is_user)
-        self.messages_layout.addWidget(bubble)
-        
+
+        # Create a container widget and layout to hold the bubble and spacer
+        container_widget = QWidget()
+        container_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        container_layout = QHBoxLayout(container_widget)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
         if is_user:
-            self.messages_layout.setAlignment(bubble, Qt.AlignmentFlag.AlignRight)
+            # Add a spacer to push the bubble to the right
+            container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
+            container_layout.addWidget(bubble)
         else:
-            self.messages_layout.setAlignment(bubble, Qt.AlignmentFlag.AlignLeft)
-            
+            # Add the bubble to the left and a spacer to the right
+            container_layout.addWidget(bubble)
+            container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
+
+        self.messages_layout.addWidget(container_widget)
+
         QTimer.singleShot(100, self.scroll_to_bottom)
         
     def add_loading(self):
         loading = LoadingBubble()
-        self.messages_layout.addWidget(loading)
-        self.messages_layout.setAlignment(loading, Qt.AlignmentFlag.AlignLeft)
+
+        container_widget = QWidget()
+        container_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        container_layout = QHBoxLayout(container_widget)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
+        container_layout.addWidget(loading)
+        container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
+
+        self.messages_layout.addWidget(container_widget)
+
         QTimer.singleShot(100, self.scroll_to_bottom)
         return loading
         
     def receive_ai_response(self, loading_bubble, response):
         if loading_bubble.parent() is not None:
-            loading_bubble.setParent(None)
-            loading_bubble.deleteLater()
+            container = loading_bubble.parentWidget()
+            container.setParent(None)
+            container.deleteLater()
         
         if response and response.get("gpt_response"):
             ai_message = response["gpt_response"]
@@ -171,8 +194,9 @@ class AIChatWindow(QWidget):
         
     def handle_ai_error(self, loading_bubble, error_message):
         if loading_bubble.parent() is not None:
-            loading_bubble.setParent(None)
-            loading_bubble.deleteLater()
+            container = loading_bubble.parentWidget()
+            container.setParent(None)
+            container.deleteLater()
         
         print(f"[AIChatWindow] Error from GPT API: {error_message}")
         self.add_message(f"An error occurred: {error_message}", False)
