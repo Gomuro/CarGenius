@@ -1,3 +1,4 @@
+import os
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QPushButton, QTabWidget, QWidget, 
                            QLabel, QHBoxLayout, QLineEdit, QListWidget, QScrollArea)
@@ -37,6 +38,17 @@ class AddContextDialog(QDialog):
         filters_tab = self._create_search_tab("filters", has_add_button=True)
         tab_widget.addTab(filters_tab, "Filters")
         
+        self._load_styles()
+
+    def _load_styles(self):
+        """Loads the application's stylesheet."""
+        theme_path = os.path.join(os.path.dirname(__file__), '..', '..', 'themes', 'dark.qss')
+        try:
+            with open(theme_path, "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Stylesheet not found at {theme_path}")
+
     def _create_search_tab(self, search_type: str, has_add_button: bool = False, use_detailed_filters: bool = False) -> QWidget:
         """Helper method to create a standardized search tab."""
         tab_widget = QWidget()
