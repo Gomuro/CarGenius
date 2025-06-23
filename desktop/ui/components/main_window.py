@@ -115,6 +115,7 @@ class MainWindow(QMainWindow):
         self.result_table.setObjectName("result_table")
         # Remove minimum height requirement so it takes its natural size
         self.result_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.result_table.car_context_signal.connect(self._on_car_context_requested)
         main_layout.addWidget(self.result_table)
 
     def _add_floating_chat_button(self):
@@ -183,6 +184,14 @@ class MainWindow(QMainWindow):
         self.ai_chat_window.show()
         self.ai_chat_window.activateWindow()
     
+    def _on_car_context_requested(self, car_data: dict):
+        """Opens the chat and sends car data as context."""
+        if not self.ai_chat_window or not self.ai_chat_window.isVisible():
+            self.open_ai_chat()
+        
+        # Use a QTimer to ensure the window is visible and ready before setting context
+        QTimer.singleShot(100, lambda: self.ai_chat_window.set_context('car', car_data))
+
     def _handle_model_tracking_request(self, criteria):
         """Handles the request to track a new model based on criteria."""
         # Check if we have a valid license key
