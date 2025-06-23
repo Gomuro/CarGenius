@@ -160,7 +160,7 @@ class AIChatWindow(QWidget):
         container_layout = QHBoxLayout(container_widget)
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
-
+        
         if is_user:
             # Add a spacer to push the bubble to the right
             container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
@@ -171,7 +171,7 @@ class AIChatWindow(QWidget):
             container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
 
         self.messages_layout.addWidget(container_widget)
-
+            
         QTimer.singleShot(100, self.scroll_to_bottom)
         
     def add_loading(self):
@@ -235,8 +235,13 @@ class AIChatWindow(QWidget):
         
     def open_add_context_dialog(self):
         dialog = AddContextDialog(self)
+        dialog.add_car_context_signal.connect(self._on_context_car_selected)
         dialog.add_filters_context_signal.connect(self.add_filters_context)
         dialog.exec()
+
+    def _on_context_car_selected(self, car_data: dict):
+        """Handle car selection from the context dialog."""
+        self.set_context('car', car_data)
 
     def set_context(self, context_type: str, data: dict):
         """

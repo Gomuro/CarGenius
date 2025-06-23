@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         
         # Use a QTimer to ensure the window is visible and ready before setting context
         QTimer.singleShot(100, lambda: self.ai_chat_window.set_context('car', car_data))
-
+    
     def _handle_model_tracking_request(self, criteria):
         """Handles the request to track a new model based on criteria."""
         # Check if we have a valid license key
