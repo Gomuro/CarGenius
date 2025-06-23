@@ -15,7 +15,7 @@ class AddContextDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Context to Chat")
-        self.setMinimumSize(600, 500) # Increased size for car listings
+        self.setMinimumSize(800, 700) # Increased size significantly
 
         self.api_service = APIService()
 
