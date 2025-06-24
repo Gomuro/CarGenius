@@ -17,19 +17,20 @@ class GptWorkerSignals(QObject):
     error = pyqtSignal(str)
 
 class GptWorker(QRunnable):
-    def __init__(self, api_service, user_id, prompt, context=None):
+    def __init__(self, api_service, user_id, prompt, context=None, chat_history=None):
         super().__init__()
         self.api_service = api_service
         self.user_id = user_id
         self.prompt = prompt
         self.signals = GptWorkerSignals()
         self.context = context
+        self.chat_history = chat_history if chat_history is not None else []
 
     def run(self):
         try:
             if not self.user_id:
                 raise ValueError("User ID is not set. Please ensure you have a valid license.")
-            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt, self.context)
+            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt, self.context, self.chat_history)
             self.signals.finished.emit(response)
         except Exception as e:
             self.signals.error.emit(str(e))
@@ -48,6 +49,7 @@ class AIChatWindow(QWidget):
         self.user_id = GLOBAL.LICENSE.get_license_key()
         self.threadpool = QThreadPool()
         self.chat_context = {}
+        self.chat_history = []
         
         self._create_ui()
         
@@ -102,7 +104,7 @@ class AIChatWindow(QWidget):
         self.messages_layout.setContentsMargins(0, 10, 0, 10)
         self.scroll_area.setWidget(self.messages_widget)
         
-        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", False)
+        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
         
         # Use the new premium ChatInputArea component
         self.chat_input_area = ChatInputArea()
@@ -143,15 +145,20 @@ class AIChatWindow(QWidget):
         
         loading_bubble = self.add_loading()
         
-        # Pass context to the worker and then clear it
-        worker = GptWorker(self.api_service, self.user_id, message, self.chat_context)
+        # Pass context to the worker
+        worker = GptWorker(self.api_service, self.user_id, message, self.chat_context, self.chat_history)
 
         worker.signals.finished.connect(lambda response: self.receive_ai_response(loading_bubble, response))
         worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
         self.threadpool.start(worker)
         
-    def add_message(self, text, is_user=False):
+    def add_message(self, text, is_user=False, is_initial_message=False):
         bubble = MessageBubble(text, is_user)
+
+        # Add to chat history, unless it's the initial welcome message
+        if not is_initial_message:
+            role = "user" if is_user else "assistant"
+            self.chat_history.append({"role": role, "content": text})
 
         # Create a container widget and layout to hold the bubble and spacer
         container_widget = QWidget()
@@ -223,8 +230,9 @@ class AIChatWindow(QWidget):
     def clear_context(self):
         """Clears the chat context and updates the UI."""
         self.chat_context = {}
+        self.chat_history.clear()
         self.context_display.update_context(self.chat_context)
-        print("Context cleared")
+        print("Context and history cleared")
         
     def _update_send_button_state(self):
         """Update send button state based on input text"""
