@@ -50,9 +50,11 @@ class ContextDisplayWidget(QFrame):
             if brand or model:
                 display_parts.append(f"Car: {brand} {model}".strip())
         
-        # Handle filters context (if it ever gets re-added)
-        if 'filters' in context and context.get('filters'):
-            display_parts.append("Active Filters")
+        # Handle filters context
+        if 'filters' in context and isinstance(context.get('filters'), dict):
+            summary = self._summarize_filter_for_display(context['filters'])
+            if summary:
+                display_parts.append(f"Filters: {summary}")
 
         if not display_parts:
             self.setVisible(False)
@@ -61,3 +63,24 @@ class ContextDisplayWidget(QFrame):
         display_text = "Context: " + " | ".join(display_parts)
         self.context_label.setText(display_text)
         self.setVisible(True) 
+
+    def _summarize_filter_for_display(self, filter_data: dict) -> str:
+        """Creates a readable summary of a filter dictionary for the context display."""
+        parts = []
+        
+        brand = filter_data.get('brand')
+        if brand and brand != 'Any Brand':
+            parts.append(brand)
+            
+        model = filter_data.get('model')
+        if model and model != 'Any Model':
+            parts.append(model)
+            
+        price = filter_data.get('price_to')
+        if price:
+            try:
+                parts.append(f"up to €{int(price):,}")
+            except (ValueError, TypeError):
+                pass 
+        
+        return ", ".join(parts) 

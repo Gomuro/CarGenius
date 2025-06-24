@@ -1,7 +1,7 @@
 import os
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QPushButton, QTabWidget, QWidget, 
-                           QLabel, QHBoxLayout, QLineEdit, QListWidget, QScrollArea)
+                           QLabel, QHBoxLayout, QLineEdit, QListWidget, QScrollArea, QListWidgetItem)
 from ..filter_panel_components.filter_inputs import FilterInputs
 from ..filter_panel_components.filter_options import FilterOptions
 from ..result_table_components.car_listing_widget import CarListingWidget
@@ -13,11 +13,11 @@ class AddContextDialog(QDialog):
     add_car_context_signal = pyqtSignal(dict)  # Pass car data
     add_filters_context_signal = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, license_key: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Add Context to Chat")
         self.setMinimumSize(800, 700) # Increased size significantly
-
+        self.license_key = license_key
         self.api_service = APIService()
 
         main_layout = QVBoxLayout(self)
@@ -77,8 +77,23 @@ class AddContextDialog(QDialog):
             results_scroll.setWidget(results_widget)
             layout.addWidget(results_scroll)
             
+        elif search_type == "filters":
+            # Special layout for the Filters tab
+            layout.addWidget(QLabel("Select a saved filter to add as context:"))
+            
+            saved_filters_list = QListWidget()
+            self._fetch_and_display_filters(saved_filters_list) # Fetch real data
+            layout.addWidget(saved_filters_list)
+
+            add_selected_btn = QPushButton("Add Selected Filter")
+            add_selected_btn.setEnabled(False)
+            layout.addWidget(add_selected_btn)
+            
+            # Enable the button only when an item is selected
+            saved_filters_list.itemSelectionChanged.connect(lambda: add_selected_btn.setEnabled(bool(saved_filters_list.currentItem())))
+            
         else:
-            # Use the simple search bar
+            # Use the simple search bar for other tabs like 'auction'
             search_layout = QHBoxLayout()
             search_input = QLineEdit()
             search_input.setPlaceholderText(f"Search {search_type}...")
@@ -182,4 +197,35 @@ class AddContextDialog(QDialog):
     def _on_search(self, search_type: str, query: str):
         """Placeholder method to handle search button clicks."""
         print(f"UI-only: Searching in '{search_type}' for query: '{query}'")
-        # In the future, this will trigger the actual API call. 
+        # In the future, this will trigger the actual API call.
+
+    def _fetch_and_display_filters(self, list_widget: QListWidget):
+        """Fetches tracked filters from the API and populates the list widget."""
+        if not self.license_key:
+            list_widget.addItem("No license key found.")
+            return
+
+        filters = self.api_service.get_tracked_filters_sync(self.license_key)
+        
+        list_widget.clear()
+        if filters:
+            for f in filters:
+                item_text = self._summarize_filter(f)
+                list_item = QListWidgetItem(item_text)
+                list_item.setData(Qt.ItemDataRole.UserRole, f)
+                list_widget.addItem(list_item)
+        else:
+            list_widget.addItem("No saved filters found.")
+
+    def _summarize_filter(self, filter_data: dict) -> str:
+        """Creates a readable summary of a filter dictionary."""
+        parts = []
+        if 'brand' in filter_data:
+            parts.append(f"Brand: {filter_data['brand']}")
+        if 'model' in filter_data:
+            parts.append(f"Model: {filter_data['model']}")
+        if 'price_to' in filter_data:
+            parts.append(f"Price up to: {filter_data['price_to']}")
+        
+        summary = ", ".join(parts)
+        return summary if summary else "Unnamed Filter" 

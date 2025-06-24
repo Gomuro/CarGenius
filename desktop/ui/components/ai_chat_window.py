@@ -234,7 +234,7 @@ class AIChatWindow(QWidget):
             self.chat_input_area.set_send_enabled(has_text)
         
     def open_add_context_dialog(self):
-        dialog = AddContextDialog(self)
+        dialog = AddContextDialog(license_key=self.user_id, parent=self)
         dialog.add_car_context_signal.connect(self._on_context_car_selected)
         dialog.add_filters_context_signal.connect(self.add_filters_context)
         dialog.exec()
