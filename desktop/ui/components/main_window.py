@@ -60,18 +60,6 @@ class MainWindow(QMainWindow):
         app_title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         title_layout.addWidget(app_title)
         
-        # Add test notification button
-        self.test_notification_btn = QPushButton("Test Toast")
-        self.test_notification_btn.setObjectName("small_button")
-        self.test_notification_btn.clicked.connect(self.show_test_notification)
-        title_layout.addWidget(self.test_notification_btn)
-        
-        # Add multiple notifications test button
-        self.multi_notification_btn = QPushButton("Test Multiple")
-        self.multi_notification_btn.setObjectName("small_button")
-        self.multi_notification_btn.clicked.connect(self.show_multiple_notifications)
-        title_layout.addWidget(self.multi_notification_btn)
-        
         # Add Analytics Dialog button
         self.analytics_btn = QPushButton("Open Analytics")
         self.analytics_btn.setObjectName("small_button")
@@ -249,94 +237,22 @@ class MainWindow(QMainWindow):
         self.chat_fab.setObjectName("chat_fab")
         self.chat_fab.style().unpolish(self.chat_fab)
         self.chat_fab.style().polish(self.chat_fab)
-        event.accept()  # Allow the window to close
+        # Accept the event to close the window
+        event.accept()
 
     def _show_custom_notification(self, title, message):
-        """Show a custom toast notification with given title and message"""
-        toast = ToastNotification(title=title, message=message)
-        toast.show_notification()
-
-    def show_test_notification(self):
-        # Create and show a toast notification
-        toast = ToastNotification(
-            title="New Match",
-            message="BMW X5 2021 matches your search criteria"
-        )
-        toast.show_notification()
-    
-    def show_multiple_notifications(self):
-        # Show 3 notifications with different car matches
-        messages = [
-            {
-                "title": "New Match",
-                "message": "Mercedes-Benz CLA 200 d Shooting Brake - 35.980 €",
-                "avatar": None
-            },
-            {
-                "title": "Price Drop",
-                "message": "BMW 3 Series 320d - Price reduced by 2.500 €",
-                "avatar": None
-            },
-            {
-                "title": "New Match",
-                "message": "Audi A4 Avant 2.0 TDI - Just arrived in your area",
-                "avatar": None
-            }
-        ]
-        
-        # Custom avatar colors for each notification
-        avatar_colors = ["#4CAF50", "#2196F3", "#FF9800"]
-        
-        # Show notifications with a small delay between them
-        for i, msg in enumerate(messages):
-            QTimer.singleShot(i * 500, lambda m=msg, i=i: self._show_delayed_notification(
-                m["title"], 
-                m["message"], 
-                avatar_colors[i]
-            ))
-    
-    def _show_delayed_notification(self, title, message, avatar_color=None):
-        toast = ToastNotification(title=title, message=message)
-        
-        # Customize avatar if color provided
-        if avatar_color:
-            # Access the avatar label and update it with custom color
-            for child in toast.children():
-                if isinstance(child, QLabel) and child.width() == 32 and child.height() == 32:
-                    size = 32
-                    pixmap = QPixmap(size, size)
-                    pixmap.fill(Qt.GlobalColor.transparent)
-                    
-                    painter = QPainter(pixmap)
-                    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                    
-                    # Draw circular background
-                    path = QPainterPath()
-                    path.addEllipse(0, 0, size, size)
-                    painter.setClipPath(path)
-                    
-                    painter.fillRect(0, 0, size, size, QColor(avatar_color))
-                    
-                    # Draw initial
-                    painter.setPen(Qt.GlobalColor.white)
-                    painter.setFont(QFont('Arial', 15, QFont.Weight.Bold))
-                    painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, title[0])
-                    
-                    painter.end()
-                    
-                    child.setPixmap(pixmap)
-                    break
-        
-        toast.show_notification()
+        """Show a toast notification with a custom message."""
+        ToastNotification.show(self, title, message,_theme=self.current_theme)
 
     def _load_styles(self, theme):
-        style_file = f"ui/themes/{theme}.qss"
+        """Load the stylesheet for the specified theme."""
+        theme_file = f"ui/themes/{theme}.qss"
         try:
-            with open(style_file, 'r') as f:
+            with open(theme_file, 'r') as f:
                 self.setStyleSheet(f.read())
             self.theme_changed.emit(theme)
         except FileNotFoundError:
-            print(f"Style file {style_file} not found")
+            print(f"Style file {theme_file} not found")
             
     def resizeEvent(self, event):
         # Update floating button position when window is resized
