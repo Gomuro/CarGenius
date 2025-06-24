@@ -37,7 +37,6 @@ class FilterPanel(BaseComponent):
         filter_layout.addWidget(self.filter_options_widget)
         self.filter_options_widget.tracking_mode_checkbox.stateChanged.connect(self._toggle_tracking_mode)
         self.filter_options_widget.reset_button.clicked.connect(self._reset_filters) # Connect reset
-        # self.filter_options_widget.additional_filters_button.clicked.connect(self._show_additional_filters) # Placeholder
         
         content_layout.addWidget(filter_frame)
         content_layout.addStretch(1)

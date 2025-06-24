@@ -11,11 +11,6 @@ class FilterOptions(QWidget):
         layout.setSpacing(15)
         layout.setContentsMargins(0, 5, 0, 0)
 
-        self.additional_filters_button = QPushButton("Additional filters")
-        self.additional_filters_button.setObjectName("dark_text_button")
-        self.additional_filters_button.setFixedHeight(32)
-        layout.addWidget(self.additional_filters_button)
-        
         if show_tracking_option:
             self.tracking_mode_checkbox = QCheckBox("Track Specific Models")
             self.tracking_mode_checkbox.setObjectName("filter_checkbox_light")

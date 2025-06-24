@@ -182,7 +182,7 @@ class AddContextDialog(QDialog):
         if current_item:
             filter_data = current_item.data(Qt.ItemDataRole.UserRole)
             self.add_filters_context_signal.emit(filter_data)
-            self.accept()
+        self.accept()
 
     def _clear_results(self):
         """Clear existing search results."""
