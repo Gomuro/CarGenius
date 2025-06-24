@@ -145,7 +145,6 @@ class AIChatWindow(QWidget):
         
         # Pass context to the worker and then clear it
         worker = GptWorker(self.api_service, self.user_id, message, self.chat_context)
-        self.chat_context = {}  # Clear context after sending
 
         worker.signals.finished.connect(lambda response: self.receive_ai_response(loading_bubble, response))
         worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
@@ -252,14 +251,9 @@ class AIChatWindow(QWidget):
         self.context_display.update_context(self.chat_context)
         print(f"Context added: {context_type}")
 
-    def add_car_context(self):
-        # This method is now obsolete and will be replaced in Phase 3
-        # Placeholder for Phase 3 - will be replaced with real data fetching
-        self.set_context('car', {"id": "123", "name": "Audi A4"})
-
-    def add_filters_context(self):
-        # Placeholder for Phase 3 - will be replaced with real filter data
-        self.set_context('filters', {"brand": "Audi", "price_max": 20000})
+    def add_filters_context(self, filter_data: dict):
+        """Sets the provided filter data as context for the chat."""
+        self.set_context('filters', filter_data)
         
     def resizeEvent(self, event):
         super().resizeEvent(event)

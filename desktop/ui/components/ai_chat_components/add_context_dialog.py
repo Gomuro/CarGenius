@@ -11,7 +11,7 @@ class AddContextDialog(QDialog):
     """Dialog for adding different types of context to the AI chat."""
 
     add_car_context_signal = pyqtSignal(dict)  # Pass car data
-    add_filters_context_signal = pyqtSignal()
+    add_filters_context_signal = pyqtSignal(dict)
 
     def __init__(self, license_key: str, parent=None):
         super().__init__(parent)
@@ -35,7 +35,7 @@ class AddContextDialog(QDialog):
         tab_widget.addTab(auction_tab, "Auction Machines")
 
         # Filters Tab
-        filters_tab = self._create_search_tab("filters", has_add_button=True)
+        filters_tab = self._create_search_tab("filters")
         tab_widget.addTab(filters_tab, "Filters")
         
         self._load_styles()
@@ -49,7 +49,7 @@ class AddContextDialog(QDialog):
         except FileNotFoundError:
             print(f"Stylesheet not found at {theme_path}")
 
-    def _create_search_tab(self, search_type: str, has_add_button: bool = False, use_detailed_filters: bool = False) -> QWidget:
+    def _create_search_tab(self, search_type: str, use_detailed_filters: bool = False) -> QWidget:
         """Helper method to create a standardized search tab."""
         tab_widget = QWidget()
         layout = QVBoxLayout(tab_widget)
@@ -92,6 +92,9 @@ class AddContextDialog(QDialog):
             # Enable the button only when an item is selected
             saved_filters_list.itemSelectionChanged.connect(lambda: add_selected_btn.setEnabled(bool(saved_filters_list.currentItem())))
             
+            # Connect the button to the new handler
+            add_selected_btn.clicked.connect(lambda: self._on_add_selected_filter(saved_filters_list))
+            
         else:
             # Use the simple search bar for other tabs like 'auction'
             search_layout = QHBoxLayout()
@@ -109,12 +112,6 @@ class AddContextDialog(QDialog):
             # Results list (for simple search)
             results_list = QListWidget()
             layout.addWidget(results_list)
-
-        if has_add_button:
-            add_filters_btn = QPushButton("Add Current Active Filters")
-            add_filters_btn.clicked.connect(self.add_filters_context_signal.emit)
-            add_filters_btn.clicked.connect(self.accept)
-            layout.addWidget(add_filters_btn)
 
         return tab_widget
 
@@ -178,6 +175,14 @@ class AddContextDialog(QDialog):
         context_data = car_data.get('_api_data', car_data)
         self.add_car_context_signal.emit(context_data)
         self.accept()
+
+    def _on_add_selected_filter(self, list_widget: QListWidget):
+        """Emits the selected filter data and closes the dialog."""
+        current_item = list_widget.currentItem()
+        if current_item:
+            filter_data = current_item.data(Qt.ItemDataRole.UserRole)
+            self.add_filters_context_signal.emit(filter_data)
+            self.accept()
 
     def _clear_results(self):
         """Clear existing search results."""
