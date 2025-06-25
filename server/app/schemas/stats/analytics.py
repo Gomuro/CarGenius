@@ -1,7 +1,7 @@
 # app/schemas/stats/analytics.py
 from datetime import datetime, date
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Any, TypeVar
 
 """Schemas for car technical details and equipment, used in the analytics module."""
 
@@ -38,7 +38,7 @@ class TechnicalDetailsSchema(BaseModel):
     trailer_load_unbraked: Optional[int] = Field(None, description="trailerLoadUnbraked-item")  # 750 kg
     net_weight: Optional[int] = Field(None, description="netWeight-item")  # 2.235 kg
     warranty_registration: Optional[str] = Field(None,
-                                                description="warrantyRegistration-item")  # Garantie ab Erstzulassung\nNicht angegeben
+                                                 description="warrantyRegistration-item")  # Garantie ab Erstzulassung\nNicht angegeben
 
     class Config:
         allow_population_by_field_name = True
@@ -196,3 +196,35 @@ class AvgPriceByBrand(BaseModel):
     max_price: float = Field(..., description="Maximum price of the car model")
     min_price: float = Field(..., description="Minimum price of the car model")
     count: int = Field(..., description="Number of listings for the car model")
+
+
+class ListingSchemaML(BaseModel):
+    brand: Optional[str] = Field(None, description="Filter by car brand")
+    model: Optional[str] = Field(None, description="Filter by car model")
+    registration_year: Optional[int] = Field(None, description="Filter by registration year")
+    mileage: Optional[int] = Field(None, description="Filter by mileage")
+    city_or_postal_code: Optional[str] = Field(None, description="Filter by city or postal code")
+    color: Optional[str] = Field(None, description="Filter by car color")
+    price: Optional[int] = Field(None, description="Filter by exact price")
+    url: Optional[str] = Field(None, description="Filter by URL of the car listing")
+    technical_details: Optional[TechnicalDetailsSchema]
+    equipment: Optional[EquipmentSchema]
+
+    class Config:
+        orm_mode = True
+
+
+class ListingCreateRequestMLSchema(BaseModel):
+    brand: Optional[str] = Field(None, description="Brand of the car")
+    model: Optional[str] = Field(None, description="Model of the car")
+    registration_year: Optional[int] = Field(None, description="Year the car was registered")
+    mileage: Optional[int] = Field(None, description="Mileage of the car in kilometers")
+    color: Optional[str] = Field(None, description="Color of the car")
+    price: Optional[int] = Field(None, description="Price of the car in the specified currency")
+    url: Optional[str] = Field(None, description="URL of the car listing")
+    city_or_postal_code: Optional[str] = Field(None, description="City or postal code where the car is located")
+    is_active: Optional[bool] = Field(True, description="Indicates if the listing is active")
+
+    class Config:
+        allow_population_by_field_name = True
+        orm_mode = True

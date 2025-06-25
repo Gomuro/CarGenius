@@ -1,15 +1,12 @@
 # app/services/license.py
 import uuid
 from datetime import datetime, timedelta, timezone
-
 from fastapi import HTTPException
-from typing import Tuple, Optional, List, Dict
-
+from typing import Tuple, Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.license import LicenseKey
-from app.schemas.license import ListingFilter
-from app.schemas.ml import ListingFilterML, ListingSchemaML
+from app.schemas.stats.analytics import ListingSchemaML
 
 
 async def generate_license_key(db: AsyncSession, client_info: str = None, expires_in_days: int = 30) -> LicenseKey:
@@ -63,10 +60,11 @@ async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]
     """Retrieve a license by its key."""
     result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
     print("🔍 License found:", LicenseKey.key is not None)
-    return result.scalar_one_or_none()   # Expecting a single LicenseKey object or None if not found
+    return result.scalar_one_or_none()  # Expecting a single LicenseKey object or None if not found
 
 
-async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filters: List[ListingSchemaML]) -> LicenseKey:
+async def update_license_filters(db: AsyncSession, license_key: LicenseKey,
+                                 filters: List[ListingSchemaML]) -> LicenseKey:
     """Update filters for a given license key with validation."""
 
     allowed_keys = set(ListingSchemaML.__fields__.keys())
