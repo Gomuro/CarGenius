@@ -1,7 +1,7 @@
 # app/services/stats/filters/filter_mobilde.py
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
-from app.schemas.ml import ListingCreateRequestMLSchema
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema
+from app.schemas.stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
+    ListingCreateRequestMLSchema
 
 
 def filtered_listings_ml(filters: ListingCreateRequestMLSchema) -> list[ListingMobileDe]:
@@ -24,9 +24,10 @@ def filtered_listings_ml(filters: ListingCreateRequestMLSchema) -> list[ListingM
         conditions.append(ListingMobileDe.color.ilike(f"%{filters.color}%"))
     if filters.price is not None:
         conditions.append(ListingMobileDe.price == filters.price)
+    if filters.url is not None:
+        conditions.append(ListingMobileDe.url.ilike(f"%{filters.url}%"))
 
     return conditions
-
 
 
 def filtered_listings(filters: ListingSchema) -> list[ListingMobileDe]:

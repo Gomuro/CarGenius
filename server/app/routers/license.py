@@ -1,13 +1,10 @@
 # app/routers/license.py
 from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.schemas.license import LicenseCreateResponse, LicenseCreateRequest, LicenseValidateResponse, \
     LicenseValidateRequest
-from app.schemas.ml import ListingSchemaML
-
+from app.schemas.stats.analytics import ListingSchemaML
 from app.services.license import generate_license_key, validate_license_key, validate_license_key_device, \
     get_license_by_key, update_license_filters
 from app.core.database import get_db
@@ -15,6 +12,7 @@ from app.core.logger import logger
 from app.core.rate_limiter import limiter
 
 router = APIRouter()
+
 
 @router.post("/generate", response_model=LicenseCreateResponse)
 @limiter.limit("3/minute")
@@ -68,7 +66,6 @@ async def update_filters(
 
 
 @router.delete("/{key}/filters", response_model=List[ListingSchemaML])
-
 async def clear_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
     if not license_key:
@@ -76,4 +73,3 @@ async def clear_filters(key: str, db: AsyncSession = Depends(get_db)):
 
     await update_license_filters(db, license_key, [])
     return [f for f in license_key.filters if isinstance(f, dict)]
-

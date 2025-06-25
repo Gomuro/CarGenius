@@ -1,18 +1,14 @@
 # app/routers/stats/analytics.py
-from typing import List, Optional, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
-from app.models.license import LicenseKey
-from app.schemas.ml import ListingFilterML, ListingCreateRequestMLSchema, ListingSchemaML
 from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, \
     EquipmentSchema, ListingCreateRequestSchema, ListingFilteredResponse
 from app.services.license import get_license_by_key
-from app.services.stats.analytics import get_avg_price_by_brand, get_filtered, listings_json_to_db, get_filtered2, \
-    get_filtered_from_license_key, get_filtered3
+from app.services.stats.analytics import get_avg_price_by_brand, get_filtered, listings_json_to_db, get_filtered_for_ml
 import json
 
+from app.utils import flatten_listing_ml
 from ml.predict import predict_price
 
 router = APIRouter()
@@ -71,66 +67,40 @@ async def search_listings(
         equipment_filters=equipment_filters
     )
 
-async def flatten_listing_ml(listings: list[ListingSchemaML]) -> list[dict]:
-    flat_listings = []
 
-    for listing in listings:
-        listing_dict = listing.dict()
-        # print("!!!!!!#########Flattening listings for ML model...", listing_dict)
-        # print('!!!!!!!!!!listing', listing_dict)
-        flat_listing = ({k: v for k, v in listing_dict.items() if k not in ["technical_details", "equipment"]})
-        # print("#########Flat listing without details:", flat_listing)
-
-        technical_details = listing_dict.get("technical_details", {}) or {}
-        equipment = listing_dict.get("equipment", {}) or {}
-
-        flat_listing.update(technical_details)
-        flat_listing.update(equipment)
-
-        for k, v in flat_listing.items():
-            if isinstance(v, bool):
-                flat_listing[k] = int(v)
-        flat_listings.append(flat_listing)
-    return flat_listings
-
-
-@router.get("/filter-search2", response_model=dict)
-async def search_listings2(key: str, db: AsyncSession = Depends(get_db)):
+@router.get("/ml_best_price_search", response_model=dict)
+async def ml_best_price_search(key: str, db: AsyncSession = Depends(get_db)):
     license_obj = await get_license_by_key(db, key)
     if not license_obj:
         raise HTTPException(status_code=404, detail="License not found")
 
-    listings = await get_filtered3(db=db, license_key=license_obj)
-    print("!!!!!!!!!!#########Flattening listings for ML model...", listings)
+    listings = await get_filtered_for_ml(db=db, license_key=license_obj)
     flat_listings = await flatten_listing_ml(listings)  # [{'brand': ..., 'mileage': ..., ...}, {...}, ...]
     if not flat_listings:
         return {"detail": "No listings found"}
-
     valid_indexes = []
     input_for_model = []
-
     for i, features in enumerate(flat_listings):
         try:
             features = dict(features)
-            features.pop('price', None)  # 🛑 не подаємо на вхід target
+            features.pop('price', None)  # 🛑 do not submit target as input
             features = {
                 k: (0 if v is None else v)
                 for k, v in features.items()
             }
             input_for_model.append(features)
             valid_indexes.append(i)
+            print(f"✅ Listing #{i} is valid for model input: {valid_indexes}")
+
         except Exception as e:
             print(f"⚠️ Skip listing #{i} due to error: {e}")
-    # Робимо прогноз тільки по валідним
+    # Make a forecast only on valid
     predicted_prices = predict_price(input_for_model)
-    # print("Len listings:", len(listings))
-    # print("Len flat_listings:", len(flat_listings))
-    # print("Len predicted_prices:", len(predicted_prices))
 
     best_offer = None
     max_saving = float("-inf")
 
-    for model_index, original_index in enumerate(valid_indexes):
+    for model_index, original_index in enumerate(valid_indexes):  #
         listing = listings[original_index]
         predicted = predicted_prices[model_index]
         actual = listing.price
@@ -142,14 +112,19 @@ async def search_listings2(key: str, db: AsyncSession = Depends(get_db)):
                 "actual_price": actual,
                 "predicted_price": predicted,
                 "saving": saving,
+                "brand": listing.brand,
+                "model": listing.model,
+                "url": listing.url,
             }
-    print("✅ Model input columns:", list(input_for_model[0].keys()))
-    print("✅ Model predicted prices:", predicted_prices)
+    print("✅ Model input columns:", list(input_for_model[0].keys()))  # Shows the columns used for prediction
+    print("✅ Model predicted prices:", predicted_prices)  # Shows the predicted prices for each listing
 
     return {
         "best_offer": best_offer,
         "listings_count": len(flat_listings),
+        "listings": flat_listings,
     }
+
 
 @router.get("/average_price", response_model=list[AvgPriceByBrand])
 async def get_average_price(limit: int = 20, db: AsyncSession = Depends(get_db)):

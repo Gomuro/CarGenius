@@ -6,21 +6,9 @@ from sqlalchemy.orm import joinedload
 
 from app.models.car import ListingMobileDe, Equipment, TechnicalDetails
 from app.models.license import LicenseKey
-from app.schemas.ml import ListingFilterML, ListingCreateRequestMLSchema, ListingSchemaML
 from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
-    ListingCreateRequestSchema, ListingOut, ListingFilteredResponse, ListingStats
-from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment, \
-    filtered_listings_ml
-
-
-def is_meaningful_value(val: Any) -> bool:
-    if val in [None, "", "string", 0, 0.0, False, [], {}]:
-        return False
-    return True
-
-
-def clean_filter_dict(data: dict) -> dict:
-    return {k: v for k, v in data.items() if is_meaningful_value(v)}
+    ListingCreateRequestSchema, ListingOut, ListingFilteredResponse, ListingStats, ListingSchemaML
+from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment
 
 
 def get_filters_from_license_key(license_key: LicenseKey):
@@ -77,39 +65,12 @@ def get_filters_from_license_key(license_key: LicenseKey):
     return listing_conditions, techdetails_conditions, equipment_conditions
 
 
-async def get_filtered_from_license_key(
-        db: AsyncSession,
-        license_key: LicenseKey
-) -> List[ListingMobileDe]:
-    listing_conditions, techdetails_conditions, equipment_conditions = get_filters_from_license_key(license_key)
-
-    stmt = (
-        select(ListingMobileDe)
-        .outerjoin(ListingMobileDe.technical_details)
-        .outerjoin(ListingMobileDe.equipment)
-        .options(
-            joinedload(ListingMobileDe.technical_details),
-            joinedload(ListingMobileDe.equipment)
-        )
-        .where(and_(
-            *listing_conditions,
-            *techdetails_conditions,
-            *equipment_conditions
-        ))
-    )
-
-    result = await db.execute(stmt)
-    listings = list(result.scalars().all())
-
-    return listings
-
-
-async def get_filtered3(
+async def get_filtered_for_ml(
         db: AsyncSession,
         license_key: LicenseKey
 ) -> list[ListingSchemaML]:
     """Filtering listings with JOIN on TechnicalDetails and Equipment."""
-    listing_conditions ,techdetails_conditions, equipment_conditions = get_filters_from_license_key(license_key)
+    listing_conditions, techdetails_conditions, equipment_conditions = get_filters_from_license_key(license_key)
 
     stmt = (
         select(ListingMobileDe)
@@ -129,39 +90,6 @@ async def get_filtered3(
 
     listings = list(result.scalars().all())  # Return a list of ListingMobileDe objects
     return [ListingSchemaML.from_orm(item) for item in listings]
-
-
-
-async def get_filtered2(
-        db: AsyncSession,
-        listings_ml_filters: ListingCreateRequestMLSchema,
-        tech_filters: TechnicalDetailsSchema,
-        equipment_filters: EquipmentSchema
-) -> list[ListingMobileDe]:
-    listing_conditions = filtered_listings_ml(listings_ml_filters)
-    techdetails_conditions = filtered_tech_details(tech_filters)
-    equipment_conditions = filtered_equipment(equipment_filters)
-
-    stmt = (
-        select(ListingMobileDe)
-        .outerjoin(ListingMobileDe.technical_details)
-        .outerjoin(ListingMobileDe.equipment)
-        .options(
-            joinedload(ListingMobileDe.technical_details),
-            joinedload(ListingMobileDe.equipment)
-        )
-        .where(and_(
-            *listing_conditions,
-            *techdetails_conditions,
-            *equipment_conditions
-        ))
-    )
-    result = await db.execute(stmt)
-    listings = list(result.scalars().all())
-
-    return listings
-
-
 
 
 async def get_filtered(
@@ -290,41 +218,3 @@ async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]
     """Fetch license key object from DB"""
     result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
     return result.scalar_one_or_none()
-
-
-async def get_listings_by_filters(db: AsyncSession, filters: List[dict]):
-    query = select(ListingMobileDe)
-
-    needs_join_equipment = False
-    needs_join_technical = False
-
-    for f in filters:
-        for key, val in f.items():
-            if key.endswith("_lte"):
-                col_name = key[:-4]
-                if hasattr(ListingMobileDe, col_name):
-                    query = query.where(getattr(ListingMobileDe, col_name) <= val)
-            elif key.endswith("_gte"):
-                col_name = key[:-4]
-                if hasattr(ListingMobileDe, col_name):
-                    query = query.where(getattr(ListingMobileDe, col_name) >= val)
-            else:
-                if hasattr(ListingMobileDe, key):
-                    query = query.where(getattr(ListingMobileDe, key) == val)
-                elif hasattr(TechnicalDetails, key):
-                    needs_join_technical = True
-                    query = query.where(getattr(TechnicalDetails, key) == val)
-                elif hasattr(Equipment, key):
-                    needs_join_equipment = True
-                    query = query.where(getattr(Equipment, key) == val)
-                else:
-                    raise ValueError(f"Unknown filter field: {key}")
-
-    if needs_join_equipment:
-        query = query.join(Equipment)
-
-    if needs_join_technical:
-        query = query.join(TechnicalDetails)
-
-    result = await db.execute(query)
-    return list(result.scalars().unique().all())
