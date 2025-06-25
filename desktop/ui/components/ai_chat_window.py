@@ -52,6 +52,36 @@ class AIChatWindow(QWidget):
         self.chat_history = []
         
         self._create_ui()
+        self._load_chat_history()
+        
+    def _load_chat_history(self):
+        """Load chat history from storage and restore messages."""
+        self.chat_history = GLOBAL.CHAT_HISTORY.load_chat_history()
+        
+        # Clear existing messages (except the welcome message)
+        # and restore from history
+        if self.chat_history:
+            # Remove the welcome message temporarily
+            self._clear_all_messages()
+            
+            # Restore messages from history
+            for message in self.chat_history:
+                role = message.get("role", "assistant")
+                content = message.get("content", "")
+                is_user = (role == "user")
+                self.add_message(content, is_user=is_user, is_initial_message=True, save_to_history=False)
+            
+            print(f"Restored {len(self.chat_history)} messages from chat history")
+        else:
+            # No history, show welcome message
+            self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
+        
+    def _clear_all_messages(self):
+        """Clear all messages from the UI."""
+        while self.messages_layout.count():
+            child = self.messages_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
         
     def _create_ui(self):
         self.setObjectName("ai_chat_window")
@@ -104,8 +134,6 @@ class AIChatWindow(QWidget):
         self.messages_layout.setContentsMargins(0, 10, 0, 10)
         self.scroll_area.setWidget(self.messages_widget)
         
-        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
-        
         # Use the new premium ChatInputArea component
         self.chat_input_area = ChatInputArea()
         self.chat_input_area.send_button.clicked.connect(self.send_message)
@@ -152,13 +180,15 @@ class AIChatWindow(QWidget):
         worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
         self.threadpool.start(worker)
         
-    def add_message(self, text, is_user=False, is_initial_message=False):
+    def add_message(self, text, is_user=False, is_initial_message=False, save_to_history=True):
         bubble = MessageBubble(text, is_user)
 
-        # Add to chat history, unless it's the initial welcome message
-        if not is_initial_message:
+        # Add to chat history, unless it's the initial welcome message or we're restoring from history
+        if not is_initial_message and save_to_history:
             role = "user" if is_user else "assistant"
             self.chat_history.append({"role": role, "content": text})
+            # Save to storage immediately
+            GLOBAL.CHAT_HISTORY.save_chat_history(self.chat_history)
 
         # Create a container widget and layout to hold the bubble and spacer
         container_widget = QWidget()
@@ -231,8 +261,21 @@ class AIChatWindow(QWidget):
         """Clears the chat context and updates the UI."""
         self.chat_context = {}
         self.chat_history.clear()
+        GLOBAL.CHAT_HISTORY.clear_chat_history()
         self.context_display.update_context(self.chat_context)
+        
+        # Clear all messages and add welcome message
+        self._clear_all_messages()
+        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
+        
         print("Context and history cleared")
+        
+    def closeEvent(self, event):
+        """Handle window close event to save chat history."""
+        # Save chat history before closing
+        GLOBAL.CHAT_HISTORY.save_chat_history(self.chat_history)
+        print("Chat history saved on window close")
+        event.accept()
         
     def _update_send_button_state(self):
         """Update send button state based on input text"""

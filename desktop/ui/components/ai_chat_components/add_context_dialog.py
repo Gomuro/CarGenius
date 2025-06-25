@@ -68,7 +68,7 @@ class AddContextDialog(QDialog):
                 self.setStyleSheet(f.read())
         except FileNotFoundError:
             print(f"Stylesheet not found at {theme_path}")
-
+    
     def _create_search_tab(self, search_type: str, use_detailed_filters: bool = False) -> QWidget:
         """Helper method to create a standardized search tab."""
         tab_widget = QWidget()

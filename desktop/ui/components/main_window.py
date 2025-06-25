@@ -1,4 +1,4 @@
-from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QSize, QSettings
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QPushButton, QLineEdit, QLabel, QFrame, QComboBox, 
                            QSizePolicy, QScrollArea, QToolTip)
@@ -26,9 +26,33 @@ class MainWindow(QMainWindow):
         # Initialize AI chat window reference
         self.ai_chat_window = None
         
+        # Initialize QSettings for saving window geometry
+        self.settings = QSettings("CarGenius", "DesktopApp")
+        
         self._create_ui()
         self._load_styles(self.current_theme)
         self._add_floating_chat_button()
+        self._restore_window_geometry()
+
+    def _restore_window_geometry(self):
+        """Restore window geometry from settings."""
+        # Restore window geometry
+        geometry = self.settings.value("window/geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+            print("Window geometry restored from settings")
+        
+        # Restore window state (maximized, etc.)
+        window_state = self.settings.value("window/state")
+        if window_state:
+            self.restoreState(window_state)
+            print("Window state restored from settings")
+
+    def _save_window_geometry(self):
+        """Save current window geometry to settings."""
+        self.settings.setValue("window/geometry", self.saveGeometry())
+        self.settings.setValue("window/state", self.saveState())
+        print("Window geometry and state saved to settings")
 
     def _create_ui(self):
         # Create scroll area as central widget
@@ -256,5 +280,17 @@ class MainWindow(QMainWindow):
             
     def resizeEvent(self, event):
         # Update floating button position when window is resized
+        super().resizeEvent(event)
         self._update_fab_position()
-        super().resizeEvent(event) 
+
+    def closeEvent(self, event):
+        """Handle application close event to save window geometry."""
+        # Save window geometry before closing
+        self._save_window_geometry()
+        
+        # Close AI chat window if open
+        if self.ai_chat_window and self.ai_chat_window.isVisible():
+            self.ai_chat_window.close()
+        
+        print("Application closing, settings saved")
+        event.accept() 
