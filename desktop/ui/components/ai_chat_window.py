@@ -6,6 +6,8 @@ from PyQt6.QtGui import QIcon, QFont, QColor, QPalette, QKeyEvent
 
 from .ai_chat_components.message_bubbles import MessageBubble, LoadingBubble
 from .ai_chat_components.chat_input_area import ChatInputArea
+from .ai_chat_components.context_display_widget import ContextDisplayWidget
+from .ai_chat_components.add_context_dialog import AddContextDialog
 from desktop.services.main_api_service import APIService
 from desktop.GLOBAL import GLOBAL
 
@@ -15,18 +17,20 @@ class GptWorkerSignals(QObject):
     error = pyqtSignal(str)
 
 class GptWorker(QRunnable):
-    def __init__(self, api_service, user_id, prompt):
+    def __init__(self, api_service, user_id, prompt, context=None, chat_history=None):
         super().__init__()
         self.api_service = api_service
         self.user_id = user_id
         self.prompt = prompt
         self.signals = GptWorkerSignals()
+        self.context = context
+        self.chat_history = chat_history if chat_history is not None else []
 
     def run(self):
         try:
             if not self.user_id:
                 raise ValueError("User ID is not set. Please ensure you have a valid license.")
-            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt)
+            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt, self.context, self.chat_history)
             self.signals.finished.emit(response)
         except Exception as e:
             self.signals.error.emit(str(e))
@@ -44,8 +48,40 @@ class AIChatWindow(QWidget):
         self.api_service = APIService()
         self.user_id = GLOBAL.LICENSE.get_license_key()
         self.threadpool = QThreadPool()
+        self.chat_context = {}
+        self.chat_history = []
         
         self._create_ui()
+        self._load_chat_history()
+        
+    def _load_chat_history(self):
+        """Load chat history from storage and restore messages."""
+        self.chat_history = GLOBAL.CHAT_HISTORY.load_chat_history()
+        
+        # Clear existing messages (except the welcome message)
+        # and restore from history
+        if self.chat_history:
+            # Remove the welcome message temporarily
+            self._clear_all_messages()
+            
+            # Restore messages from history
+            for message in self.chat_history:
+                role = message.get("role", "assistant")
+                content = message.get("content", "")
+                is_user = (role == "user")
+                self.add_message(content, is_user=is_user, is_initial_message=True, save_to_history=False)
+            
+            print(f"Restored {len(self.chat_history)} messages from chat history")
+        else:
+            # No history, show welcome message
+            self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
+        
+    def _clear_all_messages(self):
+        """Clear all messages from the UI."""
+        while self.messages_layout.count():
+            child = self.messages_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
         
     def _create_ui(self):
         self.setObjectName("ai_chat_window")
@@ -98,15 +134,20 @@ class AIChatWindow(QWidget):
         self.messages_layout.setContentsMargins(0, 10, 0, 10)
         self.scroll_area.setWidget(self.messages_widget)
         
-        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", False)
-        
         # Use the new premium ChatInputArea component
         self.chat_input_area = ChatInputArea()
         self.chat_input_area.send_button.clicked.connect(self.send_message)
+        self.chat_input_area.add_context_button.clicked.connect(self.open_add_context_dialog)
         # Install event filter on the QTextEdit within ChatInputArea
         self.chat_input_area.input_text.installEventFilter(self)
         # Connect text change to update send button state
         self.chat_input_area.input_text.textChanged.connect(self._update_send_button_state)
+
+        # Context display widget
+        self.context_display = ContextDisplayWidget()
+        self.context_display.clear_context_signal.connect(self.clear_context)
+        chat_layout.addWidget(self.context_display)
+        
         chat_layout.addWidget(self.chat_input_area)
         
         # Initialize send button state
@@ -132,33 +173,65 @@ class AIChatWindow(QWidget):
         
         loading_bubble = self.add_loading()
         
-        worker = GptWorker(self.api_service, self.user_id, message)
+        # Pass context to the worker
+        worker = GptWorker(self.api_service, self.user_id, message, self.chat_context, self.chat_history)
+
         worker.signals.finished.connect(lambda response: self.receive_ai_response(loading_bubble, response))
         worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
         self.threadpool.start(worker)
         
-    def add_message(self, text, is_user=False):
+    def add_message(self, text, is_user=False, is_initial_message=False, save_to_history=True):
         bubble = MessageBubble(text, is_user)
-        self.messages_layout.addWidget(bubble)
+
+        # Add to chat history, unless it's the initial welcome message or we're restoring from history
+        if not is_initial_message and save_to_history:
+            role = "user" if is_user else "assistant"
+            self.chat_history.append({"role": role, "content": text})
+            # Save to storage immediately
+            GLOBAL.CHAT_HISTORY.save_chat_history(self.chat_history)
+
+        # Create a container widget and layout to hold the bubble and spacer
+        container_widget = QWidget()
+        container_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        container_layout = QHBoxLayout(container_widget)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
         
         if is_user:
-            self.messages_layout.setAlignment(bubble, Qt.AlignmentFlag.AlignRight)
+            # Add a spacer to push the bubble to the right
+            container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
+            container_layout.addWidget(bubble)
         else:
-            self.messages_layout.setAlignment(bubble, Qt.AlignmentFlag.AlignLeft)
+            # Add the bubble to the left and a spacer to the right
+            container_layout.addWidget(bubble)
+            container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
+
+        self.messages_layout.addWidget(container_widget)
             
         QTimer.singleShot(100, self.scroll_to_bottom)
         
     def add_loading(self):
         loading = LoadingBubble()
-        self.messages_layout.addWidget(loading)
-        self.messages_layout.setAlignment(loading, Qt.AlignmentFlag.AlignLeft)
+
+        container_widget = QWidget()
+        container_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        container_layout = QHBoxLayout(container_widget)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
+        container_layout.addWidget(loading)
+        container_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred))
+
+        self.messages_layout.addWidget(container_widget)
+
         QTimer.singleShot(100, self.scroll_to_bottom)
         return loading
         
     def receive_ai_response(self, loading_bubble, response):
         if loading_bubble.parent() is not None:
-            loading_bubble.setParent(None)
-            loading_bubble.deleteLater()
+            container = loading_bubble.parentWidget()
+            container.setParent(None)
+            container.deleteLater()
         
         if response and response.get("gpt_response"):
             ai_message = response["gpt_response"]
@@ -171,8 +244,9 @@ class AIChatWindow(QWidget):
         
     def handle_ai_error(self, loading_bubble, error_message):
         if loading_bubble.parent() is not None:
-            loading_bubble.setParent(None)
-            loading_bubble.deleteLater()
+            container = loading_bubble.parentWidget()
+            container.setParent(None)
+            container.deleteLater()
         
         print(f"[AIChatWindow] Error from GPT API: {error_message}")
         self.add_message(f"An error occurred: {error_message}", False)
@@ -183,11 +257,54 @@ class AIChatWindow(QWidget):
             if scrollbar:
                 scrollbar.setValue(scrollbar.maximum())
         
+    def clear_context(self):
+        """Clears the chat context and updates the UI."""
+        self.chat_context = {}
+        self.chat_history.clear()
+        GLOBAL.CHAT_HISTORY.clear_chat_history()
+        self.context_display.update_context(self.chat_context)
+        
+        # Clear all messages and add welcome message
+        self._clear_all_messages()
+        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
+        
+        print("Context and history cleared")
+        
+    def closeEvent(self, event):
+        """Handle window close event to save chat history."""
+        # Save chat history before closing
+        GLOBAL.CHAT_HISTORY.save_chat_history(self.chat_history)
+        print("Chat history saved on window close")
+        event.accept()
+        
     def _update_send_button_state(self):
         """Update send button state based on input text"""
         if hasattr(self, 'chat_input_area'):
             has_text = bool(self.chat_input_area.get_text())
             self.chat_input_area.set_send_enabled(has_text)
+        
+    def open_add_context_dialog(self):
+        dialog = AddContextDialog(license_key=self.user_id, parent=self)
+        dialog.add_car_context_signal.connect(self._on_context_car_selected)
+        dialog.add_filters_context_signal.connect(self.add_filters_context)
+        dialog.exec()
+
+    def _on_context_car_selected(self, car_data: dict):
+        """Handle car selection from the context dialog."""
+        self.set_context('car', car_data)
+
+    def set_context(self, context_type: str, data: dict):
+        """
+        Sets a specific type of context for the chat.
+        This method updates the chat_context dictionary and refreshes the context display.
+        """
+        self.chat_context[context_type] = data
+        self.context_display.update_context(self.chat_context)
+        print(f"Context added: {context_type}")
+
+    def add_filters_context(self, filter_data: dict):
+        """Sets the provided filter data as context for the chat."""
+        self.set_context('filters', filter_data)
         
     def resizeEvent(self, event):
         super().resizeEvent(event)

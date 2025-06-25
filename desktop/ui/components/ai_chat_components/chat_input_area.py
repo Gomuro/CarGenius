@@ -12,9 +12,9 @@ class ChatInputArea(QFrame):
         self._create_ui()
 
     def _create_ui(self):
-        # Main container layout
+        # Main container layout should be vertical
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 16, 20, 16)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(8)
 
         # Input row with enhanced design
@@ -23,6 +23,13 @@ class ChatInputArea(QFrame):
         input_layout = QHBoxLayout(input_container)
         input_layout.setContentsMargins(4, 4, 4, 4)
         input_layout.setSpacing(12)
+        
+        # Add context button
+        self.add_context_button = QPushButton("+")
+        self.add_context_button.setObjectName("add_context_button")
+        self.add_context_button.setFixedSize(48, 48) # Adjusted size
+        self.add_context_button.setFont(QFont("Segoe UI", 16))
+        input_layout.addWidget(self.add_context_button)
 
         # Enhanced text input
         self.input_text = QTextEdit()

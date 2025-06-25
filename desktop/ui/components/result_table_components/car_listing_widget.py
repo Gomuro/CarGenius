@@ -1,8 +1,10 @@
 from PyQt6.QtWidgets import (QLabel, QVBoxLayout, QHBoxLayout, QFrame, QWidget, QGridLayout, QPushButton)
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont # QPixmap, QIcon removed as they are not used directly here but in parent/data
 
 class CarListingWidget(QFrame):
+    send_to_ai_signal = pyqtSignal(dict)
+
     def __init__(self, car_data, parent=None):
         super().__init__(parent)
         self.car_data = car_data
@@ -118,8 +120,14 @@ class CarListingWidget(QFrame):
         view_listing_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         share_btn = QPushButton("Share")
         share_btn.setObjectName("share_button")
+
+        ask_ai_btn = QPushButton("Ask AI")
+        ask_ai_btn.setObjectName("ask_ai_button")
+        ask_ai_btn.clicked.connect(self._on_ask_ai_clicked)
+
         button_layout.addWidget(view_listing_btn)
         button_layout.addWidget(share_btn)
+        button_layout.addWidget(ask_ai_btn)
         
         details_layout.addWidget(title_label)
         details_layout.addWidget(subtitle_label)
@@ -135,3 +143,8 @@ class CarListingWidget(QFrame):
         
         layout.setColumnStretch(0, 0) 
         layout.setColumnStretch(1, 1) 
+
+    def _on_ask_ai_clicked(self):
+        """Emits the car data when the Ask AI button is clicked."""
+        self.send_to_ai_signal.emit(self.car_data)
+        print(f"UI: Emitting car data for AI context: {self.car_data.get('title')}") 

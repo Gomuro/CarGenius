@@ -11,6 +11,7 @@ class GLOBAL:
         LOGS = ROOT / "logs"
         SETTINGS = ROOT / "settings"
         LICENSE_FILE = SETTINGS / "license.key"
+        CHAT_HISTORY_FILE = SETTINGS / "chat_history.json"
 
     class LICENSE:
         @staticmethod
@@ -26,6 +27,43 @@ class GLOBAL:
                     return f.read()
             except FileNotFoundError:
                 return ""
+
+    class CHAT_HISTORY:
+        @staticmethod
+        def save_chat_history(chat_history: list):
+            """Save chat history to a local JSON file."""
+            GLOBAL.PATH.CHAT_HISTORY_FILE.parent.mkdir(exist_ok=True, parents=True)
+            try:
+                with open(GLOBAL.PATH.CHAT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(chat_history, f, indent=4, ensure_ascii=False)
+                print(f"Chat history saved to {GLOBAL.PATH.CHAT_HISTORY_FILE}")
+            except Exception as e:
+                print(f"Failed to save chat history: {e}")
+
+        @staticmethod
+        def load_chat_history() -> list:
+            """Load chat history from the local JSON file."""
+            try:
+                with open(GLOBAL.PATH.CHAT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+                    print(f"Chat history loaded from {GLOBAL.PATH.CHAT_HISTORY_FILE}")
+                    return history
+            except FileNotFoundError:
+                print("No chat history file found, starting with empty history")
+                return []
+            except Exception as e:
+                print(f"Failed to load chat history: {e}")
+                return []
+
+        @staticmethod
+        def clear_chat_history():
+            """Clear the saved chat history."""
+            try:
+                if GLOBAL.PATH.CHAT_HISTORY_FILE.exists():
+                    GLOBAL.PATH.CHAT_HISTORY_FILE.unlink()
+                    print("Chat history cleared")
+            except Exception as e:
+                print(f"Failed to clear chat history: {e}")
 
     # Add API configuration
     API_BASE_URL = "http://localhost:8000"  # This can be changed for production

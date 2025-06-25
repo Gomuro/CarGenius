@@ -208,7 +208,8 @@ class FilterInputs(QWidget):
 
     def _populate_mileages(self):
         """Заповнюємо список пробігу"""
-        mileage_ranges = ["Any Mileage", "< 10,000 km", "< 50,000 km", "< 100,000 km", "< 150,000 km", "> 150,000 km"]
+        # The "> 150,000 km" option is removed as it cannot be supported by the backend API
+        mileage_ranges = ["Any Mileage", "< 10,000 km", "< 50,000 km", "< 100,000 km", "< 150,000 km"]
         self.mileage_input.clear()
         self.mileage_input.addItems(mileage_ranges)
 
@@ -254,42 +255,31 @@ class FilterInputs(QWidget):
         return [l for l in filtered_data if l.get("model") == selected_model]
 
     def _get_current_filtered_data(self):
-        """Отримуємо дані, відфільтровані за поточними налаштуваннями"""
-        filtered_data = self._filter_by_brand_and_model()
-        
-        # Фільтр по року
+        """Отримуємо відфільтровані дані на основі поточних налаштувань"""
+        # Починаємо з повного списку або з попередньо відфільтрованих даних
+        filtered_data = self._filter_by_brand_and_model() # Включає фільтрацію за брендом і моделлю
+
+        # Фільтрація за роком
         selected_year = self.reg_date_input.currentText()
         if selected_year != "Any Year":
             try:
-                year = int(selected_year)
-                filtered_data = [l for l in filtered_data if l.get("registration_year") == year]
+                year_val = int(selected_year)
+                filtered_data = [l for l in filtered_data if l.get("registration_year") == year_val]
             except ValueError:
                 pass
-                
-        # Фільтр по локації
-        location_text = self.location_input.text().strip()
-        if location_text:
-            filtered_data = [l for l in filtered_data 
-                           if location_text.lower() in l.get("city_or_postal_code", "").lower()]
-        
-        # Фільтр по кольору
-        selected_color = self.color_input.currentText()
-        if selected_color != "Any Color" and selected_color:
-            filtered_data = [l for l in filtered_data if l.get("color") == selected_color]
-        
-        # Фільтр по ціні
+
+        # Фільтрація за ціною
         selected_price = self.price_input.currentText()
-        if selected_price != "Any price" and selected_price:
+        if selected_price != "Any price":
             try:
-                max_price = int(selected_price.replace("€", "").replace(",", ""))
-                filtered_data = [l for l in filtered_data 
-                               if l.get("price", 0) <= max_price]
+                price_val = int(selected_price.replace("€", "").replace(",", ""))
+                filtered_data = [l for l in filtered_data if l.get("price", 0) <= price_val]
             except ValueError:
                 pass
-        
-        # Фільтр по пробігу (базова логіка для діапазонів)
+
+        # Фільтрація за пробігом
         selected_mileage = self.mileage_input.currentText()
-        if selected_mileage != "Any Mileage" and selected_mileage:
+        if selected_mileage != "Any Mileage":
             if "< 10,000" in selected_mileage:
                 filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 10000]
             elif "< 50,000" in selected_mileage:
@@ -298,9 +288,20 @@ class FilterInputs(QWidget):
                 filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 100000]
             elif "< 150,000" in selected_mileage:
                 filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 150000]
-            elif "> 150,000" in selected_mileage:
-                filtered_data = [l for l in filtered_data if l.get("mileage", 0) > 150000]
                 
+        # Фільтрація за локацією (місто або поштовий індекс)
+        location_text = self.location_input.text().strip().lower()
+        if location_text:
+            filtered_data = [
+                l for l in filtered_data 
+                if l.get("city_or_postal_code") and location_text in l["city_or_postal_code"].lower()
+            ]
+
+        # Фільтрація за кольором
+        selected_color = self.color_input.currentText()
+        if selected_color != "Any Color":
+            filtered_data = [l for l in filtered_data if l.get("color") == selected_color]
+            
         return filtered_data
 
     # =============================================================================
@@ -333,38 +334,63 @@ class FilterInputs(QWidget):
     # БЛОК 7: ПУБЛІЧНЕ API
     # =============================================================================
     
-    def get_criteria(self):
-        """Отримуємо поточні критерії фільтрації"""
+    def get_criteria(self) -> dict:
+        """Gathers all filter criteria into a single dictionary."""
         criteria = {}
-        
-        # Основні фільтри
-        if self.brand_input.currentText() != "Any Brand":
-            criteria["brand"] = self.brand_input.currentText()
-        if self.model_input.currentText() != "Any Model":
-            criteria["model"] = self.model_input.currentText()
-        if self.reg_date_input.currentText() != "Any Year":
+
+        # Brand
+        brand = self.brand_input.currentText()
+        if brand != "Any Brand":
+            criteria['brand'] = brand
+
+        # Model
+        model = self.model_input.currentText()
+        if model != "Any Model":
+            criteria['model'] = model
+
+        # Registration Year
+        reg_date_text = self.reg_date_input.currentText()
+        if reg_date_text != "Any Year":
             try:
-                criteria["registration_year"] = int(self.reg_date_input.currentText())
-            except ValueError:
-                pass
-        if self.location_input.text():
-            criteria["city_or_postal_code"] = self.location_input.text()
-        if self.color_input.currentText() != "Any Color":
-            criteria["color"] = self.color_input.currentText()
-            
-        # Обробка ціни
+                criteria['registration_year'] = int(reg_date_text)
+            except (ValueError, TypeError):
+                print(f"Warning: Could not parse year value '{reg_date_text}'")
+
+        # Price
         price_text = self.price_input.currentText()
         if price_text != "Any price":
             try:
-                price_value = int(price_text.replace("€", "").replace(",", ""))
-                criteria["price_lte"] = price_value
-            except ValueError:
-                pass
-                
+                price_value = int(price_text.replace('€', '').replace(',', ''))
+                criteria['price_lte'] = price_value
+            except (ValueError, TypeError):
+                print(f"Warning: Could not parse price value '{price_text}'")
+
+        # Mileage
+        mileage_text = self.mileage_input.currentText()
+        if mileage_text != "Any Mileage":
+            try:
+                # Backend expects a single 'mileage' parameter, treated as 'less than or equal to'
+                mileage_str = mileage_text.replace('<', '').replace('>', '').replace(',', '').replace('km', '').strip()
+                mileage_value = int(mileage_str)
+                if '<' in mileage_text:
+                    criteria['mileage'] = mileage_value
+            except (ValueError, TypeError):
+                print(f"Warning: Could not parse mileage value '{mileage_text}'")
+
+        # Location
+        location_text = self.location_input.text()
+        if location_text:
+            criteria['city_or_postal_code'] = location_text
+
+        # Color
+        color_text = self.color_input.currentText()
+        if color_text != "Any Color":
+            criteria['color'] = color_text
+            
         return criteria
 
     def set_search_button_text(self, text):
-        """Встановлюємо текст кнопки пошуку"""
+        """Встановлюємо текст для кнопки пошуку (для режиму відстеження)"""
         self.search_button.setText(text)
         # Disable auto-updates when custom text is set
         self.auto_update_button_text = False

@@ -1,11 +1,13 @@
 from PyQt6.QtWidgets import (QVBoxLayout, QLabel, QHBoxLayout, QFrame)
 # Removed QTableWidget, QTableWidgetItem, QScrollArea, QWidget, QGridLayout, QPushButton as they are encapsulated or not directly used
-from PyQt6.QtCore import Qt # QSize removed
+from PyQt6.QtCore import Qt, pyqtSignal # QSize removed
 # from PyQt6.QtGui import QPixmap, QFont, QIcon # No longer directly used here
 from . import BaseComponent
 from .result_table_components.car_listing_widget import CarListingWidget # Import the new component
 
 class ResultTable(BaseComponent):
+    car_context_signal = pyqtSignal(dict)
+
     def _create_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -91,9 +93,14 @@ class ResultTable(BaseComponent):
 
         for car_data in car_data_list:
             listing_widget = CarListingWidget(car_data)
+            listing_widget.send_to_ai_signal.connect(self._on_car_context_selected)
             self.listings_layout.addWidget(listing_widget)
         
         # Potentially add a spacer or stretch if no results, or handle that in _create_ui
         self.listings_layout.addStretch(1) # Add stretch to push items to top if container is scrollable
+
+    def _on_car_context_selected(self, car_data: dict):
+        """Receives car data from a listing and emits it upward."""
+        self.car_context_signal.emit(car_data)
 
     # _create_car_listing method is now encapsulated in CarListingWidget 

@@ -1,4 +1,4 @@
-from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QSize, QSettings
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QPushButton, QLineEdit, QLabel, QFrame, QComboBox, 
                            QSizePolicy, QScrollArea, QToolTip)
@@ -26,9 +26,33 @@ class MainWindow(QMainWindow):
         # Initialize AI chat window reference
         self.ai_chat_window = None
         
+        # Initialize QSettings for saving window geometry
+        self.settings = QSettings("CarGenius", "DesktopApp")
+        
         self._create_ui()
         self._load_styles(self.current_theme)
         self._add_floating_chat_button()
+        self._restore_window_geometry()
+
+    def _restore_window_geometry(self):
+        """Restore window geometry from settings."""
+        # Restore window geometry
+        geometry = self.settings.value("window/geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+            print("Window geometry restored from settings")
+        
+        # Restore window state (maximized, etc.)
+        window_state = self.settings.value("window/state")
+        if window_state:
+            self.restoreState(window_state)
+            print("Window state restored from settings")
+
+    def _save_window_geometry(self):
+        """Save current window geometry to settings."""
+        self.settings.setValue("window/geometry", self.saveGeometry())
+        self.settings.setValue("window/state", self.saveState())
+        print("Window geometry and state saved to settings")
 
     def _create_ui(self):
         # Create scroll area as central widget
@@ -59,18 +83,6 @@ class MainWindow(QMainWindow):
         app_title.setObjectName("app_title")
         app_title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         title_layout.addWidget(app_title)
-        
-        # Add test notification button
-        self.test_notification_btn = QPushButton("Test Toast")
-        self.test_notification_btn.setObjectName("small_button")
-        self.test_notification_btn.clicked.connect(self.show_test_notification)
-        title_layout.addWidget(self.test_notification_btn)
-        
-        # Add multiple notifications test button
-        self.multi_notification_btn = QPushButton("Test Multiple")
-        self.multi_notification_btn.setObjectName("small_button")
-        self.multi_notification_btn.clicked.connect(self.show_multiple_notifications)
-        title_layout.addWidget(self.multi_notification_btn)
         
         # Add Analytics Dialog button
         self.analytics_btn = QPushButton("Open Analytics")
@@ -115,6 +127,7 @@ class MainWindow(QMainWindow):
         self.result_table.setObjectName("result_table")
         # Remove minimum height requirement so it takes its natural size
         self.result_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.result_table.car_context_signal.connect(self._on_car_context_requested)
         main_layout.addWidget(self.result_table)
 
     def _add_floating_chat_button(self):
@@ -183,6 +196,14 @@ class MainWindow(QMainWindow):
         self.ai_chat_window.show()
         self.ai_chat_window.activateWindow()
     
+    def _on_car_context_requested(self, car_data: dict):
+        """Opens the chat and sends car data as context."""
+        if not self.ai_chat_window or not self.ai_chat_window.isVisible():
+            self.open_ai_chat()
+        
+        # Use a QTimer to ensure the window is visible and ready before setting context
+        QTimer.singleShot(100, lambda: self.ai_chat_window.set_context('car', car_data))
+    
     def _handle_model_tracking_request(self, criteria):
         """Handles the request to track a new model based on criteria."""
         # Check if we have a valid license key
@@ -240,96 +261,36 @@ class MainWindow(QMainWindow):
         self.chat_fab.setObjectName("chat_fab")
         self.chat_fab.style().unpolish(self.chat_fab)
         self.chat_fab.style().polish(self.chat_fab)
-        event.accept()  # Allow the window to close
+        # Accept the event to close the window
+        event.accept()
 
     def _show_custom_notification(self, title, message):
-        """Show a custom toast notification with given title and message"""
-        toast = ToastNotification(title=title, message=message)
-        toast.show_notification()
-
-    def show_test_notification(self):
-        # Create and show a toast notification
-        toast = ToastNotification(
-            title="New Match",
-            message="BMW X5 2021 matches your search criteria"
-        )
-        toast.show_notification()
-    
-    def show_multiple_notifications(self):
-        # Show 3 notifications with different car matches
-        messages = [
-            {
-                "title": "New Match",
-                "message": "Mercedes-Benz CLA 200 d Shooting Brake - 35.980 €",
-                "avatar": None
-            },
-            {
-                "title": "Price Drop",
-                "message": "BMW 3 Series 320d - Price reduced by 2.500 €",
-                "avatar": None
-            },
-            {
-                "title": "New Match",
-                "message": "Audi A4 Avant 2.0 TDI - Just arrived in your area",
-                "avatar": None
-            }
-        ]
-        
-        # Custom avatar colors for each notification
-        avatar_colors = ["#4CAF50", "#2196F3", "#FF9800"]
-        
-        # Show notifications with a small delay between them
-        for i, msg in enumerate(messages):
-            QTimer.singleShot(i * 500, lambda m=msg, i=i: self._show_delayed_notification(
-                m["title"], 
-                m["message"], 
-                avatar_colors[i]
-            ))
-    
-    def _show_delayed_notification(self, title, message, avatar_color=None):
-        toast = ToastNotification(title=title, message=message)
-        
-        # Customize avatar if color provided
-        if avatar_color:
-            # Access the avatar label and update it with custom color
-            for child in toast.children():
-                if isinstance(child, QLabel) and child.width() == 32 and child.height() == 32:
-                    size = 32
-                    pixmap = QPixmap(size, size)
-                    pixmap.fill(Qt.GlobalColor.transparent)
-                    
-                    painter = QPainter(pixmap)
-                    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                    
-                    # Draw circular background
-                    path = QPainterPath()
-                    path.addEllipse(0, 0, size, size)
-                    painter.setClipPath(path)
-                    
-                    painter.fillRect(0, 0, size, size, QColor(avatar_color))
-                    
-                    # Draw initial
-                    painter.setPen(Qt.GlobalColor.white)
-                    painter.setFont(QFont('Arial', 15, QFont.Weight.Bold))
-                    painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, title[0])
-                    
-                    painter.end()
-                    
-                    child.setPixmap(pixmap)
-                    break
-        
-        toast.show_notification()
+        """Show a toast notification with a custom message."""
+        ToastNotification.show(self, title, message,_theme=self.current_theme)
 
     def _load_styles(self, theme):
-        style_file = f"ui/themes/{theme}.qss"
+        """Load the stylesheet for the specified theme."""
+        theme_file = f"ui/themes/{theme}.qss"
         try:
-            with open(style_file, 'r') as f:
+            with open(theme_file, 'r') as f:
                 self.setStyleSheet(f.read())
             self.theme_changed.emit(theme)
         except FileNotFoundError:
-            print(f"Style file {style_file} not found")
+            print(f"Style file {theme_file} not found")
             
     def resizeEvent(self, event):
         # Update floating button position when window is resized
+        super().resizeEvent(event)
         self._update_fab_position()
-        super().resizeEvent(event) 
+
+    def closeEvent(self, event):
+        """Handle application close event to save window geometry."""
+        # Save window geometry before closing
+        self._save_window_geometry()
+        
+        # Close AI chat window if open
+        if self.ai_chat_window and self.ai_chat_window.isVisible():
+            self.ai_chat_window.close()
+        
+        print("Application closing, settings saved")
+        event.accept() 

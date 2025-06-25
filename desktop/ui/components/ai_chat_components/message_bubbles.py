@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import (QLabel, QFrame, QVBoxLayout, QHBoxLayout)
+from PyQt6.QtWidgets import (QLabel, QFrame, QVBoxLayout, QHBoxLayout, QSizePolicy)
 from PyQt6.QtGui import QFont
 
 class MessageBubble(QFrame):
@@ -13,13 +13,17 @@ class MessageBubble(QFrame):
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFrameShadow(QFrame.Shadow.Raised)
         
+        # Set proper size policies for the bubble
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 8, 10, 8)
-        layout.setSpacing(0)
+        layout.setSpacing(4)
         
         sender = QLabel("You" if is_user else "AI")
         sender.setObjectName("sender_label")
         sender.setFont(QFont("Arial", 8))
+        sender.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         layout.addWidget(sender)
         
         message_label = QLabel(message)
@@ -27,10 +31,17 @@ class MessageBubble(QFrame):
         message_label.setWordWrap(True)
         message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         message_label.setFont(QFont("Segoe UI", 10))
+        message_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        message_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        message_label.setMinimumHeight(20)  # Ensure minimum height for single lines
         layout.addWidget(message_label)
         
         self.setProperty("align", "right" if is_user else "left")
         self.setMaximumWidth(500)
+        self.setMinimumWidth(100)  # Add minimum width to prevent over-compression
+        
+        # Ensure the bubble adjusts its height based on content
+        self.adjustSize()
 
 
 class LoadingBubble(MessageBubble):

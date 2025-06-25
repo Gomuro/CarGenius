@@ -2,24 +2,20 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QCheckBox
 from PyQt6.QtCore import Qt
 
 class FilterOptions(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, show_tracking_option: bool = True, parent=None):
         super().__init__(parent)
-        self._create_ui()
+        self._create_ui(show_tracking_option)
 
-    def _create_ui(self):
+    def _create_ui(self, show_tracking_option: bool):
         layout = QHBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(0, 5, 0, 0)
 
-        self.additional_filters_button = QPushButton("Additional filters")
-        self.additional_filters_button.setObjectName("dark_text_button")
-        self.additional_filters_button.setFixedHeight(32)
-        layout.addWidget(self.additional_filters_button)
-        
-        self.tracking_mode_checkbox = QCheckBox("Track Specific Models")
-        self.tracking_mode_checkbox.setObjectName("filter_checkbox_light")
-        self.tracking_mode_checkbox.setFixedHeight(32)
-        layout.addWidget(self.tracking_mode_checkbox)
+        if show_tracking_option:
+            self.tracking_mode_checkbox = QCheckBox("Track Specific Models")
+            self.tracking_mode_checkbox.setObjectName("filter_checkbox_light")
+            self.tracking_mode_checkbox.setFixedHeight(32)
+            layout.addWidget(self.tracking_mode_checkbox)
         
         self.reset_button = QPushButton("Reset")
         self.reset_button.setObjectName("dark_text_button")
