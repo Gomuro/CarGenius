@@ -1,21 +1,24 @@
 # server/ml/predict.py
+from typing import List
 import pandas as pd
+
+from .features import CATEGORICAL_COLS, preprocess_data
 from .model_utils import load_model
 
+def predict_price(input_data_list: List[dict]) -> List[float]:
+    model, features, scaler = load_model()  # Load the model, features and scaler
+    df = pd.DataFrame(input_data_list).drop(columns=["price"], errors="ignore")
 
-def predict_price(input_data: dict) -> float:
-    model, features = load_model()
+    # Check for complex types in columns
+    for col in df.columns:
+        if df[col].apply(lambda x: isinstance(x, (dict, list))).any():
+            raise ValueError(f"Column '{col}' contains non-scalar values")
 
-    df = pd.DataFrame([input_data])
+    # Invoke preprocess_data from scaler (fit=False)
+    df, _ = preprocess_data(df, fit=False, scaler=scaler)
 
-    # One-hot encoding
-    df = pd.get_dummies(df)
+    # We ensure the correct order of columns (fill in missing 0)
+    df = df.reindex(columns=features, fill_value=0)
 
-    for col in features:
-        if col not in df.columns:
-            df[col] = 0
-
-    df = df[features]   # Sort columns to match the model's training order
-
-    prediction = model.predict(df)[0]
-    return round(prediction, 2)
+    # Forecast
+    return model.predict(df).tolist()

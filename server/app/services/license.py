@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.license import LicenseKey
 from app.schemas.license import ListingFilter
+from app.schemas.ml import ListingFilterML, ListingSchemaML
 
 
 async def generate_license_key(db: AsyncSession, client_info: str = None, expires_in_days: int = 30) -> LicenseKey:
@@ -61,13 +62,14 @@ async def validate_license_key_device(key: str, device_id: str, client_info: str
 async def get_license_by_key(db: AsyncSession, key: str) -> Optional[LicenseKey]:
     """Retrieve a license by its key."""
     result = await db.execute(select(LicenseKey).where(LicenseKey.key == key))
+    print("🔍 License found:", LicenseKey.key is not None)
     return result.scalar_one_or_none()   # Expecting a single LicenseKey object or None if not found
 
 
-async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filters: List[ListingFilter]) -> LicenseKey:
+async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filters: List[ListingSchemaML]) -> LicenseKey:
     """Update filters for a given license key with validation."""
 
-    allowed_keys = set(ListingFilter.__fields__.keys())
+    allowed_keys = set(ListingSchemaML.__fields__.keys())
 
     for i, f in enumerate(filters):
         print(f"[DEBUG] Type of filter[{i}]:", type(f), f)
@@ -78,7 +80,6 @@ async def update_license_filters(db: AsyncSession, license_key: LicenseKey, filt
                 status_code=400,
                 detail=f"Invalid filter keys: {', '.join(invalid_keys)}. Allowed keys: {', '.join(allowed_keys)}"
             )
-
     license_key.filters = [f.dict(exclude_unset=True) for f in filters]
 
     await db.commit()

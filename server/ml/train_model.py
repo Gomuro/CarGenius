@@ -1,43 +1,98 @@
+# server/ml/train_model.py
+import os
+import pathlib
+import sys
+
+import numpy as np
+from dotenv import load_dotenv
+
+load_dotenv()
+print("✅ DATABASE_URL =", os.getenv("DATABASE_URL"))
+
 import joblib
 import pandas as pd
-from features import preprocess_data, NUMERIC_COLS
+from sklearn.ensemble import RandomForestRegressor
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
+from app.core.database import get_db, async_session_maker
+from app.models.car import ListingMobileDe
+from ml.features import preprocess_data, NUMERIC_COLS, CATEGORICAL_COLS
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-def train_and_save_model():
-    import json
-    with open("car_data_Audi_1.json", "r") as f:
-        data = json.load(f)
+async def get_flat_listings_async(session):
+    result = await session.execute(
+        select(ListingMobileDe)
+        .options(
+            joinedload(ListingMobileDe.technical_details),
+            joinedload(ListingMobileDe.equipment)
+        )
+        .filter(ListingMobileDe.is_active == True)
+    )
+    listings = result.scalars().all()
 
     flat_data = []
-    for item in data:
+    for listing in listings:
         flat_item = {}
-        flat_item.update(item.get("listing", {}))
-        flat_item.update(item.get("technical_details", {}))
-        equipment = item.get("equipment", {})
-        for key, value in equipment.items():
-            flat_item[f"equipment_{key}"] = value
+        for col in ListingMobileDe.__table__.columns.keys():
+            if col not in ["id", "url", "currency"]:
+                flat_item[col] = getattr(listing, col)
+
+        if listing.technical_details:
+            for key, value in listing.technical_details.__dict__.items():
+                if not key.startswith("_"):
+                    flat_item[key] = value
+
+        if listing.equipment:
+            for key, value in listing.equipment.__dict__.items():
+                if not key.startswith("_"):
+                    flat_item[key] = value
+
         flat_data.append(flat_item)
 
-    df = pd.DataFrame(flat_data)
-    print(df[NUMERIC_COLS].dtypes)
-    print(df[NUMERIC_COLS].head())
+    return flat_data
 
-    df, scaler = preprocess_data(df, fit=True)
 
-    x = df.drop(columns=["price"])
-    y = df["price"]
+async def train_and_save_model_from_db_async():
+    async with async_session_maker() as session:
+        flat_data = await get_flat_listings_async(session)
+        print(f"Retrieved {len(flat_data)} listings from the database")
+        df = pd.DataFrame(flat_data)
+        for col in CATEGORICAL_COLS:
+            if col not in df.columns:
+                df[col] = np.nan  # so that pandas understands it as a space
 
-    from sklearn.ensemble import RandomForestRegressor
-    model = RandomForestRegressor(n_estimators=100)
-    print("x.dtypes**********", x.dtypes)
-    print("x.head~~~~~~~~~~~~", x.head())
+            # Check which columns are still missing
+        missing_cols = [col for col in CATEGORICAL_COLS if col not in df.columns]
+        if missing_cols:
+            print(f"Still missing categorical columns before preprocess_data: {missing_cols}")
 
-    model.fit(x, y)
+        # Call preprocess_data
+        df, scaler = preprocess_data(df, fit=True)
 
-    # joblib.dump(model, "app/ml/model/price_model.pkl")
-    joblib.dump(model, "model/price_model.pkl")
-    # joblib.dump(scaler, "app/ml/model/scaler.pkl")
-    joblib.dump(scaler, "model/scaler.pkl")
+        x = df.drop(columns=["price"])
+        y = df["price"]  #
+
+        # Model training
+        model = RandomForestRegressor(n_estimators=100)
+        datetime_cols = x.select_dtypes(include=["datetime", "datetimetz"]).columns
+        if len(datetime_cols) > 0:
+            print(f"⛔️ Dropping datetime columns: {list(datetime_cols)}")
+            x = x.drop(columns=datetime_cols)
+        model.fit(x, y)
+
+        model_dir = pathlib.Path(__file__).resolve().parent / "model"
+        model_dir.mkdir(exist_ok=True)
+
+        features = x.columns.tolist()
+
+        joblib.dump(model, model_dir / "price_model.pkl")
+        joblib.dump(features, model_dir / "model_features.pkl")
+        joblib.dump(scaler, model_dir / "scaler.pkl")
+
+
+import asyncio
 
 if __name__ == "__main__":
-    train_and_save_model()
+    asyncio.run(train_and_save_model_from_db_async())

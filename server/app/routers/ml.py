@@ -1,16 +1,38 @@
 # # app/routers/ml.py
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.routers.stats.analytics import get_listings_by_filters
-from app.schemas.license import ListingFilter
-from app.schemas.stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSchema, ListingOut, ListingStats
+from app.models.license import LicenseKey
+from app.schemas.license import ListingFilter, ListingMlOut
+from app.schemas.ml import PredictPriceRequest, PricePredictionResponse, ListingFilterML, ListingSchemaML, CarFeatures
+from app.schemas.stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSchema, ListingOut
 from app.services.license import get_license_by_key
-from app.services.ml import evaluate_offer, rank_listings_by_price
-from app.services.stats.analytics import get_filterd
+from app.services.ml import evaluate_offer, rank_listings_by_price, get_best_offer_for_license
+from app.services.stats.analytics import get_filtered
+from app.utils import flatten_listing_ml
+from ml.model_utils import load_model, get_ml_model
+from ml.predict import predict_price
 
 router = APIRouter()
+
+
+
+@router.post("predict-best-price/")
+async def predict_best_price(car_data: CarFeatures):
+    try:
+        input_data = [car_data.dict()]
+        prediction = predict_price(input_data)
+        print("🔮 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPredicted price:", prediction)
+        return {"predicted_price": prediction[0]}
+    except Exception as e:
+        print("❌ Error during prediction:", str(e))
+        raise HTTPException(status_code=500, detail="Prediction failed " + str(e))
+
+
 
 def create_listing_filter_from_input(data: dict) -> ListingSchema:
     return ListingSchema(
@@ -30,40 +52,6 @@ def create_equipment_filter_from_input(data: dict) -> EquipmentSchema:
         climate_control=data.get("climate_control"),
     )
 
-from pydantic import BaseModel
-from typing import Optional
-
-class PredictPriceRequest(BaseModel):
-    registration_year: Optional[int]
-    mileage: Optional[int]
-    power: Optional[int]
-    fuel_type: Optional[str]
-    transmission: Optional[str]
-    body_type: Optional[str]
-    color: Optional[str]
-    door_count: Optional[int]
-    num_seats: Optional[int]
-    number_of_previous_owners: Optional[int]
-    climate_control: Optional[bool]
-    navigation_system: Optional[bool]
-    park_assist: Optional[bool]
-    panoramic_roof: Optional[bool]
-    leather_seats: Optional[bool]
-
-# 📁 app/schemas/ml.py
-
-from typing import List
-from pydantic import BaseModel
-
-
-class PricePredictionResponse(BaseModel):
-    predicted_price: float
-    actual_price: float
-    difference: float
-    is_profitable: bool
-    similar_listings: list[ListingOut]
-    stats: ListingStats
-
 
 @router.post("/ml/suggest-price", response_model=PricePredictionResponse)
 async def suggest_price(
@@ -77,7 +65,7 @@ async def suggest_price(
     tech_filters = create_tech_filter_from_input(payload.dict())
     equipment_filters = create_equipment_filter_from_input(payload.dict())
 
-    response = await get_filterd(
+    response = await get_filtered(
         db=db,
         listing_filters=listing_filters,
         tech_filters=tech_filters,
@@ -91,31 +79,20 @@ async def suggest_price(
     }
 
 
+@router.get("/ml/{key}/best-offer", response_model=ListingSchemaML)
+async def get_best_offer(key: str, db: AsyncSession = Depends(get_db)):
+    license = await get_license_by_key(db, key)
+    if not license:
+        raise HTTPException(status_code=404, detail="License not found")
 
+    ml_model = get_ml_model()
 
+    best_listing = await get_best_offer_for_license(db, license, ml_model)
+    if not best_listing:
+        raise HTTPException(status_code=404, detail="No suitable listings found")
 
-@router.get("/{license_key}/best-price", response_model=List[ListingFilter])
-async def get_best_price_listings(
-    license_key: str,
-    db: AsyncSession = Depends(get_db),
-):
-    # Step 1: Get License and filters
-    license_obj = await get_license_by_key(db, license_key)
-    if not license_obj:
-        raise HTTPException(status_code=404, detail="License key not found")
-
-    filters = license_obj.filters or []
-    if not filters:
-        raise HTTPException(status_code=400, detail="No filters saved for this license key")
-
-    # Step 2: Query listings applying filters
-    listings = await get_listings_by_filters(db, filters)
-    if not listings:
-        return []  # no matches
-
-    # Step 3: Rank listings with ML or heuristic
-    ranked_listings = rank_listings_by_price(listings)
-
-    # Step 4: Return top N results (e.g., top 10)
-    top_results = ranked_listings[:10]
-    return top_results
+    return ListingSchemaML(
+        **flatten_listing_ml(best_listing),
+        **(flatten_listing_ml(best_listing.technical_details) if best_listing.technical_details else {}),
+        **(flatten_listing_ml(best_listing.equipment) if best_listing.equipment else {})
+    )

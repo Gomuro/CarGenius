@@ -25,7 +25,7 @@ class TechnicalDetailsSchema(BaseModel):
     emissions_sticker: Optional[str] = Field(None, description="emissionsSticker-item")  # 4 (Grün)
     first_year_registration: Optional[int] = Field(None, description="firstRegistration-item")
     first_month_registration: Optional[int] = Field(None, description="firstRegistration-item")
-    number_of_previous_owners: Optional[str] = Field(None, description="numberOfPreviousOwners-item")  # 1
+    number_of_previous_owners: Optional[int] = Field(None, description="numberOfPreviousOwners-item")  # 1
     hu_year: Optional[int] = Field(None, description="hu-item")
     hu_month: Optional[int] = Field(None, description="hu-item")
     climatisation: Optional[str] = Field(None, description="climatisation-item")  # 3-Zonen-Klimaautomatik
@@ -118,13 +118,14 @@ class ListingCreateRequestSchema(BaseModel):
     model: str = Field(..., description="Model of the car")
     registration_year: int = Field(..., description="Year the car was registered")
     mileage: Optional[int] = Field(None, description="Mileage of the car in kilometers")
-    city_or_postal_code: Optional[str] = Field(None, description="City or postal code where the car is located")
     color: Optional[str] = Field(None, description="Color of the car")
     price: int = Field(..., description="Price of the car in the specified currency")
     currency: Optional[str] = Field("EUR", description="Currency of the price, e.g., EUR")
     url: str = Field(..., description="URL of the car listing")
-    technical_details: TechnicalDetailsSchema
-    equipment: EquipmentSchema
+    city_or_postal_code: Optional[str] = Field(None, description="City or postal code where the car is located")
+    is_active: Optional[bool] = Field(True, description="Indicates if the listing is active")
+    technical_details: Optional[TechnicalDetailsSchema]
+    equipment: Optional[EquipmentSchema]
 
     class Config:
         allow_population_by_field_name = True
@@ -141,6 +142,7 @@ class ListingSchema(BaseModel):
     mileage: Optional[int] = Field(None, description="Filter by mileage")
     city_or_postal_code: Optional[str] = Field(None, description="Filter by city or postal code")
     color: Optional[str] = Field(None, description="Filter by car color")
+    price: Optional[int] = Field(None, description="Filter by exact price")
     price_lte: Optional[int] = Field(None, description="Filter by maximum price")
     price_gte: Optional[int] = Field(None, description="Filter by minimum price")
 
