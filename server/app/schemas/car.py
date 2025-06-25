@@ -16,7 +16,7 @@ class CarBase(BaseModel):
     transmission: Optional[str] = None
     first_year_registration: Optional[int] = None
     first_mont_registration: Optional[int] = None
-    number_of_previous_owners: Optional[str] = None
+    number_of_previous_owners: Optional[int] = None
     battery_range: Optional[str] = None
     warranty_registration: Optional[str] = None
 

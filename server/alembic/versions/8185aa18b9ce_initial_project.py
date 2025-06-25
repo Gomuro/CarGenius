@@ -148,7 +148,7 @@ def upgrade() -> None:
     sa.Column('emissions_sticker', sa.String(), nullable=True),
     sa.Column('first_year_registration', sa.Integer(), nullable=True),
     sa.Column('first_month_registration', sa.Integer(), nullable=True),
-    sa.Column('number_of_previous_owners', sa.String(), nullable=True),
+    sa.Column('number_of_previous_owners', sa.Integer(), nullable=True),
     sa.Column('hu_year', sa.Integer(), nullable=True),
     sa.Column('hu_month', sa.Integer(), nullable=True),
     sa.Column('climatisation', sa.String(), nullable=True),

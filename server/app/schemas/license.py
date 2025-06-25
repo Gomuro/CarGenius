@@ -56,8 +56,9 @@ class ListingMlOut(BaseModel):
     id: int
     brand: str
     model: str
-    price: float
+    price: int
     mileage: int
+    registration_year: int
 
     class Config:
         orm_mode = True

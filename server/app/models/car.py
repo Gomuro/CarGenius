@@ -58,7 +58,7 @@ class TechnicalDetails(Base):
     emissions_sticker = Column(String, nullable=True)  # 4 (Grün)
     first_year_registration = Column(Integer, index=True, nullable=True)
     first_month_registration = Column(Integer, index=True, nullable=True)
-    number_of_previous_owners = Column(String, nullable=True)  # 1
+    number_of_previous_owners = Column(Integer, nullable=True)  # 1
     hu_year = Column(Integer, nullable=True)
     hu_month = Column(Integer, nullable=True)
     climatisation = Column(String, nullable=True)  # 3-Zonen-Klimaautomatik

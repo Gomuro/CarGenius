@@ -1,7 +1,32 @@
 # app/services/stats/filters/filter_mobilde.py
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
-from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
-    ListingCreateRequestSchema
+from app.schemas.ml import ListingCreateRequestMLSchema
+from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, EquipmentSchema
+
+
+def filtered_listings_ml(filters: ListingCreateRequestMLSchema) -> list[ListingMobileDe]:
+    """
+    Get car listings filtered by the ListingFilter schema criteria.
+    """
+    conditions = [ListingMobileDe.is_active.is_(True)]
+
+    if filters.brand is not None:
+        conditions.append(ListingMobileDe.brand.ilike(f"%{filters.brand}%"))
+    if filters.model is not None:
+        conditions.append(ListingMobileDe.model.ilike(f"%{filters.model}%"))
+    if filters.registration_year is not None:
+        conditions.append(ListingMobileDe.registration_year == filters.registration_year)
+    if filters.mileage is not None:
+        conditions.append(ListingMobileDe.mileage <= filters.mileage)
+    if filters.city_or_postal_code is not None:
+        conditions.append(ListingMobileDe.city_or_postal_code.ilike(f"%{filters.city_or_postal_code}%"))
+    if filters.color is not None:
+        conditions.append(ListingMobileDe.color.ilike(f"%{filters.color}%"))
+    if filters.price is not None:
+        conditions.append(ListingMobileDe.price == filters.price)
+
+    return conditions
+
 
 
 def filtered_listings(filters: ListingSchema) -> list[ListingMobileDe]:
@@ -22,6 +47,8 @@ def filtered_listings(filters: ListingSchema) -> list[ListingMobileDe]:
         conditions.append(ListingMobileDe.city_or_postal_code.ilike(f"%{filters.city_or_postal_code}%"))
     if filters.color is not None:
         conditions.append(ListingMobileDe.color.ilike(f"%{filters.color}%"))
+    if filters.price is not None:
+        conditions.append(ListingMobileDe.price == filters.price)
     if filters.price_lte is not None:
         conditions.append(ListingMobileDe.price <= filters.price_lte)
     if filters.price_gte is not None:
@@ -72,7 +99,7 @@ def filtered_tech_details(filters: TechnicalDetailsSchema) -> list[TechnicalDeta
     if filters.first_month_registration is not None:
         conditions.append(TechnicalDetails.first_month_registration == filters.first_month_registration)
     if filters.number_of_previous_owners is not None:
-        conditions.append(TechnicalDetails.number_of_previous_owners.ilike(f"%{filters.number_of_previous_owners}%"))
+        conditions.append(TechnicalDetails.number_of_previous_owners == filters.number_of_previous_owners)
     if filters.hu_year is not None:
         conditions.append(TechnicalDetails.hu_year == filters.hu_year)
     if filters.hu_month is not None:
