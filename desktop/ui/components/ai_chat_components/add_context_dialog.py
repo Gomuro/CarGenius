@@ -1,7 +1,7 @@
 import os
 from PyQt6.QtCore import pyqtSignal, Qt, QObject, QRunnable, QThreadPool
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QPushButton, QTabWidget, QWidget, 
-                           QLabel, QHBoxLayout, QLineEdit, QListWidget, QScrollArea, QListWidgetItem)
+                           QLabel, QHBoxLayout, QLineEdit, QListWidget, QScrollArea, QListWidgetItem, QMessageBox)
 from ..filter_panel_components.filter_inputs import FilterInputs
 from ..filter_panel_components.filter_options import FilterOptions
 from ..result_table_components.car_listing_widget import CarListingWidget
@@ -10,7 +10,7 @@ from desktop.services.main_api_service import APIService
 # Worker for running search in a separate thread
 class SearchWorkerSignals(QObject):
     finished = pyqtSignal(object)
-    error = pyqtSignal(str)
+    error = pyqtSignal(str, str)  # error_type, error_message
 
 class SearchWorker(QRunnable):
     def __init__(self, api_service, criteria):
@@ -22,9 +22,27 @@ class SearchWorker(QRunnable):
     def run(self):
         try:
             response = self.api_service.search_listings_sync(self.criteria)
-            self.signals.finished.emit(response)
+            if response is None:
+                # API returned None, likely a network or server issue
+                self.signals.error.emit("network", "Could not connect to the server. Please check your internet connection and try again.")
+            else:
+                self.signals.finished.emit(response)
+        except ConnectionError as e:
+            self.signals.error.emit("network", "Network connection failed. Please check your internet connection and try again.")
+        except TimeoutError as e:
+            self.signals.error.emit("timeout", "Request timed out. The server might be busy. Please try again in a moment.")
         except Exception as e:
-            self.signals.error.emit(str(e))
+            error_message = str(e)
+            if "connection" in error_message.lower() or "network" in error_message.lower():
+                self.signals.error.emit("network", "Network connection failed. Please check your internet connection and try again.")
+            elif "timeout" in error_message.lower():
+                self.signals.error.emit("timeout", "Request timed out. Please try again in a moment.")
+            elif "server" in error_message.lower() or "500" in error_message:
+                self.signals.error.emit("server", "Server error occurred. Please try again later.")
+            elif "404" in error_message:
+                self.signals.error.emit("server", "Service not found. Please contact support if this persists.")
+            else:
+                self.signals.error.emit("unknown", f"An unexpected error occurred: {error_message}")
 
 class AddContextDialog(QDialog):
     """Dialog for adding different types of context to the AI chat."""
@@ -157,7 +175,7 @@ class AddContextDialog(QDialog):
             lambda response: self._on_search_finished(response, filter_inputs)
         )
         worker.signals.error.connect(
-            lambda error: self._on_search_error(error, filter_inputs)
+            lambda error_type, error_msg: self._on_search_error(error_type, error_msg, filter_inputs)
         )
         self.threadpool.start(worker)
 
@@ -173,18 +191,46 @@ class AddContextDialog(QDialog):
             else:
                 self._display_no_results()
         else:
-            print("No results or error in API response")
-            self._display_no_results()
+            # Response exists but doesn't have expected format
+            self._display_error_message("Invalid server response. Please try again or contact support.")
 
-    def _on_search_error(self, error_message, filter_inputs):
-        """Handle search error."""
+    def _on_search_error(self, error_type, error_message, filter_inputs):
+        """Handle search error with specific error types."""
         self.loading_label.setHidden(True)
         filter_inputs.search_button.setEnabled(True)
-        print(f"Search error: {error_message}")
+        print(f"Search error ({error_type}): {error_message}")
+        
+        # Show error in the results area
+        self._display_error_message(error_message)
+        
+        # For critical errors, also show a popup
+        if error_type in ["network", "server"]:
+            self._show_error_popup("Search Error", error_message)
+
+    def _display_error_message(self, error_message):
+        """Display an error message in the results area."""
         self._clear_results()
-        error_label = QLabel(f"An error occurred: {error_message}")
-        error_label.setStyleSheet("color: #D32F2F;") # Red color for errors
+        error_label = QLabel(f"❌ {error_message}")
+        error_label.setStyleSheet("""
+            color: #D32F2F; 
+            background-color: rgba(211, 47, 47, 0.1);
+            border: 1px solid #D32F2F;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 14px;
+        """)
+        error_label.setWordWrap(True)
+        error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.results_layout.addWidget(error_label)
+
+    def _show_error_popup(self, title, message):
+        """Show an error popup dialog."""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Icon.Warning)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg_box.exec()
 
     def _display_car_listings(self, listings_data):
         """Display car listings using CarListingWidget."""
@@ -250,8 +296,17 @@ class AddContextDialog(QDialog):
     def _display_no_results(self):
         """Display no results message."""
         self._clear_results()
-        no_results_label = QLabel("No results found. Try adjusting your search criteria.")
-        no_results_label.setStyleSheet("color: #666; text-align: center; padding: 20px;")
+        no_results_label = QLabel("📭 No cars found matching your search criteria.\nTry adjusting your filters or search terms.")
+        no_results_label.setStyleSheet("""
+            color: #666; 
+            background-color: rgba(102, 102, 102, 0.1);
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 14px;
+        """)
+        no_results_label.setWordWrap(True)
+        no_results_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.results_layout.addWidget(no_results_label)
 
     def _on_search(self, search_type: str, query: str):
@@ -265,17 +320,24 @@ class AddContextDialog(QDialog):
             list_widget.addItem("No license key found.")
             return
 
-        filters = self.api_service.get_tracked_filters_sync(self.license_key)
-        
-        list_widget.clear()
-        if filters:
-            for f in filters:
-                item_text = self._summarize_filter(f)
-                list_item = QListWidgetItem(item_text)
-                list_item.setData(Qt.ItemDataRole.UserRole, f)
-                list_widget.addItem(list_item)
-        else:
-            list_widget.addItem("No saved filters found.")
+        try:
+            filters = self.api_service.get_tracked_filters_sync(self.license_key)
+            
+            list_widget.clear()
+            if filters:
+                for f in filters:
+                    item_text = self._summarize_filter(f)
+                    list_item = QListWidgetItem(item_text)
+                    list_item.setData(Qt.ItemDataRole.UserRole, f)
+                    list_widget.addItem(list_item)
+            else:
+                list_widget.addItem("No saved filters found.")
+        except Exception as e:
+            list_widget.clear()
+            error_item = QListWidgetItem(f"❌ Error loading filters: {str(e)}")
+            error_item.setFlags(Qt.ItemFlag.NoItemFlags)  # Make it non-selectable
+            list_widget.addItem(error_item)
+            print(f"Error fetching filters: {e}")
 
     def _summarize_filter(self, filter_data: dict) -> str:
         """Creates a readable summary of a filter dictionary."""
