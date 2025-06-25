@@ -1,11 +1,30 @@
 import os
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QObject, QRunnable, QThreadPool
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QPushButton, QTabWidget, QWidget, 
                            QLabel, QHBoxLayout, QLineEdit, QListWidget, QScrollArea, QListWidgetItem)
 from ..filter_panel_components.filter_inputs import FilterInputs
 from ..filter_panel_components.filter_options import FilterOptions
 from ..result_table_components.car_listing_widget import CarListingWidget
 from desktop.services.main_api_service import APIService
+
+# Worker for running search in a separate thread
+class SearchWorkerSignals(QObject):
+    finished = pyqtSignal(object)
+    error = pyqtSignal(str)
+
+class SearchWorker(QRunnable):
+    def __init__(self, api_service, criteria):
+        super().__init__()
+        self.api_service = api_service
+        self.criteria = criteria
+        self.signals = SearchWorkerSignals()
+
+    def run(self):
+        try:
+            response = self.api_service.search_listings_sync(self.criteria)
+            self.signals.finished.emit(response)
+        except Exception as e:
+            self.signals.error.emit(str(e))
 
 class AddContextDialog(QDialog):
     """Dialog for adding different types of context to the AI chat."""
@@ -19,6 +38,7 @@ class AddContextDialog(QDialog):
         self.setMinimumSize(800, 700) # Increased size significantly
         self.license_key = license_key
         self.api_service = APIService()
+        self.threadpool = QThreadPool()
 
         main_layout = QVBoxLayout(self)
         
@@ -67,6 +87,12 @@ class AddContextDialog(QDialog):
             layout.addWidget(filter_inputs)
             layout.addWidget(filter_options)
             
+            # Add a loading indicator (a simple label)
+            self.loading_label = QLabel("Searching, please wait...")
+            self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.loading_label.setHidden(True) # Initially hidden
+            layout.addWidget(self.loading_label)
+
             # Create scrollable results area for car listings
             results_scroll = QScrollArea()
             results_scroll.setWidgetResizable(True)
@@ -116,20 +142,49 @@ class AddContextDialog(QDialog):
         return tab_widget
 
     def _on_detailed_search(self, search_type: str, filter_inputs):
-        """Handle search with detailed filters using real API."""
+        """Handle search with detailed filters using a background thread."""
         criteria = filter_inputs.get_criteria()
         print(f"Searching {search_type} with criteria: {criteria}")
         
-        # Call the real API
-        response = self.api_service.search_listings_sync(criteria)
+        # Show loading indicator and disable button
+        self.loading_label.setHidden(False)
+        filter_inputs.search_button.setEnabled(False)
+        self._clear_results()
 
-        listings_data = response.get("Listings", [])
-        
-        if response:
-            self._display_car_listings(listings_data)
+        # Run search in a background thread
+        worker = SearchWorker(self.api_service, criteria)
+        worker.signals.finished.connect(
+            lambda response: self._on_search_finished(response, filter_inputs)
+        )
+        worker.signals.error.connect(
+            lambda error: self._on_search_error(error, filter_inputs)
+        )
+        self.threadpool.start(worker)
+
+    def _on_search_finished(self, response, filter_inputs):
+        """Handle successful search completion."""
+        self.loading_label.setHidden(True)
+        filter_inputs.search_button.setEnabled(True)
+
+        if response and "Listings" in response:
+            listings_data = response.get("Listings", [])
+            if listings_data:
+                self._display_car_listings(listings_data)
+            else:
+                self._display_no_results()
         else:
             print("No results or error in API response")
             self._display_no_results()
+
+    def _on_search_error(self, error_message, filter_inputs):
+        """Handle search error."""
+        self.loading_label.setHidden(True)
+        filter_inputs.search_button.setEnabled(True)
+        print(f"Search error: {error_message}")
+        self._clear_results()
+        error_label = QLabel(f"An error occurred: {error_message}")
+        error_label.setStyleSheet("color: #D32F2F;") # Red color for errors
+        self.results_layout.addWidget(error_label)
 
     def _display_car_listings(self, listings_data):
         """Display car listings using CarListingWidget."""
@@ -182,7 +237,7 @@ class AddContextDialog(QDialog):
         if current_item:
             filter_data = current_item.data(Qt.ItemDataRole.UserRole)
             self.add_filters_context_signal.emit(filter_data)
-        self.accept()
+            self.accept()
 
     def _clear_results(self):
         """Clear existing search results."""
