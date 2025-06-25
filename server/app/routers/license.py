@@ -4,8 +4,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.license import ListingFilter, LicenseCreateResponse, LicenseCreateRequest, LicenseValidateResponse, \
+from app.schemas.license import LicenseCreateResponse, LicenseCreateRequest, LicenseValidateResponse, \
     LicenseValidateRequest
+from app.schemas.ml import ListingSchemaML
 
 from app.services.license import generate_license_key, validate_license_key, validate_license_key_device, \
     get_license_by_key, update_license_filters
@@ -44,8 +45,7 @@ async def validate_license_route_device(data: LicenseValidateRequest, db: AsyncS
     return LicenseValidateResponse(is_valid=is_valid, message=message)
 
 
-@router.get("/{key}/filters", response_model=List[ListingFilter])
-
+@router.get("/{key}/filters", response_model=List[ListingSchemaML])
 async def get_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
     if not license_key:
@@ -54,10 +54,10 @@ async def get_filters(key: str, db: AsyncSession = Depends(get_db)):
     return [f for f in license_key.filters if isinstance(f, dict)]
 
 
-@router.put("/{key}/filters", response_model=List[ListingFilter])
+@router.put("/{key}/filters", response_model=List[ListingSchemaML])
 async def update_filters(
         key: str,
-        payload: List[ListingFilter],
+        payload: List[ListingSchemaML],
         db: AsyncSession = Depends(get_db)
 ):
     license_key = await get_license_by_key(db, key)
@@ -67,7 +67,7 @@ async def update_filters(
     return updated_license.filters
 
 
-@router.delete("/{key}/filters", response_model=List[ListingFilter])
+@router.delete("/{key}/filters", response_model=List[ListingSchemaML])
 
 async def clear_filters(key: str, db: AsyncSession = Depends(get_db)):
     license_key = await get_license_by_key(db, key)
