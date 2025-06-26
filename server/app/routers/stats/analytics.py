@@ -1,13 +1,14 @@
 # app/routers/stats/analytics.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from app.core.database import get_db
+from app.models.car import ListingMobileDe
 from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, \
     EquipmentSchema, ListingCreateRequestSchema, ListingFilteredResponse
 from app.services.license import get_license_by_key
 from app.services.stats.analytics import get_avg_price_by_brand, get_filtered, listings_json_to_db, get_filtered_for_ml
 import json
-
 from app.utils import flatten_listing_ml
 from ml.predict import predict_price
 
@@ -23,7 +24,7 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
     file_path = "car_data_Audi_1.json"
     try:
         with open(file_path, "r", encoding="utf8") as file:
-            data = json.load(file)
+            data = json.load(file)  # Load JSON data from the file
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"{file_path} not found")
 
@@ -32,8 +33,9 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
     elif isinstance(data, dict):
         listing_data = [data]
     else:
-        raise HTTPException(status=400, detail="Invalid data format. Expected a list or a dictionary.")
+        raise HTTPException(status_code=400, detail="Invalid data format. Expected a list or a dictionary.")
     created = 0
+    skipped = 0
     for item in listing_data:
         try:
             combined_data = {
@@ -41,13 +43,23 @@ async def save_listing_to_db(db: AsyncSession = Depends(get_db)) -> dict:
                 "technical_details": item.get("technical_details", {}),
                 "equipment": item.get("equipment", {})
             }
+            existing_listing = await db.execute(
+                select(ListingMobileDe).where(ListingMobileDe.url == combined_data.get("url"))
+            )
+            if existing_listing.scalar_one_or_none():  # Check if listing with the same URL already exists
+                skipped += 1
+                continue
+
             listing = ListingCreateRequestSchema(**combined_data)
             await listings_json_to_db(db=db, data=listing)
             created += 1
         except Exception as e:
             print(f"Error processing item {item}: {e}")
 
-    return {"message": f"Successfully saved {created} listings to the database."}
+    return {
+        "message": f"Successfully saved {created} listings to the database.",
+        "skipped": skipped
+    }
 
 
 @router.get("/filter-search", response_model=ListingFilteredResponse)
