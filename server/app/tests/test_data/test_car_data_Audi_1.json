@@ -1,0 +1,46 @@
+[
+  {
+    "listing": {
+      "brand": "Audi",
+      "model": "A6",
+      "registration_year": 2023,
+      "mileage": 10000,
+      "color": "Black",
+      "price": 30000,
+      "currency": "EUR",
+      "url": "https://example.com/audi-a6-2023",
+      "city_or_postal_code": "Berlin",
+      "is_active": true
+    },
+    "technical_details": {
+      "fuel_type": "Petrol",
+      "engine_power_kw": 150
+    },
+    "equipment": {
+      "abs": true,
+      "esp": true
+    }
+  },
+  {
+    "listing": {
+      "brand": "Audi",
+      "model": "A6",
+      "registration_year": 2023,
+      "mileage": 10000,
+      "color": "Black",
+      "price": 30000,
+      "currency": "EUR",
+      "url": "https://example.com/audi-a6-2023",
+      "city_or_postal_code": "Berlin",
+      "is_active": true
+    },
+    "technical_details": {
+      "fuel_type": "Petrol",
+      "engine_power_kw": 150
+    },
+    "equipment": {
+      "abs": true,
+      "esp": true
+    }
+  }
+]
