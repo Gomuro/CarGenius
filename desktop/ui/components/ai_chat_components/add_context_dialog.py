@@ -86,7 +86,7 @@ class AddContextDialog(QDialog):
                 self.setStyleSheet(f.read())
         except FileNotFoundError:
             print(f"Stylesheet not found at {theme_path}")
-    
+
     def _create_search_tab(self, search_type: str, use_detailed_filters: bool = False) -> QWidget:
         """Helper method to create a standardized search tab."""
         tab_widget = QWidget()
@@ -110,7 +110,7 @@ class AddContextDialog(QDialog):
             self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.loading_label.setHidden(True) # Initially hidden
             layout.addWidget(self.loading_label)
-
+            
             # Create scrollable results area for car listings
             results_scroll = QScrollArea()
             results_scroll.setWidgetResizable(True)
@@ -283,7 +283,7 @@ class AddContextDialog(QDialog):
         if current_item:
             filter_data = current_item.data(Qt.ItemDataRole.UserRole)
             self.add_filters_context_signal.emit(filter_data)
-            self.accept()
+        self.accept()
 
     def _clear_results(self):
         """Clear existing search results."""
