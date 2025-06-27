@@ -1,9 +1,9 @@
 # server/ml/predict.py
 from typing import List
 import pandas as pd
-
-from .features import CATEGORICAL_COLS, preprocess_data
+from .features import preprocess_data
 from .model_utils import load_model
+
 
 def predict_price(input_data_list: List[dict]) -> List[float]:
     model, features, scaler = load_model()  # Load the model, features and scaler

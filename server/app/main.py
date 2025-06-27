@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from app.core.rate_limiter import limiter
 from app.exceptions import rate_limit_handler, custom_request_validation_exception_handler
-from app.routers import license, gpt, notify, ml
+from app.routers import license, gpt, notify
 from app.routers.stats import license_stats, analytics
 from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import \
@@ -29,4 +29,3 @@ app.include_router(gpt.router, prefix=f"{API_PREFIX}/gpt", tags=["gpt"])
 app.include_router(notify.router, prefix=f"{API_PREFIX}/ws", tags=["ws-notify"])
 app.include_router(license_stats.router, prefix=f"{API_PREFIX}/stats", tags=["stats"])
 app.include_router(analytics.router, prefix=f"{API_PREFIX}/analytics", tags=["analytics"])
-app.include_router(ml.router, prefix=f"{API_PREFIX}/ml", tags=["ml"])
