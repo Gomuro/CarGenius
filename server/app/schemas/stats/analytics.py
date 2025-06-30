@@ -185,6 +185,9 @@ class ListingStats(BaseModel):
 class ListingFilteredResponse(BaseModel):
     Listings: List[ListingOut]
     Stats: ListingStats
+    page: int = Field(1, description="Current page number")
+    size: int = Field(20, description="Number of listings per page")
+    total: int
 
     class Config:
         orm_mode = True

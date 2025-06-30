@@ -1,5 +1,6 @@
 # app/routers/stats/analytics.py
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_db
@@ -67,7 +68,10 @@ async def search_listings(
         db: AsyncSession = Depends(get_db),
         listing_filters: ListingSchema = Depends(),
         tech_filters: TechnicalDetailsSchema = Depends(),
-        equipment_filters: EquipmentSchema = Depends()
+        equipment_filters: EquipmentSchema = Depends(),
+        page: int = Query(ge=0, default=1),
+        size: int = Query(ge=1, le=100, default=20),
+        total: int = Query(ge=0, default=0)
 ) -> {ListingFilteredResponse}:
     """
     Search for car listings based on various filters.
@@ -76,7 +80,10 @@ async def search_listings(
         db=db,
         listing_filters=listing_filters,
         tech_filters=tech_filters,
-        equipment_filters=equipment_filters
+        equipment_filters=equipment_filters,
+        page=page,
+        size=size,
+        total=total
     )
 
 
@@ -95,7 +102,7 @@ async def ml_best_price_search(key: str, db: AsyncSession = Depends(get_db)):
     for i, features in enumerate(flat_listings):
         try:
             features = dict(features)
-            features.pop('price', None)  # 🛑 do not submit target as input
+            features.pop('price', None)  # do not submit target as input
             features = {
                 k: (0 if v is None else v)
                 for k, v in features.items()
