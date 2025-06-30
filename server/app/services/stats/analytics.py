@@ -1,4 +1,5 @@
 # app/services/stats/analytics.py
+import math
 from typing import Optional, List, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
@@ -96,9 +97,12 @@ async def get_filtered(
         db: AsyncSession,
         listing_filters: ListingSchema,
         tech_filters: TechnicalDetailsSchema,
-        equipment_filters: EquipmentSchema
+        equipment_filters: EquipmentSchema,
+        page:int, size:int, total: int
 ) -> ListingFilteredResponse:
     """Filtering listings with JOIN on TechnicalDetails and Equipment."""
+    ofset_min = page * size
+    ofset_max = (page + 1) * size
     listing_conditions = filtered_listings(listing_filters)
     techdetails_conditions = filtered_tech_details(tech_filters)
     equipment_conditions = filtered_equipment(equipment_filters)
@@ -143,13 +147,16 @@ async def get_filtered(
         avg_price = min_price = max_price = count = 0
 
     return ListingFilteredResponse(
-        Listings=listing_out,
+        Listings=listing_out[ofset_min:ofset_max],  # Paginate the listings
         Stats=ListingStats(
             avg_price=round(avg_price, 2) if avg_price else 0,
             min_price=round(min_price, 2) if min_price else 0,
             max_price=round(max_price, 2) if max_price else 0,
             count=count
-        )
+        ),
+        page=page,
+        size=size,
+        total=math.ceil(len(listing_out) / size) - 1
     )
 
 
