@@ -63,9 +63,14 @@ class APIService:
         """Get average prices by brand"""
         return await self._request("GET", "/analytics/average_price", {"limit": limit})
 
-    async def search_listings(self, filters: Dict) -> Optional[Dict]:
+    async def search_listings(self, filters: Dict, page: int = None, page_size: int = None) -> Optional[Dict]:
         """Search car listings with filters and get statistics"""
-        return await self._request("GET", "/analytics/filter-search", filters)
+        params = filters.copy()
+        if page is not None:
+            params['page'] = page
+        if page_size is not None:
+            params['size'] = page_size  # Backend uses 'size' not 'page_size'
+        return await self._request("GET", "/analytics/filter-search", params)
 
     async def save_json_to_db(self) -> Optional[Dict]:
         """Save JSON data to database"""
@@ -115,8 +120,8 @@ class APIService:
     def get_average_prices_sync(self, limit: int = 20) -> Optional[Dict]:
         return asyncio.run(self.get_average_prices(limit))
 
-    def search_listings_sync(self, filters: Dict) -> Optional[Dict]:
-        return asyncio.run(self.search_listings(filters))
+    def search_listings_sync(self, filters: Dict, page: int = None, page_size: int = None) -> Optional[Dict]:
+        return asyncio.run(self.search_listings(filters, page, page_size))
 
     def get_license_stats_sync(self, days: int = 30) -> Optional[Dict]:
         return asyncio.run(self.get_license_stats(days))
