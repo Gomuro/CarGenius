@@ -258,7 +258,7 @@ class FilterInputs(QWidget):
         """Отримуємо відфільтровані дані на основі поточних налаштувань"""
         # Починаємо з повного списку або з попередньо відфільтрованих даних
         filtered_data = self._filter_by_brand_and_model() # Включає фільтрацію за брендом і моделлю
-
+        
         # Фільтрація за роком
         selected_year = self.reg_date_input.currentText()
         if selected_year != "Any Year":
@@ -267,7 +267,7 @@ class FilterInputs(QWidget):
                 filtered_data = [l for l in filtered_data if l.get("registration_year") == year_val]
             except ValueError:
                 pass
-
+                
         # Фільтрація за ціною
         selected_price = self.price_input.currentText()
         if selected_price != "Any price":
@@ -276,7 +276,7 @@ class FilterInputs(QWidget):
                 filtered_data = [l for l in filtered_data if l.get("price", 0) <= price_val]
             except ValueError:
                 pass
-
+        
         # Фільтрація за пробігом
         selected_mileage = self.mileage_input.currentText()
         if selected_mileage != "Any Mileage":
@@ -301,7 +301,7 @@ class FilterInputs(QWidget):
         selected_color = self.color_input.currentText()
         if selected_color != "Any Color":
             filtered_data = [l for l in filtered_data if l.get("color") == selected_color]
-            
+                
         return filtered_data
 
     # =============================================================================
@@ -337,7 +337,7 @@ class FilterInputs(QWidget):
     def get_criteria(self) -> dict:
         """Gathers all filter criteria into a single dictionary."""
         criteria = {}
-
+        
         # Brand
         brand = self.brand_input.currentText()
         if brand != "Any Brand":
@@ -355,7 +355,7 @@ class FilterInputs(QWidget):
                 criteria['registration_year'] = int(reg_date_text)
             except (ValueError, TypeError):
                 print(f"Warning: Could not parse year value '{reg_date_text}'")
-
+            
         # Price
         price_text = self.price_input.currentText()
         if price_text != "Any price":
@@ -386,7 +386,7 @@ class FilterInputs(QWidget):
         color_text = self.color_input.currentText()
         if color_text != "Any Color":
             criteria['color'] = color_text
-            
+                
         return criteria
 
     def set_search_button_text(self, text):

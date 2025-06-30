@@ -76,6 +76,10 @@ class APIService:
         """Get license creation statistics"""
         return await self._request("GET", "/stats/licenses-per-day", {"days": days})
 
+    async def get_best_offer(self, license_key: str) -> Optional[Dict]:
+        """Get the best offer based on user's tracked filters."""
+        return await self._request("GET", "/analytics/ml_best_price_search", {"key": license_key})
+
     # Filter management endpoints
     async def get_tracked_filters(self, license_key: str) -> Optional[list]:
         """Get tracked filters for a license"""
@@ -116,6 +120,10 @@ class APIService:
 
     def get_license_stats_sync(self, days: int = 30) -> Optional[Dict]:
         return asyncio.run(self.get_license_stats(days))
+
+    def get_best_offer_sync(self, license_key: str) -> Optional[Dict]:
+        """Synchronous wrapper for get_best_offer"""
+        return asyncio.run(self.get_best_offer(license_key))
 
     def get_tracked_filters_sync(self, license_key: str) -> Optional[list]:
         return asyncio.run(self.get_tracked_filters(license_key))

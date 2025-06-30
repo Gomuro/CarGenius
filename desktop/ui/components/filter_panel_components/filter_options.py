@@ -17,6 +17,11 @@ class FilterOptions(QWidget):
             self.tracking_mode_checkbox.setFixedHeight(32)
             layout.addWidget(self.tracking_mode_checkbox)
         
+        self.analyze_button = QPushButton("⚡️ Analyze for Best Offer")
+        self.analyze_button.setObjectName("dark_text_button")
+        self.analyze_button.setFixedHeight(32)
+        layout.addWidget(self.analyze_button)
+        
         self.reset_button = QPushButton("Reset")
         self.reset_button.setObjectName("dark_text_button")
         self.reset_button.setFixedHeight(32)

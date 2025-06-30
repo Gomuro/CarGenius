@@ -185,9 +185,9 @@ class AddContextDialog(QDialog):
         filter_inputs.search_button.setEnabled(True)
 
         if response and "Listings" in response:
-            listings_data = response.get("Listings", [])
+        listings_data = response.get("Listings", [])
             if listings_data:
-                self._display_car_listings(listings_data)
+            self._display_car_listings(listings_data)
             else:
                 self._display_no_results()
         else:
@@ -321,17 +321,17 @@ class AddContextDialog(QDialog):
             return
 
         try:
-            filters = self.api_service.get_tracked_filters_sync(self.license_key)
-            
-            list_widget.clear()
-            if filters:
-                for f in filters:
-                    item_text = self._summarize_filter(f)
-                    list_item = QListWidgetItem(item_text)
-                    list_item.setData(Qt.ItemDataRole.UserRole, f)
-                    list_widget.addItem(list_item)
-            else:
-                list_widget.addItem("No saved filters found.")
+        filters = self.api_service.get_tracked_filters_sync(self.license_key)
+        
+        list_widget.clear()
+        if filters:
+            for f in filters:
+                item_text = self._summarize_filter(f)
+                list_item = QListWidgetItem(item_text)
+                list_item.setData(Qt.ItemDataRole.UserRole, f)
+                list_widget.addItem(list_item)
+        else:
+            list_widget.addItem("No saved filters found.")
         except Exception as e:
             list_widget.clear()
             error_item = QListWidgetItem(f"❌ Error loading filters: {str(e)}")

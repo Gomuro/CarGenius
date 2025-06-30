@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import (QLabel, QVBoxLayout, QHBoxLayout, QFrame, QWidget, QGridLayout, QPushButton)
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (QLabel, QVBoxLayout, QHBoxLayout, QFrame, QWidget, QGridLayout, QPushButton, QApplication)
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont # QPixmap, QIcon removed as they are not used directly here but in parent/data
+import webbrowser
 
 class CarListingWidget(QFrame):
     send_to_ai_signal = pyqtSignal(dict)
@@ -118,15 +119,18 @@ class CarListingWidget(QFrame):
         view_listing_btn = QPushButton("Open on Website")
         view_listing_btn.setObjectName("view_listing_button")
         view_listing_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        share_btn = QPushButton("Share")
-        share_btn.setObjectName("share_button")
+        view_listing_btn.clicked.connect(self._open_on_website)
+
+        self.share_btn = QPushButton("Share")
+        self.share_btn.setObjectName("share_button")
+        self.share_btn.clicked.connect(self._share_car_details)
 
         ask_ai_btn = QPushButton("Ask AI")
         ask_ai_btn.setObjectName("ask_ai_button")
         ask_ai_btn.clicked.connect(self._on_ask_ai_clicked)
 
         button_layout.addWidget(view_listing_btn)
-        button_layout.addWidget(share_btn)
+        button_layout.addWidget(self.share_btn)
         button_layout.addWidget(ask_ai_btn)
         
         details_layout.addWidget(title_label)
@@ -143,6 +147,37 @@ class CarListingWidget(QFrame):
         
         layout.setColumnStretch(0, 0) 
         layout.setColumnStretch(1, 1) 
+
+    def _open_on_website(self):
+        """Opens the car's URL in the default web browser."""
+        url = self.car_data.get("_api_data", {}).get("url")
+        if url:
+            webbrowser.open(url)
+            print(f"Opening URL: {url}")
+        else:
+            print("No URL found for this listing.")
+            
+    def _share_car_details(self):
+        """Formats car details and copies them to the clipboard."""
+        api_data = self.car_data.get('_api_data', {})
+        
+        details_to_share = (
+            f"Check out this car I found with CarGenius:\n"
+            f"Make: {api_data.get('brand', 'N/A')}\n"
+            f"Model: {api_data.get('model', 'N/A')}\n"
+            f"Year: {api_data.get('registration_year', 'N/A')}\n"
+            f"Price: {self.car_data.get('price', 'N/A')}\n"
+            f"URL: {api_data.get('url', 'N/A')}"
+        )
+        
+        clipboard = QApplication.clipboard()
+        clipboard.setText(details_to_share)
+        
+        # Provide user feedback
+        original_text = self.share_btn.text()
+        self.share_btn.setText("Copied!")
+        QTimer.singleShot(2000, lambda: self.share_btn.setText(original_text))
+        print("Car details copied to clipboard.")
 
     def _on_ask_ai_clicked(self):
         """Emits the car data when the Ask AI button is clicked."""
