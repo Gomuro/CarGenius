@@ -129,6 +129,9 @@ class MainWindow(QMainWindow):
         self.result_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.result_table.car_context_signal.connect(self._on_car_context_requested)
         main_layout.addWidget(self.result_table)
+        
+        # Connect search signal from filter panel to result table
+        self.filter_panel.search_requested.connect(self.result_table.load_search_results)
 
     def _add_floating_chat_button(self):
         """Add a floating action button for opening the AI chat"""

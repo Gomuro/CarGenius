@@ -12,17 +12,18 @@ class CarDataWorkerSignals(QObject):
     error = pyqtSignal(str)
 
 class CarDataWorker(QRunnable):
-    def __init__(self, api_service, page=1, page_size=20):
+    def __init__(self, api_service, page=1, page_size=20, filters=None):
         super().__init__()
         self.api_service = api_service
         self.page = page
         self.page_size = page_size
+        self.filters = filters or {}
         self.signals = CarDataWorkerSignals()
 
     def run(self):
         try:
-            # Fetch listings with pagination parameters
-            response = self.api_service.search_listings_sync({}, self.page, self.page_size)
+            # Fetch listings with pagination parameters and filters
+            response = self.api_service.search_listings_sync(self.filters, self.page, self.page_size)
             self.signals.finished.emit(response)
         except Exception as e:
             self.signals.error.emit(str(e))
@@ -39,6 +40,9 @@ class ResultTable(BaseComponent):
         self.page_size = 20
         self.total_pages = 1
         self.total_results = 0
+        
+        # Search state
+        self.current_filters = {}
         
         super().__init__(*args, **kwargs)
 
@@ -168,8 +172,8 @@ class ResultTable(BaseComponent):
         
         main_layout.addWidget(pagination_frame)
         
-        # Load real data
-        self._load_car_data()
+        # Show initial state instead of loading data
+        self._show_initial_state()
 
     def _on_page_size_changed(self, new_size_text):
         """Handle page size change."""
@@ -193,6 +197,38 @@ class ResultTable(BaseComponent):
             self.current_page += 1
             print(f"[ResultTable] Going to next page: {self.current_page}")
             self._load_car_data()
+
+    def _show_initial_state(self):
+        """Show initial welcome state before any search."""
+        self.loading_label.hide()
+        
+        # Clear any existing content
+        self._clear_listings()
+        
+        # Show welcome message
+        welcome_label = QLabel("🔍 Ready to search!\n\nUse the filters above and click 'Search' to find cars.")
+        welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        welcome_label.setObjectName("welcome_label")
+        welcome_label.setStyleSheet("""
+            color: #888; 
+            font-size: 16px;
+            padding: 40px;
+            line-height: 1.5;
+        """)
+        self.listings_layout.addWidget(welcome_label)
+        
+        # Reset pagination UI
+        self.total_results = 0
+        self.total_pages = 1
+        self.current_page = 1
+        self._update_pagination_ui()
+
+    def load_search_results(self, criteria: dict):
+        """Public method to load search results with given criteria."""
+        print(f"[ResultTable] Loading search results with criteria: {criteria}")
+        self.current_filters = criteria
+        self.current_page = 1  # Reset to first page for new search
+        self._load_car_data()
 
     def _update_pagination_ui(self):
         """Update pagination controls based on current state."""
@@ -222,7 +258,7 @@ class ResultTable(BaseComponent):
         self.prev_button.setEnabled(False)
         self.next_button.setEnabled(False)
         
-        worker = CarDataWorker(self.api_service, self.current_page, self.page_size)
+        worker = CarDataWorker(self.api_service, self.current_page, self.page_size, self.current_filters)
         worker.signals.finished.connect(self._on_data_loaded)
         worker.signals.error.connect(self._on_data_error)
         self.threadpool.start(worker)
@@ -292,13 +328,23 @@ class ResultTable(BaseComponent):
 
     def _show_no_results(self):
         """Show no results message."""
-        no_results_label = QLabel("📭 No car listings available at the moment.\nPlease try again later.")
+        self._clear_listings()
+        no_results_label = QLabel("📭 No car listings found matching your search criteria.\nTry adjusting your filters or search terms.")
         no_results_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         no_results_label.setObjectName("no_results_label")
+        no_results_label.setStyleSheet("""
+            color: #666; 
+            background-color: rgba(102, 102, 102, 0.1);
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 14px;
+        """)
         self.listings_layout.addWidget(no_results_label)
 
     def _show_error(self, error_message):
         """Show error message."""
+        self._clear_listings()
         error_label = QLabel(f"❌ {error_message}")
         error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         error_label.setObjectName("error_label")
@@ -312,12 +358,16 @@ class ResultTable(BaseComponent):
         """)
         self.listings_layout.addWidget(error_label)
     
-    def populate_listings(self, car_data_list):
-        # Clear existing listings first if any (for dynamic updates)
+    def _clear_listings(self):
+        """Clear all widgets from listings layout."""
         while self.listings_layout.count():
             child = self.listings_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
+
+    def populate_listings(self, car_data_list):
+        # Clear existing listings first if any (for dynamic updates)
+        self._clear_listings()
 
         for car_data in car_data_list:
             listing_widget = CarListingWidget(car_data)
