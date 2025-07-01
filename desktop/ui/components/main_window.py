@@ -274,7 +274,8 @@ class MainWindow(QMainWindow):
 
     def _show_custom_notification(self, title, message):
         """Show a toast notification with a custom message."""
-        ToastNotification.show(self, title, message,_theme=self.current_theme)
+        toast = ToastNotification(parent=self, title=title, message=message)
+        toast.show_notification()
 
     def _load_styles(self, theme):
         """Load the stylesheet for the specified theme."""
