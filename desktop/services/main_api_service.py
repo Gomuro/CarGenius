@@ -63,6 +63,28 @@ class APIService:
         """Get average prices by brand"""
         return await self._request("GET", "/analytics/average_price", {"limit": limit})
 
+    async def get_filter_options(self) -> Optional[Dict]:
+        """Get all available filter options (brands, models, colors, years) efficiently"""
+        return await self._request("GET", "/analytics/filter-options")
+
+    async def get_models_for_brand(self, brand: str = None) -> Optional[list]:
+        """Get distinct models for a specific brand"""
+        params = {}
+        if brand:
+            params["brand"] = brand
+        return await self._request("GET", "/analytics/filter-options/models", params)
+
+    async def get_colors_for_filters(self, brand: str = None, model: str = None, registration_year: int = None) -> Optional[list]:
+        """Get distinct colors filtered by brand, model, and year"""
+        params = {}
+        if brand:
+            params["brand"] = brand
+        if model:
+            params["model"] = model
+        if registration_year:
+            params["registration_year"] = registration_year
+        return await self._request("GET", "/analytics/filter-options/colors", params)
+
     async def search_listings(self, filters: Dict) -> Optional[Dict]:
         """Search car listings with filters and get statistics"""
         return await self._request("GET", "/analytics/filter-search", filters)
@@ -75,6 +97,10 @@ class APIService:
     async def get_license_stats(self, days: int = 30) -> Optional[Dict]:
         """Get license creation statistics"""
         return await self._request("GET", "/stats/licenses-per-day", {"days": days})
+
+    async def get_best_offer(self, license_key: str) -> Optional[Dict]:
+        """Get the best offer based on user's tracked filters."""
+        return await self._request("GET", "/analytics/ml_best_price_search", {"key": license_key})
 
     # Filter management endpoints
     async def get_tracked_filters(self, license_key: str) -> Optional[list]:
@@ -111,11 +137,27 @@ class APIService:
     def get_average_prices_sync(self, limit: int = 20) -> Optional[Dict]:
         return asyncio.run(self.get_average_prices(limit))
 
+    def get_filter_options_sync(self) -> Optional[Dict]:
+        """Synchronous wrapper for get_filter_options"""
+        return asyncio.run(self.get_filter_options())
+
+    def get_models_for_brand_sync(self, brand: str = None) -> Optional[list]:
+        """Synchronous wrapper for get_models_for_brand"""
+        return asyncio.run(self.get_models_for_brand(brand))
+
+    def get_colors_for_filters_sync(self, brand: str = None, model: str = None, registration_year: int = None) -> Optional[list]:
+        """Synchronous wrapper for get_colors_for_filters"""
+        return asyncio.run(self.get_colors_for_filters(brand, model, registration_year))
+
     def search_listings_sync(self, filters: Dict) -> Optional[Dict]:
         return asyncio.run(self.search_listings(filters))
 
     def get_license_stats_sync(self, days: int = 30) -> Optional[Dict]:
         return asyncio.run(self.get_license_stats(days))
+
+    def get_best_offer_sync(self, license_key: str) -> Optional[Dict]:
+        """Synchronous wrapper for get_best_offer"""
+        return asyncio.run(self.get_best_offer(license_key))
 
     def get_tracked_filters_sync(self, license_key: str) -> Optional[list]:
         return asyncio.run(self.get_tracked_filters(license_key))

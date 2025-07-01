@@ -5,62 +5,59 @@ class FilterInputs(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.api_service_instance = APIService()
-        self.all_listings = []
+        self.filter_options = {}  # Store all filter options
         self.original_search_button_text = "Loading..."
         self.is_loading = True
         self.auto_update_button_text = True  # Flag to control automatic button text updates
         
-        self._create_ui()  # Створюємо UI спочатку з текстом "Loading..."
-        self._load_data()  # Потім завантажуємо дані
+        self._create_ui()  # Create UI first with "Loading..." text
+        self._load_filter_options()  # Then load filter options efficiently
         self._setup_cascading_behavior()
 
     # =============================================================================
     # БЛОК 1: ІНІЦІАЛІЗАЦІЯ ТА ЗАВАНТАЖЕННЯ ДАНИХ
     # =============================================================================
     
-    def _load_data(self):
-        """Завантажуємо всі дані один раз для фільтрації"""
+    def _load_filter_options(self):
+        """Load all available filter options efficiently without loading full dataset"""
         self.is_loading = True
         self._update_loading_state()
         
         try:
-            cars_data = self.api_service_instance.search_listings_sync({})
-            if cars_data and 'Listings' in cars_data:
-                self.all_listings = cars_data['Listings']
-                # Використовуємо Stats.count для точної кількості записів
-                if 'Stats' in cars_data and cars_data['Stats'] and 'count' in cars_data['Stats']:
-                    total_count = cars_data['Stats']['count']
-                    self.original_search_button_text = f"{total_count} listings"
-                else:
-                    # Fallback до підрахунку довжини масиву
-                    self.original_search_button_text = f"{len(self.all_listings)} listings"
+            # Get all filter options in one efficient call
+            self.filter_options = self.api_service_instance.get_filter_options_sync()
+            if self.filter_options:
+                # Get total count of listings for button text
+                total_brands = len(self.filter_options.get("brands", []))
+                total_models = len(self.filter_options.get("models", []))
+                self.original_search_button_text = f"Search {total_brands} brands, {total_models} models"
             else:
-                self.all_listings = []
-                self.original_search_button_text = "0 listings"
+                self.filter_options = {"brands": [], "models": [], "colors": [], "years": []}
+                self.original_search_button_text = "Search listings"
         except Exception as e:
-            print(f"Error loading data: {e}")
-            self.all_listings = []
-            self.original_search_button_text = "Error loading data"
+            print(f"Error loading filter options: {e}")
+            self.filter_options = {"brands": [], "models": [], "colors": [], "years": []}
+            self.original_search_button_text = "Error loading filters"
         finally:
             self.is_loading = False
             self._initialize_filters()
             self._update_loading_state()
 
     def _update_loading_state(self):
-        """Оновлюємо стан завантаження UI"""
+        """Update the loading state of the UI"""
         if self.is_loading:
             self.search_button.setText("Loading...")
             self.search_button.setEnabled(False)
-            # Вимикаємо всі фільтри під час завантаження
+            # Disable all filters during loading
             self._set_filters_enabled(False)
         else:
             self.search_button.setText(self.original_search_button_text)
             self.search_button.setEnabled(True)
-            # Вмикаємо фільтри після завантаження
+            # Enable filters after loading
             self._set_filters_enabled(True)
 
     def _set_filters_enabled(self, enabled: bool):
-        """Вмикаємо/вимикаємо всі фільтри"""
+        """Enable/disable all filters"""
         self.brand_input.setEnabled(enabled)
         self.model_input.setEnabled(enabled)
         self.reg_date_input.setEnabled(enabled)
@@ -74,28 +71,28 @@ class FilterInputs(QWidget):
     # =============================================================================
     
     def _create_ui(self):
-        """Створюємо інтерфейс з усіма елементами"""
+        """Create interface with all elements"""
         layout = QGridLayout(self)
         layout.setHorizontalSpacing(20)
         layout.setVerticalSpacing(12)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Заголовки та елементи першого ряду
+        # Headers and elements of the first row
         self._create_row1_elements(layout)
-        # Заголовки та елементи другого ряду  
+        # Headers and elements of the second row  
         self._create_row2_elements(layout)
         
-        # НЕ ініціалізуємо фільтри тут - це буде зроблено після завантаження даних
+        # Don't initialize filters here - this will be done after loading data
 
     def _create_row1_elements(self, layout):
-        """Перший ряд: Brand, Model, Year, Mileage"""
+        """First row: Brand, Model, Year, Mileage"""
         headers = ["Brand", "Model", "Registration date", "Kilometers up to"]
         for col, header in enumerate(headers):
             label = QLabel(header)
             label.setObjectName("filter_header_light")
             layout.addWidget(label, 0, col)
 
-        # Створюємо випадаючі списки
+        # Create dropdown lists
         self.brand_input = self._create_combobox()
         self.model_input = self._create_combobox()
         self.reg_date_input = self._create_combobox()
@@ -107,14 +104,14 @@ class FilterInputs(QWidget):
         layout.addWidget(self.mileage_input, 1, 3)
 
     def _create_row2_elements(self, layout):
-        """Другий ряд: Location, Color, Price, Search"""
+        """Second row: Location, Color, Price, Search"""
         headers = ["City or postal code", "Color", "Price up to", ""]
         for col, header in enumerate(headers):
             label = QLabel(header)
             label.setObjectName("filter_header_light")
             layout.addWidget(label, 2, col)
 
-        # Створюємо елементи
+        # Create elements
         self.location_input = QLineEdit()
         self.location_input.setObjectName("dark_filter_input")
         self.location_input.setPlaceholderText("Enter location")
@@ -134,12 +131,12 @@ class FilterInputs(QWidget):
         layout.addWidget(self.price_input, 3, 2)
         layout.addWidget(self.search_button, 3, 3)
         
-        # Налаштовуємо розтягування колонок
+        # Configure column stretching
         for i in range(4):
             layout.setColumnStretch(i, 1)
 
     def _create_combobox(self):
-        """Створюємо стандартний combobox"""
+        """Create standard combobox"""
         combo = QComboBox()
         combo.setObjectName("dark_filter_input")
         combo.setFixedHeight(38)
@@ -150,36 +147,36 @@ class FilterInputs(QWidget):
     # =============================================================================
     
     def _setup_cascading_behavior(self):
-        """Налаштовуємо каскадну поведінку фільтрів"""
+        """Setup cascading behavior of filters"""
         self.brand_input.currentTextChanged.connect(self._on_brand_changed)
         self.model_input.currentTextChanged.connect(self._on_model_changed)
         self.reg_date_input.currentTextChanged.connect(self._on_year_changed)
-        # Додаємо оновлення для інших фільтрів
+        # Add updates for other filters
         self.location_input.textChanged.connect(self._update_search_button_count)
         self.price_input.currentTextChanged.connect(self._update_search_button_count)
         self.color_input.currentTextChanged.connect(self._update_search_button_count)
         self.mileage_input.currentTextChanged.connect(self._update_search_button_count)
 
     def _initialize_filters(self):
-        """Ініціалізуємо всі фільтри після завантаження даних"""
-        if not self.is_loading and self.all_listings:
+        """Initialize all filters after loading data"""
+        if not self.is_loading and self.filter_options:
             self._populate_brands()
             self._reset_dependent_filters()
 
     def _on_brand_changed(self):
-        """Коли змінюється бренд → оновлюємо моделі"""
+        """When brand changes → update models"""
         self._populate_models()
         self._reset_years_and_below()
         self._update_search_button_count()
 
     def _on_model_changed(self):
-        """Коли змінюється модель → оновлюємо роки"""
+        """When model changes → update years"""
         self._populate_years()
         self._reset_colors_and_mileages()
         self._update_search_button_count()
 
     def _on_year_changed(self):
-        """Коли змінюється рік → оновлюємо пробіг та кольори"""
+        """When year changes → update mileage and colors"""
         self._populate_mileages()
         self._populate_colors()
         self._update_search_button_count()
@@ -189,144 +186,110 @@ class FilterInputs(QWidget):
     # =============================================================================
     
     def _populate_brands(self):
-        """Заповнюємо список брендів"""
-        brands = {listing.get("brand") for listing in self.all_listings if listing.get("brand")}
-        self._populate_dropdown(self.brand_input, sorted(brands), "Any Brand")
+        """Populate brands list"""
+        brands = self.filter_options.get("brands", [])
+        self._populate_dropdown(self.brand_input, brands, "Any Brand")
 
     def _populate_models(self):
-        """Заповнюємо список моделей для обраного бренду"""
-        filtered_data = self._filter_by_brand()
-        models = {listing.get("model") for listing in filtered_data if listing.get("model")}
-        self._populate_dropdown(self.model_input, sorted(models), "Any Model")
+        """Populate models list for selected brand using efficient API call"""
+        selected_brand = self.brand_input.currentText()
+        try:
+            # Use efficient API call to get models for specific brand
+            if selected_brand == "Any Brand":
+                models = self.filter_options.get("models", [])
+            else:
+                models = self.api_service_instance.get_models_for_brand_sync(selected_brand)
+                if models is None:
+                    models = []
+            self._populate_dropdown(self.model_input, models, "Any Model")
+        except Exception as e:
+            print(f"Error loading models for brand {selected_brand}: {e}")
+            self._populate_dropdown(self.model_input, [], "Any Model")
 
     def _populate_years(self):
-        """Заповнюємо список років для обраного бренду та моделі"""
-        filtered_data = self._filter_by_brand_and_model()
-        years = {listing.get("registration_year") for listing in filtered_data if listing.get("registration_year")}
-        years_str = [str(year) for year in sorted(years)]
+        """Populate years list"""
+        years = self.filter_options.get("years", [])
+        years_str = [str(year) for year in years]
         self._populate_dropdown(self.reg_date_input, years_str, "Any Year")
 
     def _populate_mileages(self):
-        """Заповнюємо список пробігу"""
+        """Populate mileage list"""
         # The "> 150,000 km" option is removed as it cannot be supported by the backend API
         mileage_ranges = ["Any Mileage", "< 10,000 km", "< 50,000 km", "< 100,000 km", "< 150,000 km"]
         self.mileage_input.clear()
         self.mileage_input.addItems(mileage_ranges)
 
     def _populate_colors(self):
-        """Заповнюємо список кольорів для поточних фільтрів"""
-        filtered_data = self._get_current_filtered_data()
-        colors = {listing.get("color") for listing in filtered_data if listing.get("color")}
-        self._populate_dropdown(self.color_input, sorted(colors), "Any Color")
+        """Populate colors list for current filters using efficient API call"""
+        selected_brand = self.brand_input.currentText()
+        selected_model = self.model_input.currentText()
+        selected_year_text = self.reg_date_input.currentText()
+        
+        try:
+            # Convert year to int if not "Any Year"
+            selected_year = None
+            if selected_year_text != "Any Year":
+                try:
+                    selected_year = int(selected_year_text)
+                except ValueError:
+                    pass
+            
+            # Use efficient API call to get colors for current filters
+            colors = self.api_service_instance.get_colors_for_filters_sync(
+                brand=selected_brand if selected_brand != "Any Brand" else None,
+                model=selected_model if selected_model != "Any Model" else None,
+                registration_year=selected_year
+            )
+            if colors is None:
+                colors = []
+            self._populate_dropdown(self.color_input, colors, "Any Color")
+        except Exception as e:
+            print(f"Error loading colors: {e}")
+            self._populate_dropdown(self.color_input, [], "Any Color")
 
     def _populate_dropdown(self, dropdown, items, default_text):
-        """Універсальний метод заповнення випадаючого списку"""
+        """Universal method for populating dropdown list"""
         dropdown.clear()
         dropdown.addItem(default_text)
         if items:
             dropdown.addItems(items)
 
     def _update_search_button_count(self):
-        """Оновлюємо текст кнопки згідно з поточними фільтрами"""
+        """Update button text according to current filters"""
         if self.is_loading or not self.auto_update_button_text:
-            return  # Не оновлюємо під час завантаження або якщо вимкнено автооновлення
+            return  # Don't update during loading or if auto-update is disabled
             
-        filtered_data = self._get_current_filtered_data()
-        count = len(filtered_data)
-        self.search_button.setText(f"{count} listings")
+        # For now, just show current filter state since we don't load all data
+        criteria = self.get_criteria()
+        if criteria:
+            filter_count = len([v for v in criteria.values() if v])
+            self.search_button.setText(f"Search with {filter_count} filters")
+        else:
+            self.search_button.setText(self.original_search_button_text)
 
     # =============================================================================
-    # БЛОК 5: МЕТОДИ ФІЛЬТРАЦІЇ ДАНИХ
-    # =============================================================================
-    
-    def _filter_by_brand(self):
-        """Фільтруємо дані за брендом"""
-        selected_brand = self.brand_input.currentText()
-        if selected_brand == "Any Brand":
-            return self.all_listings
-        return [l for l in self.all_listings if l.get("brand") == selected_brand]
-
-    def _filter_by_brand_and_model(self):
-        """Фільтруємо дані за брендом та моделлю"""
-        filtered_data = self._filter_by_brand()
-        selected_model = self.model_input.currentText()
-        if selected_model == "Any Model":
-            return filtered_data
-        return [l for l in filtered_data if l.get("model") == selected_model]
-
-    def _get_current_filtered_data(self):
-        """Отримуємо відфільтровані дані на основі поточних налаштувань"""
-        # Починаємо з повного списку або з попередньо відфільтрованих даних
-        filtered_data = self._filter_by_brand_and_model() # Включає фільтрацію за брендом і моделлю
-
-        # Фільтрація за роком
-        selected_year = self.reg_date_input.currentText()
-        if selected_year != "Any Year":
-            try:
-                year_val = int(selected_year)
-                filtered_data = [l for l in filtered_data if l.get("registration_year") == year_val]
-            except ValueError:
-                pass
-
-        # Фільтрація за ціною
-        selected_price = self.price_input.currentText()
-        if selected_price != "Any price":
-            try:
-                price_val = int(selected_price.replace("€", "").replace(",", ""))
-                filtered_data = [l for l in filtered_data if l.get("price", 0) <= price_val]
-            except ValueError:
-                pass
-
-        # Фільтрація за пробігом
-        selected_mileage = self.mileage_input.currentText()
-        if selected_mileage != "Any Mileage":
-            if "< 10,000" in selected_mileage:
-                filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 10000]
-            elif "< 50,000" in selected_mileage:
-                filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 50000]
-            elif "< 100,000" in selected_mileage:
-                filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 100000]
-            elif "< 150,000" in selected_mileage:
-                filtered_data = [l for l in filtered_data if l.get("mileage", 0) < 150000]
-                
-        # Фільтрація за локацією (місто або поштовий індекс)
-        location_text = self.location_input.text().strip().lower()
-        if location_text:
-            filtered_data = [
-                l for l in filtered_data 
-                if l.get("city_or_postal_code") and location_text in l["city_or_postal_code"].lower()
-            ]
-
-        # Фільтрація за кольором
-        selected_color = self.color_input.currentText()
-        if selected_color != "Any Color":
-            filtered_data = [l for l in filtered_data if l.get("color") == selected_color]
-            
-        return filtered_data
-
-    # =============================================================================
-    # БЛОК 6: МЕТОДИ СКИДАННЯ ФІЛЬТРІВ
+    # БЛОК 5: МЕТОДИ СКИДАННЯ ФІЛЬТРІВ
     # =============================================================================
     
     def _reset_dependent_filters(self):
-        """Скидаємо всі залежні фільтри"""
+        """Reset all dependent filters"""
         self._reset_dropdown(self.model_input, "Any Model")
         self._reset_dropdown(self.reg_date_input, "Any Year")
         self._reset_dropdown(self.mileage_input, "Any Mileage")
         self._reset_dropdown(self.color_input, "Any Color")
 
     def _reset_years_and_below(self):
-        """Скидаємо роки та все що нижче"""
+        """Reset years and everything below"""
         self._reset_dropdown(self.reg_date_input, "Any Year")
         self._reset_colors_and_mileages()
 
     def _reset_colors_and_mileages(self):
-        """Скидаємо кольори та пробіг"""
+        """Reset colors and mileage"""
         self._reset_dropdown(self.mileage_input, "Any Mileage")
         self._reset_dropdown(self.color_input, "Any Color")
 
     def _reset_dropdown(self, dropdown, default_text):
-        """Скидаємо випадаючий список до початкового стану"""
+        """Reset dropdown to initial state"""
         dropdown.clear()
         dropdown.addItem(default_text)
 
@@ -337,7 +300,7 @@ class FilterInputs(QWidget):
     def get_criteria(self) -> dict:
         """Gathers all filter criteria into a single dictionary."""
         criteria = {}
-
+        
         # Brand
         brand = self.brand_input.currentText()
         if brand != "Any Brand":
@@ -355,7 +318,7 @@ class FilterInputs(QWidget):
                 criteria['registration_year'] = int(reg_date_text)
             except (ValueError, TypeError):
                 print(f"Warning: Could not parse year value '{reg_date_text}'")
-
+            
         # Price
         price_text = self.price_input.currentText()
         if price_text != "Any price":
@@ -386,30 +349,30 @@ class FilterInputs(QWidget):
         color_text = self.color_input.currentText()
         if color_text != "Any Color":
             criteria['color'] = color_text
-            
+                
         return criteria
 
     def set_search_button_text(self, text):
-        """Встановлюємо текст для кнопки пошуку (для режиму відстеження)"""
+        """Set text for search button (for tracking mode)"""
         self.search_button.setText(text)
         # Disable auto-updates when custom text is set
         self.auto_update_button_text = False
 
     def restore_auto_button_updates(self):
-        """Відновлюємо автоматичне оновлення тексту кнопки"""
+        """Restore automatic text updates for the button"""
         self.auto_update_button_text = True
         self._update_search_button_count()  # Update to current count
 
     def reset_inputs(self):
-        """Скидаємо всі фільтри до початкового стану"""
+        """Reset all filters to initial state"""
         if self.is_loading:
-            return  # Не скидаємо під час завантаження
+            return  # Don't reset during loading
             
         # Re-enable auto-updates when resetting
         self.auto_update_button_text = True
         
         self.brand_input.setCurrentIndex(0)  # "Any Brand"
-        self._on_brand_changed()  # Каскадно скидаємо все інше
+        self._on_brand_changed()  # Cascade reset everything else
         self.location_input.clear()
         self.price_input.setCurrentIndex(0)
         self.search_button.setText(self.original_search_button_text) 

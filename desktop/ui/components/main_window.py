@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
         self.filter_panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         # Connect to the filter panel's signal for model tracking
         self.filter_panel.model_tracking_requested.connect(self._handle_model_tracking_request)
+        # Connect to the filter panel's signal for search requests
+        self.filter_panel.search_requested.connect(self._handle_search_request)
         main_layout.addWidget(self.filter_panel)
 
         # Results table with flexible sizing
@@ -204,6 +206,12 @@ class MainWindow(QMainWindow):
         # Use a QTimer to ensure the window is visible and ready before setting context
         QTimer.singleShot(100, lambda: self.ai_chat_window.set_context('car', car_data))
     
+    def _handle_search_request(self, criteria):
+        """Handles search requests from the filter panel."""
+        print(f"[MainWindow] Search request received with criteria: {criteria}")
+        # Pass the search criteria to the result table
+        self.result_table.search_with_criteria(criteria)
+
     def _handle_model_tracking_request(self, criteria):
         """Handles the request to track a new model based on criteria."""
         # Check if we have a valid license key

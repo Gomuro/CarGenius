@@ -98,15 +98,27 @@ async def get_filtered(
         listing_filters: ListingSchema,
         tech_filters: TechnicalDetailsSchema,
         equipment_filters: EquipmentSchema,
-        page:int, size:int, total: int
+        page: int, size: int, total: int  # total is unused, calculated dynamically
 ) -> ListingFilteredResponse:
-    """Filtering listings with JOIN on TechnicalDetails and Equipment."""
-    ofset_min = page * size
-    ofset_max = (page + 1) * size
+    """Filtering listings with JOIN on TechnicalDetails and Equipment, with proper pagination."""
     listing_conditions = filtered_listings(listing_filters)
     techdetails_conditions = filtered_tech_details(tech_filters)
     equipment_conditions = filtered_equipment(equipment_filters)
+    
+    all_conditions = and_(*listing_conditions, *techdetails_conditions, *equipment_conditions)
 
+    # First, get the total count for pagination
+    count_stmt = (
+        select(func.count(ListingMobileDe.id))
+        .outerjoin(ListingMobileDe.technical_details)
+        .outerjoin(ListingMobileDe.equipment)
+        .where(all_conditions)
+    )
+    count_result = await db.execute(count_stmt)
+    total_count = count_result.scalar_one_or_none() or 0
+    
+    # Then, fetch the paginated data
+    offset = (page - 1) * size if page > 0 else 0
     stmt = (
         select(ListingMobileDe)
         .outerjoin(ListingMobileDe.technical_details)
@@ -115,48 +127,44 @@ async def get_filtered(
             joinedload(ListingMobileDe.technical_details),
             joinedload(ListingMobileDe.equipment)
         )
-        .where(and_(
-            *listing_conditions,
-            *techdetails_conditions,
-            *equipment_conditions
-        ))
+        .where(all_conditions)
+        .limit(size)
+        .offset(offset)
     )
     result = await db.execute(stmt)
-
-    listings = list(result.scalars().all())  # Return a list of ListingMobileDe objects
+    listings = list(result.scalars().all())
     listing_out = [ListingOut.from_orm(item) for item in listings]
 
-    if listings:
+    # Calculate stats based on all filtered results, not just the current page
+    if total_count > 0:
         price_stmt = (
             select(
                 func.avg(ListingMobileDe.price),
                 func.min(ListingMobileDe.price),
-                func.max(ListingMobileDe.price),
-                func.count(ListingMobileDe.id)
+                func.max(ListingMobileDe.price)
             )
             .outerjoin(ListingMobileDe.technical_details)
             .outerjoin(ListingMobileDe.equipment)
-            .where(and_(
-                *listing_conditions,
-                *techdetails_conditions,
-                *equipment_conditions
-            )))
+            .where(all_conditions)
+        )
         stats_result = await db.execute(price_stmt)
-        avg_price, min_price, max_price, count = stats_result.one_or_none()  # return a single row (tuple)  with aggregated stats or None if no listings found
+        avg_price, min_price, max_price = stats_result.one_or_none()
     else:
-        avg_price = min_price = max_price = count = 0
+        avg_price = min_price = max_price = 0
+        
+    total_pages = int(math.ceil(total_count / size)) if size > 0 else 0
 
     return ListingFilteredResponse(
-        Listings=listing_out[ofset_min:ofset_max],  # Paginate the listings
+        Listings=listing_out,  # Already paginated
         Stats=ListingStats(
             avg_price=round(avg_price, 2) if avg_price else 0,
             min_price=round(min_price, 2) if min_price else 0,
             max_price=round(max_price, 2) if max_price else 0,
-            count=count
+            count=total_count
         ),
         page=page,
         size=size,
-        total=math.ceil(len(listing_out) / size) - 1
+        total=total_pages
     )
 
 

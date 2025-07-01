@@ -86,7 +86,7 @@ class AddContextDialog(QDialog):
                 self.setStyleSheet(f.read())
         except FileNotFoundError:
             print(f"Stylesheet not found at {theme_path}")
-    
+
     def _create_search_tab(self, search_type: str, use_detailed_filters: bool = False) -> QWidget:
         """Helper method to create a standardized search tab."""
         tab_widget = QWidget()
@@ -110,7 +110,7 @@ class AddContextDialog(QDialog):
             self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.loading_label.setHidden(True) # Initially hidden
             layout.addWidget(self.loading_label)
-
+            
             # Create scrollable results area for car listings
             results_scroll = QScrollArea()
             results_scroll.setWidgetResizable(True)
@@ -185,9 +185,9 @@ class AddContextDialog(QDialog):
         filter_inputs.search_button.setEnabled(True)
 
         if response and "Listings" in response:
-            listings_data = response.get("Listings", [])
+        listings_data = response.get("Listings", [])
             if listings_data:
-                self._display_car_listings(listings_data)
+            self._display_car_listings(listings_data)
             else:
                 self._display_no_results()
         else:
@@ -283,7 +283,7 @@ class AddContextDialog(QDialog):
         if current_item:
             filter_data = current_item.data(Qt.ItemDataRole.UserRole)
             self.add_filters_context_signal.emit(filter_data)
-            self.accept()
+        self.accept()
 
     def _clear_results(self):
         """Clear existing search results."""
@@ -321,17 +321,17 @@ class AddContextDialog(QDialog):
             return
 
         try:
-            filters = self.api_service.get_tracked_filters_sync(self.license_key)
-            
-            list_widget.clear()
-            if filters:
-                for f in filters:
-                    item_text = self._summarize_filter(f)
-                    list_item = QListWidgetItem(item_text)
-                    list_item.setData(Qt.ItemDataRole.UserRole, f)
-                    list_widget.addItem(list_item)
-            else:
-                list_widget.addItem("No saved filters found.")
+        filters = self.api_service.get_tracked_filters_sync(self.license_key)
+        
+        list_widget.clear()
+        if filters:
+            for f in filters:
+                item_text = self._summarize_filter(f)
+                list_item = QListWidgetItem(item_text)
+                list_item.setData(Qt.ItemDataRole.UserRole, f)
+                list_widget.addItem(list_item)
+        else:
+            list_widget.addItem("No saved filters found.")
         except Exception as e:
             list_widget.clear()
             error_item = QListWidgetItem(f"❌ Error loading filters: {str(e)}")
