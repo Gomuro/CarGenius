@@ -2,8 +2,22 @@ from PyQt6.QtWidgets import (
     QComboBox, QLineEdit, QGridLayout, QLabel, QPushButton, QWidget, QFrame, 
     QHBoxLayout, QVBoxLayout, QSizePolicy, QGraphicsOpacityEffect
 )
-from PyQt6.QtCore import Qt, QSettings, QPropertyAnimation, QParallelAnimationGroup, pyqtSignal
+from PyQt6.QtCore import Qt, QSettings, QPropertyAnimation, QParallelAnimationGroup, pyqtSignal, QTimer, QThreadPool, QRunnable, QObject
 from desktop.services.main_api_service import APIService
+
+class CountWorkerSignals(QObject):
+    finished = pyqtSignal(int)
+
+class CountWorker(QRunnable):
+    def __init__(self, api_service, filters):
+        super().__init__()
+        self.api_service = api_service
+        self.filters = filters
+        self.signals = CountWorkerSignals()
+
+    def run(self):
+        count = self.api_service.get_listings_count_sync(self.filters)
+        self.signals.finished.emit(count)
 
 class RetryComboBox(QComboBox):
     """A QComboBox that can enter an error state and allow retrying."""
@@ -70,6 +84,12 @@ class FilterInputs(QWidget):
         self.is_loading = True
         self.auto_update_button_text = True  # Flag to control automatic button text updates
         
+        self.count_threadpool = QThreadPool()
+        self.count_timer = QTimer(self)
+        self.count_timer.setSingleShot(True)
+        self.count_timer.setInterval(500) # 500ms delay
+        self.count_timer.timeout.connect(self._trigger_count_update)
+
         self._create_ui()
         self._setup_cascading_behavior()
         self._load_filter_options()
@@ -470,17 +490,37 @@ class FilterInputs(QWidget):
             dropdown.blockSignals(False)
 
     def _update_search_button_count(self):
-        """Update button text according to current filters"""
+        """Debounce the count update."""
         if self.is_loading or not self.auto_update_button_text:
-            return  # Don't update during loading or if auto-update is disabled
-            
-        # For now, just show current filter state since we don't load all data
+            return
+        
+        self.search_button.setText("Updating...")
+        self.count_timer.start() # Restart the timer every time a filter changes
+
+    def _trigger_count_update(self):
+        """Fetch the count of listings based on current filters."""
         criteria = self.get_criteria()
-        if criteria:
-            filter_count = len([v for v in criteria.values() if v])
-            self.search_button.setText(f"Search with {filter_count} filters")
-        else:
-            self.search_button.setText(self.original_search_button_text)
+
+        # When no filters are selected, use the initial text with total counts.
+        if not criteria:
+            if self.original_search_button_text != "Error loading filters":
+                 self.search_button.setText(self.original_search_button_text)
+            else:
+                 self.search_button.setText("Search")
+            return
+
+        worker = CountWorker(self.api_service_instance, criteria)
+        worker.signals.finished.connect(self._on_count_finished)
+        self.count_threadpool.start(worker)
+
+    def _on_count_finished(self, count):
+        """Update the search button text with the fetched count."""
+        if count > 0:
+            self.search_button.setText(f"Search {count} listings")
+        elif count == 0:
+            self.search_button.setText("No listings found")
+        else: # count == -1, an error occurred
+            self.search_button.setText("Error updating count")
 
     # =============================================================================
     # БЛОК 5: МЕТОДИ СКИДАННЯ ФІЛЬТРІВ
