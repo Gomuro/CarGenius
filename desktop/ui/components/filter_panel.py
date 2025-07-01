@@ -32,8 +32,8 @@ class BestOfferWorker(QRunnable):
 class FilterPanel(BaseComponent):
     # Signal to emit complete filter criteria for tracking
     model_tracking_requested = pyqtSignal(dict)  # Now emits complete filter criteria
-    # Signal to emit search request with criteria
-    search_requested = pyqtSignal(dict)
+    # Signal to emit search criteria for regular searches
+    search_requested = pyqtSignal(dict)  # Emits search criteria for result table
 
     def __init__(self, *args, **kwargs):
         self.threadpool = QThreadPool()
@@ -95,9 +95,9 @@ class FilterPanel(BaseComponent):
             else:
                 print("[FilterPanel] Tracking requested, but no criteria set.")
         else:
+            # Regular search mode - emit search request
             print(f"[FilterPanel] Search requested with criteria: {criteria}")
-            # Emit search signal with criteria (can be empty for "show all")
-            self.search_requested.emit(criteria) 
+            self.search_requested.emit(criteria)
 
     def _reset_filters(self):
         self.filter_inputs_widget.reset_inputs()

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import distinct, func
 from app.core.database import get_db
 from app.models.car import ListingMobileDe
 from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, TechnicalDetailsSchema, \
@@ -12,8 +13,122 @@ from app.services.stats.analytics import get_avg_price_by_brand, get_filtered, l
 import json
 from app.utils import flatten_listing_ml
 from ml.predict import predict_price
+from typing import List
 
 router = APIRouter()
+
+
+@router.get("/filter-options")
+async def get_filter_options(db: AsyncSession = Depends(get_db)) -> dict:
+    """
+    Get all available filter options (brands, models, colors, years) without loading full dataset.
+    This provides the options for filter dropdowns efficiently.
+    """
+    try:
+        # Get distinct brands
+        brands_result = await db.execute(
+            select(distinct(ListingMobileDe.brand))
+            .where(ListingMobileDe.is_active == True)
+            .order_by(ListingMobileDe.brand)
+        )
+        brands = [brand for brand in brands_result.scalars().all() if brand is not None]
+
+        # Get distinct models
+        models_result = await db.execute(
+            select(distinct(ListingMobileDe.model))
+            .where(ListingMobileDe.is_active == True)
+            .order_by(ListingMobileDe.model)
+        )
+        models = [model for model in models_result.scalars().all() if model is not None]
+
+        # Get distinct colors
+        colors_result = await db.execute(
+            select(distinct(ListingMobileDe.color))
+            .where(ListingMobileDe.is_active == True)
+            .order_by(ListingMobileDe.color)
+        )
+        colors = [color for color in colors_result.scalars().all() if color is not None]
+
+        # Get distinct years
+        years_result = await db.execute(
+            select(distinct(ListingMobileDe.registration_year))
+            .where(ListingMobileDe.is_active == True)
+            .order_by(ListingMobileDe.registration_year.desc())
+        )
+        years = [year for year in years_result.scalars().all() if year is not None]
+
+        # Get price ranges (min/max for reference)
+        price_result = await db.execute(
+            select(
+                func.min(ListingMobileDe.price),
+                func.max(ListingMobileDe.price)
+            ).where(ListingMobileDe.is_active == True)
+        )
+        min_price, max_price = price_result.one()
+
+        return {
+            "brands": brands,
+            "models": models,
+            "colors": colors,
+            "years": years,
+            "price_range": {
+                "min": min_price or 0,
+                "max": max_price or 0
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving filter options: {str(e)}")
+
+
+@router.get("/filter-options/models")
+async def get_models_for_brand(brand: str = None, db: AsyncSession = Depends(get_db)) -> List[str]:
+    """
+    Get distinct models, optionally filtered by brand.
+    This is useful for cascading dropdowns.
+    """
+    try:
+        query = select(distinct(ListingMobileDe.model)).where(ListingMobileDe.is_active == True)
+        
+        if brand and brand != "Any Brand":
+            query = query.where(ListingMobileDe.brand == brand)
+            
+        query = query.order_by(ListingMobileDe.model)
+        
+        result = await db.execute(query)
+        models = [model for model in result.scalars().all() if model is not None]
+        return models
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving models: {str(e)}")
+
+
+@router.get("/filter-options/colors")
+async def get_colors_for_filters(
+    brand: str = None, 
+    model: str = None, 
+    registration_year: int = None,
+    db: AsyncSession = Depends(get_db)
+) -> List[str]:
+    """
+    Get distinct colors, optionally filtered by brand, model, and year.
+    This is useful for cascading dropdowns.
+    """
+    try:
+        query = select(distinct(ListingMobileDe.color)).where(ListingMobileDe.is_active == True)
+        
+        if brand and brand != "Any Brand":
+            query = query.where(ListingMobileDe.brand == brand)
+        if model and model != "Any Model":
+            query = query.where(ListingMobileDe.model == model)
+        if registration_year:
+            query = query.where(ListingMobileDe.registration_year == registration_year)
+            
+        query = query.order_by(ListingMobileDe.color)
+        
+        result = await db.execute(query)
+        colors = [color for color in result.scalars().all() if color is not None]
+        return colors
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving colors: {str(e)}")
 
 
 @router.post("/json-to-db")
