@@ -88,12 +88,12 @@ async def get_models_for_brand(brand: str = None, db: AsyncSession = Depends(get
     """
     try:
         query = select(distinct(ListingMobileDe.model)).where(ListingMobileDe.is_active == True)
-        
+
         if brand and brand != "Any Brand":
             query = query.where(ListingMobileDe.brand == brand)
-            
+
         query = query.order_by(ListingMobileDe.model)
-        
+
         result = await db.execute(query)
         models = [model for model in result.scalars().all() if model is not None]
         return models
@@ -103,10 +103,10 @@ async def get_models_for_brand(brand: str = None, db: AsyncSession = Depends(get
 
 @router.get("/filter-options/colors")
 async def get_colors_for_filters(
-    brand: str = None, 
-    model: str = None, 
-    registration_year: int = None,
-    db: AsyncSession = Depends(get_db)
+        brand: str = None,
+        model: str = None,
+        registration_year: int = None,
+        db: AsyncSession = Depends(get_db)
 ) -> List[str]:
     """
     Get distinct colors, optionally filtered by brand, model, and year.
@@ -114,16 +114,16 @@ async def get_colors_for_filters(
     """
     try:
         query = select(distinct(ListingMobileDe.color)).where(ListingMobileDe.is_active == True)
-        
+
         if brand and brand != "Any Brand":
             query = query.where(ListingMobileDe.brand == brand)
         if model and model != "Any Model":
             query = query.where(ListingMobileDe.model == model)
         if registration_year:
             query = query.where(ListingMobileDe.registration_year == registration_year)
-            
+
         query = query.order_by(ListingMobileDe.color)
-        
+
         result = await db.execute(query)
         colors = [color for color in result.scalars().all() if color is not None]
         return colors
@@ -227,36 +227,37 @@ async def ml_best_price_search(key: str, db: AsyncSession = Depends(get_db)):
             print(f"✅ Listing #{i} is valid for model input: {valid_indexes}")
 
         except Exception as e:
-            print(f"⚠️ Skip listing #{i} due to error: {e}")
+            print(f"Skip listing #{i} due to error: {e}")
     # Make a forecast only on valid
     predicted_prices = predict_price(input_for_model)
 
-    best_offer = None
-    max_saving = float("-inf")
+    offers = []
 
-    for model_index, original_index in enumerate(valid_indexes):  #
+    for model_index, original_index in enumerate(valid_indexes):
         listing = listings[original_index]
         predicted = predicted_prices[model_index]
         actual = listing.price
         saving = predicted - actual
 
-        if saving > max_saving:
-            max_saving = saving
-            best_offer = {
-                "actual_price": actual,
-                "predicted_price": predicted,
-                "saving": saving,
-                "brand": listing.brand,
-                "model": listing.model,
-                "url": listing.url,
-            }
-    print("✅ Model input columns:", list(input_for_model[0].keys()))  # Shows the columns used for prediction
-    print("✅ Model predicted prices:", predicted_prices)  # Shows the predicted prices for each listing
+        offer = {
+            "actual_price": actual,
+            "predicted_price": predicted,
+            "saving": saving,
+            "brand": listing.brand,
+            "model": listing.model,
+            "registration_year": listing.registration_year,
+            "meleage": listing.mileage,
+            "color": listing.color,
+            "url": listing.url,
+        }
+        offers.append(offer)
+
+    # Sort by benefit and take the top 10
+    top_offers = sorted(offers, key=lambda x: x["saving"], reverse=True)[:10]
 
     return {
-        "best_offer": best_offer,
+        "top_offers": top_offers,
         "listings_count": len(flat_listings),
-        "listings": flat_listings,
     }
 
 
