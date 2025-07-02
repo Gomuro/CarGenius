@@ -78,7 +78,12 @@ async def update_license_filters(db: AsyncSession, license_key: LicenseKey,
                 status_code=400,
                 detail=f"Invalid filter keys: {', '.join(invalid_keys)}. Allowed keys: {', '.join(allowed_keys)}"
             )
-    license_key.filters = [f.dict(exclude_unset=True) for f in filters]
+    
+    # Store only non-null values consistently
+    license_key.filters = [
+        {k: v for k, v in f.dict(exclude_unset=True).items() if v is not None}
+        for f in filters
+    ]
 
     await db.commit()
     await db.refresh(license_key)
