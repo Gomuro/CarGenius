@@ -1,23 +1,38 @@
 # app/services/gpt.py
 import asyncio
 from openai import OpenAI
+from sqlalchemy import desc
+from sqlalchemy.future import select
+
 from app.core.config import OPENAI_KEY
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.constants import BASE_SYSTEM_PROMPT
 from app.models.gpt import GPTPromptLog
+from app.models.license import LicenseKey
 
 
 class GPTClient:
     def __init__(self, api_key=OPENAI_KEY):
         self.client = OpenAI(api_key=api_key)
 
-    async def start_gpt(self, prompt):
+    async def start_gpt(self, history: list[dict], filters: list[dict], best_price_offer: dict[dict, dict],
+                        prompt: str):
+        system_message = {
+            "role": "system",
+            "content": f"{BASE_SYSTEM_PROMPT}"
+                       f"\nUser preferences: {filters}"
+                       f"\nTop 10 car deals: {best_price_offer}"
+        }
+        messages = [system_message] + history + [{"role": "user", "content": prompt}]
+
         response = await asyncio.to_thread(
             lambda: self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}]
+                messages=messages
             )
         )
         return response.choices[0].message.content
+
 
 async def log_gpt_prompt(db: AsyncSession, user_id: str, gpt_prompt: str, gpt_response: str):
     """ Log the GPT prompt and response to the database. """
@@ -32,30 +47,38 @@ async def log_gpt_prompt(db: AsyncSession, user_id: str, gpt_prompt: str, gpt_re
     return gpt_log
 
 
+async def get_chat_history(db: AsyncSession, user_id: str, limit: int = 5):
+    """ Retrieve the chat history for a user. """
+    if not user_id:
+        return {
+            "history": [],
+            "message": "user_id is required to retrieve chat history."
+        }
+    stmt = (
+        select(GPTPromptLog)
+        .where(GPTPromptLog.user_id == user_id)
+        .order_by(GPTPromptLog.created_at.desc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    logs = list(result.scalars().all())
+    logs.reverse()  # Reverse to show the oldest first
+    return logs  # returning the list of logs
 
 
-    # def create_task_object(self, user_feedback, feedback_id=None):
-    #     task_title = self.generate_task_title(user_feedback)
-    #     description = self.generate_task_description(user_feedback)
-    #     priority = self.generate_priority(user_feedback)
-    #     return task_title, description, priority
-    #
-    # def generate_task_title(self, feedback):
-    #     response = self.start_gpt(f"Generate a task title line based on the feedback provided: {feedback}.")
-    #     return response
-    #
-    # def generate_task_description(self, feedback):
-    #     prompt = f"Generate a task based on the following feedback:{feedback}"
-    #     response = self.start_gpt(prompt)
-    #     return response
-    #
-    # def generate_priority(self, feedback):
-    #     priority_list = ["High", "Low", "Medium", "Urgent"]
-    #     prompt = f"Based on the urgency of the feedback ({feedback}), First of laa return one word response about priority {priority_list}"
-    #     response = self.start_gpt(prompt)
-    #     return response
+async def get_user_filters(db: AsyncSession, user_id: str):
+    """ Retrieve the filters for a user. """
+    if not user_id:
+        return {
+            "filters": [],
+            "message": "user_id is required to retrieve filters."
+        }
+    stmt = select(LicenseKey).where(LicenseKey.key == user_id)
+    result = await db.execute(stmt)
+    license_data = result.scalar_one_or_none()
+    return {
+        "filters": license_data.filters if license_data and license_data.filters else []}  # returning the filters list
 
 
 if __name__ == "__main__":
     client = GPTClient()
-

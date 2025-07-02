@@ -9,7 +9,6 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 ENV_PATH = BASE_DIR /".env"
 load_dotenv(dotenv_path=ENV_PATH)
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-API_KEY = os.getenv("API_KEY")
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")   # The URL to the message broker through which Celery receives tasks
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")   # The URL to the backend where Celery stores task results
 DATABASE_URL = os.getenv("DATABASE_URL")

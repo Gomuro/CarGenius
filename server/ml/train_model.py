@@ -22,6 +22,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 async def get_flat_listings_async(session):
+    """ Retrieve active listings from the database and flatten their structure. """
     result = await session.execute(
         select(ListingMobileDe)
         .options(
@@ -55,6 +56,7 @@ async def get_flat_listings_async(session):
 
 
 async def train_and_save_model_from_db_async():
+    """ Train a model using data from the database and save it to disk. """
     async with async_session_maker() as session:
         flat_data = await get_flat_listings_async(session)
         print(f"Retrieved {len(flat_data)} listings from the database")
@@ -78,7 +80,7 @@ async def train_and_save_model_from_db_async():
         model = RandomForestRegressor(n_estimators=100)
         datetime_cols = x.select_dtypes(include=["datetime", "datetimetz"]).columns
         if len(datetime_cols) > 0:
-            print(f"⛔️ Dropping datetime columns: {list(datetime_cols)}")
+            print(f"Dropping datetime columns: {list(datetime_cols)}")
             x = x.drop(columns=datetime_cols)
         model.fit(x, y)
 
