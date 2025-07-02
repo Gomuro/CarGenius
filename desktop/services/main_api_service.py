@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 from desktop.GLOBAL import GLOBAL
 from typing import Optional, Dict, Any
+import requests
 
 
 class APIService:
@@ -89,6 +90,25 @@ class APIService:
         """Search car listings with filters and get statistics"""
         return await self._request("GET", "/analytics/filter-search", filters)
 
+    async def get_listings_count(self, filters: Dict) -> int:
+        """
+        Fetches only the count of listings for the given filters.
+        Calls the main search endpoint with size=1 to be efficient.
+        Returns -1 on error.
+        """
+        params = {"page": 1, "size": 1}
+        if filters:
+            params.update(filters)
+            
+        response_data = await self._request("GET", "/analytics/filter-search", params)
+        
+        if response_data and 'Stats' in response_data and 'count' in response_data['Stats']:
+            return response_data['Stats']['count']
+        elif response_data is None: # Indicates a network or server error from _request
+            return -1
+        else: # Valid response but missing data
+            return 0
+
     async def save_json_to_db(self) -> Optional[Dict]:
         """Save JSON data to database"""
         return await self._request("POST", "/analytics/json-to-db")
@@ -174,3 +194,7 @@ class APIService:
 
     def get_is_loading(self) -> bool:
         return self.is_loading
+
+    def get_listings_count_sync(self, filters: dict) -> int:
+        """Synchronous wrapper for get_listings_count."""
+        return asyncio.run(self.get_listings_count(filters))

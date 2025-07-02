@@ -2,7 +2,7 @@
 import math
 from typing import Optional, List, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, or_
 from sqlalchemy.orm import joinedload
 
 from app.models.car import ListingMobileDe, Equipment, TechnicalDetails
@@ -12,45 +12,58 @@ from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, Technica
 from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment
 
 
-def get_filters_from_license_key(license_key: LicenseKey):
-    listing_conditions = []
-    techdetails_conditions = []
-    equipment_conditions = []
-
+async def get_filtered_for_ml(
+        db: AsyncSession,
+        license_key: LicenseKey
+) -> list[ListingSchemaML]:
+    """
+    Filtering listings with JOIN on TechnicalDetails and Equipment.
+    This logic assumes filters for different car models are ORed,
+    and specific criteria within one car model are ANDed.
+    """
+    filter_groups = []
+    # A filter group represents one set of criteria for a car (e.g. brand, model, and its tech details)
     for raw_filter in license_key.filters:
+        # Skip if not a dictionary
         if not isinstance(raw_filter, dict):
             continue
-        for key, value in raw_filter.items():
 
+        # Initialize lists for conditions
+        listing_conditions, tech_conditions, equip_conditions = [], [], []
+
+        # Process each filter key-value pair
+        for key, value in raw_filter.items():
+            # Handle technical details
             if key == "technical_details" and isinstance(value, dict):
                 for subkey, subvalue in value.items():
                     attr = getattr(TechnicalDetails, subkey, None)
                     if attr is not None:
                         if isinstance(subvalue, str):
-                            techdetails_conditions.append(attr.ilike(f"%{subvalue}%"))
+                            tech_conditions.append(attr.ilike(f"%{subvalue}%"))
                         elif isinstance(subvalue, (int, float, bool)):
-                            techdetails_conditions.append(attr == subvalue)
+                            tech_conditions.append(attr == subvalue)
                         elif isinstance(subvalue, dict):
                             if "min" in subvalue:
-                                techdetails_conditions.append(attr >= subvalue["min"])
+                                tech_conditions.append(attr >= subvalue["min"])
                             if "max" in subvalue:
-                                techdetails_conditions.append(attr <= subvalue["max"])
+                                tech_conditions.append(attr <= subvalue["max"])
 
+            # Handle equipment
             elif key == "equipment" and isinstance(value, dict):
                 for subkey, subvalue in value.items():
                     attr = getattr(Equipment, subkey, None)
                     if attr is not None:
                         if isinstance(subvalue, (bool, int, float)):
-                            equipment_conditions.append(attr == subvalue)
+                            equip_conditions.append(attr == subvalue)
                         elif isinstance(subvalue, str):
-                            equipment_conditions.append(attr.ilike(f"%{subvalue}%"))
+                            equip_conditions.append(attr.ilike(f"%{subvalue}%"))
                         elif isinstance(subvalue, dict):
                             if "min" in subvalue:
-                                equipment_conditions.append(attr >= subvalue["min"])
+                                equip_conditions.append(attr >= subvalue["min"])
                             if "max" in subvalue:
-                                equipment_conditions.append(attr <= subvalue["max"])
-
+                                equip_conditions.append(attr <= subvalue["max"])
             else:
+                # Handle listing attributes
                 if value is not None:
                     listing_attr = getattr(ListingMobileDe, key, None)
                     if listing_attr is not None:
@@ -63,16 +76,12 @@ def get_filters_from_license_key(license_key: LicenseKey):
                                 listing_conditions.append(listing_attr >= value["min"])
                             if "max" in value:
                                 listing_conditions.append(listing_attr <= value["max"])
-    return listing_conditions, techdetails_conditions, equipment_conditions
 
+        all_conditions = listing_conditions + tech_conditions + equip_conditions
+        if all_conditions:
+            filter_groups.append(and_(*all_conditions))
 
-async def get_filtered_for_ml(
-        db: AsyncSession,
-        license_key: LicenseKey
-) -> list[ListingSchemaML]:
-    """Filtering listings with JOIN on TechnicalDetails and Equipment."""
-    listing_conditions, techdetails_conditions, equipment_conditions = get_filters_from_license_key(license_key)
-
+    # Base query to get all listings
     stmt = (
         select(ListingMobileDe)
         .outerjoin(ListingMobileDe.technical_details)
@@ -81,15 +90,15 @@ async def get_filtered_for_ml(
             joinedload(ListingMobileDe.technical_details),
             joinedload(ListingMobileDe.equipment)
         )
-        .where(and_(
-            *listing_conditions,
-            *techdetails_conditions,
-            *equipment_conditions
-        ))
     )
+    
+    # Apply filters if any
+    if filter_groups:
+        stmt = stmt.where(or_(*filter_groups))
+
     result = await db.execute(stmt)
 
-    listings = list(result.scalars().all())  # Return a list of ListingMobileDe objects
+    listings = list(result.scalars().all())
     return [ListingSchemaML.from_orm(item) for item in listings]
 
 

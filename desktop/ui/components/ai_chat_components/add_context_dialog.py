@@ -282,6 +282,8 @@ class AddContextDialog(QDialog):
         current_item = list_widget.currentItem()
         if current_item:
             filter_data = current_item.data(Qt.ItemDataRole.UserRole)
+            # Remove None values from the filter data
+            filter_data = {k: v for k, v in filter_data.items() if v is not None}
             self.add_filters_context_signal.emit(filter_data)
         self.accept()
 

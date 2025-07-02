@@ -17,20 +17,19 @@ class GptWorkerSignals(QObject):
     error = pyqtSignal(str)
 
 class GptWorker(QRunnable):
-    def __init__(self, api_service, user_id, prompt, context=None, chat_history=None):
+    def __init__(self, api_service, user_id, prompt, context=None):
         super().__init__()
         self.api_service = api_service
         self.user_id = user_id
         self.prompt = prompt
         self.signals = GptWorkerSignals()
         self.context = context
-        self.chat_history = chat_history if chat_history is not None else []
 
     def run(self):
         try:
             if not self.user_id:
                 raise ValueError("User ID is not set. Please ensure you have a valid license.")
-            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt, self.context, self.chat_history)
+            response = self.api_service.ask_gpt_sync(self.user_id, self.prompt, self.context)
             self.signals.finished.emit(response)
         except Exception as e:
             self.signals.error.emit(str(e))
@@ -174,7 +173,7 @@ class AIChatWindow(QWidget):
         loading_bubble = self.add_loading()
         
         # Pass context to the worker
-        worker = GptWorker(self.api_service, self.user_id, message, self.chat_context, self.chat_history)
+        worker = GptWorker(self.api_service, self.user_id, message, self.chat_context)
 
         worker.signals.finished.connect(lambda response: self.receive_ai_response(loading_bubble, response))
         worker.signals.error.connect(lambda error: self.handle_ai_error(loading_bubble, error))
@@ -304,6 +303,7 @@ class AIChatWindow(QWidget):
 
     def add_filters_context(self, filter_data: dict):
         """Sets the provided filter data as context for the chat."""
+        print(f"Filter data: {filter_data}")
         self.set_context('filters', filter_data)
         
     def resizeEvent(self, event):

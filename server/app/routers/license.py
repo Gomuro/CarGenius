@@ -1,6 +1,7 @@
 # app/routers/license.py
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.license import LicenseCreateResponse, LicenseCreateRequest, LicenseValidateResponse, \
     LicenseValidateRequest
@@ -62,7 +63,12 @@ async def update_filters(
     if not license_key:
         raise HTTPException(status_code=404, detail="License key not found")
     updated_license = await update_license_filters(db, license_key, payload)
-    return updated_license.filters
+    clean_filters = [
+        {k: v for k, v in f.items() if v is not None}
+        for f in updated_license.filters
+    ]
+    print(f"[DEBUG] Updated filters for license {key}: {clean_filters}")
+    return JSONResponse(content=clean_filters)
 
 
 @router.delete("/{key}/filters", response_model=List[ListingSchemaML])
