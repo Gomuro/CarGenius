@@ -1,5 +1,12 @@
 import sys
 import os
+
+# Add the project root directory to Python path
+# This allows imports to work whether running from project root or desktop directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from PyQt6.QtWidgets import QApplication
 from desktop.ui.components.main_window import MainWindow
 from desktop.ui.components.license_dialog import LicenseDialog
