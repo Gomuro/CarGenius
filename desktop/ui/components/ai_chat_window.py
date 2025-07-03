@@ -1,13 +1,14 @@
 from PyQt6.QtCore import Qt, QSize, QTimer, QEvent, QRunnable, QThreadPool, pyqtSignal, QObject
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                            QTextEdit, QLabel, QFrame, QScrollArea, 
-                           QSizePolicy, QSpacerItem, QSplitter)
+                           QSizePolicy, QSpacerItem, QSplitter, QMessageBox)
 from PyQt6.QtGui import QIcon, QFont, QColor, QPalette, QKeyEvent
 
 from .ai_chat_components.message_bubbles import MessageBubble, LoadingBubble
 from .ai_chat_components.chat_input_area import ChatInputArea
 from .ai_chat_components.context_display_widget import ContextDisplayWidget
 from .ai_chat_components.add_context_dialog import AddContextDialog
+from .toast_notification import ToastNotification
 from desktop.services.main_api_service import APIService
 from desktop.GLOBAL import GLOBAL
 
@@ -54,11 +55,26 @@ class AIChatWindow(QWidget):
         self._load_chat_history()
         
     def _load_chat_history(self):
-        """Load chat history from storage and restore messages."""
-        self.chat_history = GLOBAL.CHAT_HISTORY.load_chat_history()
+        """Load chat history from server and restore messages."""
+        try:
+            # Try to load from server
+            if self.user_id:
+                response = self.api_service.get_chat_history_sync(self.user_id, limit=50)
+                if response and response.get("history"):
+                    self.chat_history = response["history"]
+                    print(f"Loaded {len(self.chat_history)} messages from server")
+                else:
+                    print("No chat history found on server")
+                    self.chat_history = []
+            else:
+                print("No user ID available, starting with empty history")
+                self.chat_history = []
+        except Exception as e:
+            print(f"Error loading chat history from server: {e}")
+            print("Starting with empty history")
+            self.chat_history = []
         
-        # Clear existing messages (except the welcome message)
-        # and restore from history
+        # Clear existing messages and restore from history
         if self.chat_history:
             # Remove the welcome message temporarily
             self._clear_all_messages()
@@ -70,7 +86,7 @@ class AIChatWindow(QWidget):
                 is_user = (role == "user")
                 self.add_message(content, is_user=is_user, is_initial_message=True, save_to_history=False)
             
-            print(f"Restored {len(self.chat_history)} messages from chat history")
+            print(f"Restored {len(self.chat_history)} messages from server")
         else:
             # No history, show welcome message
             self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
@@ -110,9 +126,17 @@ class AIChatWindow(QWidget):
         chat_header.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
         header_layout.addWidget(chat_header)
         
+        header_layout.addStretch()
+        
+        # New Chat button
+        new_chat_button = QPushButton("🗑️ New Chat")
+        new_chat_button.setObjectName("new_chat_button")
+        new_chat_button.setToolTip("Clear chat history and start fresh")
+        new_chat_button.clicked.connect(self.confirm_clear_chat)
+        header_layout.addWidget(new_chat_button)
+        
         status_label = QLabel("● Online")
         status_label.setObjectName("chat_status")
-        header_layout.addStretch()
         header_layout.addWidget(status_label)
         
         chat_layout.addWidget(header_frame)
@@ -182,12 +206,14 @@ class AIChatWindow(QWidget):
     def add_message(self, text, is_user=False, is_initial_message=False, save_to_history=True):
         bubble = MessageBubble(text, is_user)
 
-        # Add to chat history, unless it's the initial welcome message or we're restoring from history
+        # Note: Messages are now automatically saved to server when making GPT API calls
+        # We only maintain local history for UI purposes during the session
         if not is_initial_message and save_to_history:
             role = "user" if is_user else "assistant"
-            self.chat_history.append({"role": role, "content": text})
-            # Save to storage immediately
-            GLOBAL.CHAT_HISTORY.save_chat_history(self.chat_history)
+            message_data = {"role": role, "content": text}
+            self.chat_history.append(message_data)
+            # Server storage happens automatically through GPT API calls
+            # No need for manual local file saving
 
         # Create a container widget and layout to hold the bubble and spacer
         container_widget = QWidget()
@@ -257,24 +283,82 @@ class AIChatWindow(QWidget):
                 scrollbar.setValue(scrollbar.maximum())
         
     def clear_context(self):
-        """Clears the chat context and updates the UI."""
+        """Clears the chat context and updates the UI. This method is called from context display widget."""
+        # Just clear context but not chat history - use clear_chat_with_server for full clearing
         self.chat_context = {}
-        self.chat_history.clear()
-        GLOBAL.CHAT_HISTORY.clear_chat_history()
         self.context_display.update_context(self.chat_context)
-        
-        # Clear all messages and add welcome message
-        self._clear_all_messages()
-        self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
-        
-        print("Context and history cleared")
+        print("Context cleared")
         
     def closeEvent(self, event):
-        """Handle window close event to save chat history."""
-        # Save chat history before closing
-        GLOBAL.CHAT_HISTORY.save_chat_history(self.chat_history)
-        print("Chat history saved on window close")
+        """Handle window close event."""
+        # No need to save chat history locally since it's stored on server
+        print("Chat window closing - history is stored on server")
         event.accept()
+        
+    def confirm_clear_chat(self):
+        """Show confirmation dialog before clearing chat history."""
+        reply = QMessageBox.question(
+            self,
+            "Clear Chat History",
+            "Are you sure you want to clear all chat history?\n\nThis action cannot be undone and will remove all messages from both your device and the server.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.clear_chat_with_server()
+    
+    def clear_chat_with_server(self):
+        """Clear chat history both locally and on the server."""
+        try:
+            if not self.user_id:
+                self.show_toast("Error", "No user ID available. Cannot clear server history.", "error")
+                return
+            
+            # Show loading state
+            self.show_toast("Info", "Clearing chat history...", "info")
+            
+            # Clear server-side history
+            response = self.api_service.clear_chat_history_sync(self.user_id)
+            
+            if response and response.get("message"):
+                # Server clearing successful
+                deleted_count = response.get("deleted_count", 0)
+                
+                # Clear local data
+                self.chat_context = {}
+                self.chat_history.clear()
+                self.context_display.update_context(self.chat_context)
+                
+                # Clear UI messages and show welcome
+                self._clear_all_messages()
+                self.add_message("🚗 Welcome to CarGenius AI Assistant! I'm here to help you find the perfect car. What can I assist you with today?", is_user=False, is_initial_message=True)
+                
+                # Show success notification
+                self.show_toast("Success", f"Chat history cleared successfully! {deleted_count} messages removed.", "success")
+                print(f"Chat history cleared: {deleted_count} messages deleted")
+                
+            else:
+                # Server error or no response
+                self.show_toast("Error", "Failed to clear chat history on server. Please try again.", "error")
+                
+        except Exception as e:
+            error_msg = f"Error clearing chat history: {str(e)}"
+            print(f"[AIChatWindow] {error_msg}")
+            self.show_toast("Error", "Failed to clear chat history. Please check your connection and try again.", "error")
+    
+    def show_toast(self, title: str, message: str, toast_type: str = "info"):
+        """Show a toast notification."""
+        try:
+            # Create avatar based on type
+            avatar = None  # Will use default colored avatar
+            
+            # Create and show toast
+            toast = ToastNotification(parent=self, title=title, message=message, avatar=avatar)
+            toast.show_notification()
+            
+        except Exception as e:
+            print(f"[AIChatWindow] Error showing toast: {e}")
         
     def _update_send_button_state(self):
         """Update send button state based on input text"""

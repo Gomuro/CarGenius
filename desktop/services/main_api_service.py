@@ -147,6 +147,17 @@ class APIService:
         }
         return await self._request("POST", endpoint, data)
 
+    async def get_chat_history(self, user_id: str, limit: int = 50) -> Optional[Dict]:
+        """Get chat history from the server for a specific user."""
+        endpoint = f"/gpt/history/{user_id}"
+        params = {"limit": limit}
+        return await self._request("GET", endpoint, params)
+
+    async def clear_chat_history(self, user_id: str) -> Optional[Dict]:
+        """Clear chat history on server for a specific user."""
+        endpoint = f"/gpt/history/{user_id}"
+        return await self._request("DELETE", endpoint)
+
     # Sync wrapper methods
     def validate_license_sync(self, key: str, client_info: str, device_id: Optional[str] = None) -> Optional[Dict]:
         return asyncio.run(self.validate_license(key, client_info, device_id))
@@ -191,6 +202,14 @@ class APIService:
     def ask_gpt_sync(self, user_id: str, prompt: str, context: Optional[Dict] = None, chat_history: Optional[list] = None) -> Optional[Dict]:
         """Synchronous wrapper for ask_gpt"""
         return asyncio.run(self.ask_gpt(user_id, prompt, context, chat_history))
+
+    def get_chat_history_sync(self, user_id: str, limit: int = 50) -> Optional[Dict]:
+        """Synchronous wrapper for get_chat_history"""
+        return asyncio.run(self.get_chat_history(user_id, limit))
+
+    def clear_chat_history_sync(self, user_id: str) -> Optional[Dict]:
+        """Synchronous wrapper for clear_chat_history"""
+        return asyncio.run(self.clear_chat_history(user_id))
 
     def get_is_loading(self) -> bool:
         return self.is_loading
