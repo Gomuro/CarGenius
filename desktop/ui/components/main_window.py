@@ -84,12 +84,6 @@ class MainWindow(QMainWindow):
         app_title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         title_layout.addWidget(app_title)
         
-        # Add Analytics Dialog button
-        self.analytics_btn = QPushButton("Open Analytics")
-        self.analytics_btn.setObjectName("small_button")
-        self.analytics_btn.clicked.connect(self._open_analytics_dialog)
-        title_layout.addWidget(self.analytics_btn)
-        
         # Add spacer to push title to the left
         title_layout.addStretch()
         
@@ -98,6 +92,10 @@ class MainWindow(QMainWindow):
         # Add header to main layout
         main_layout.addWidget(header_frame)
         
+        # Dashboard Section
+        dashboard_section = self._create_dashboard_section()
+        main_layout.addWidget(dashboard_section)
+
         # Separator
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
@@ -302,4 +300,89 @@ class MainWindow(QMainWindow):
             self.ai_chat_window.close()
         
         print("Application closing, settings saved")
-        event.accept() 
+        event.accept()
+
+    def _create_dashboard_section(self):
+        """Creates the main dashboard section with feature cards."""
+        dashboard_frame = QFrame()
+        dashboard_frame.setObjectName("dashboard_frame")
+        dashboard_layout = QHBoxLayout(dashboard_frame)
+        dashboard_layout.setSpacing(20)
+        dashboard_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Create dashboard cards
+        search_card = self._create_dashboard_card(
+            icon="🔍",
+            title="Search Cars",
+            subtitle="Find your perfect vehicle",
+            action=self.scroll_to_filters
+        )
+        analytics_card = self._create_dashboard_card(
+            icon="📊",
+            title="Analytics",
+            subtitle="View market trends",
+            action=self._open_analytics_dialog
+        )
+        deals_card = self._create_dashboard_card(
+            icon="🎯",
+            title="Hot Deals",
+            subtitle="ML recommendations",
+            action=self._open_hot_deals
+        )
+
+        # Add cards to layout
+        dashboard_layout.addWidget(search_card)
+        dashboard_layout.addWidget(analytics_card)
+        dashboard_layout.addWidget(deals_card)
+
+        return dashboard_frame
+
+    def _create_dashboard_card(self, icon, title, subtitle, action):
+        """Helper function to create a single dashboard card."""
+        card = QFrame()
+        card.setObjectName("dashboard_card")
+        card.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        layout = QVBoxLayout(card)
+        layout.setSpacing(10)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Icon
+        icon_label = QLabel(icon)
+        icon_label.setObjectName("dashboard_card_icon")
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Title
+        title_label = QLabel(title)
+        title_label.setObjectName("dashboard_card_title")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Subtitle
+        subtitle_label = QLabel(subtitle)
+        subtitle_label.setObjectName("dashboard_card_subtitle")
+        subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(icon_label)
+        layout.addWidget(title_label)
+        layout.addWidget(subtitle_label)
+
+        # Click handler
+        card.mousePressEvent = lambda e: action() if action else None
+
+        return card
+
+    def scroll_to_filters(self):
+        """Scrolls the view to the filter panel."""
+        if hasattr(self, 'filter_panel'):
+            scroll_area = self.centralWidget()
+            target_widget = self.filter_panel
+            # Ensure the target widget is visible
+            scroll_area.ensureWidgetVisible(target_widget)
+    
+    def _open_hot_deals(self):
+        """Opens the analytics dialog and switches to the 'Hot Deals' tab."""
+        dialog = AnalyticsDialog(self.tracked_models_criteria, self.api_service, parent=self)
+        # Switch to the Hot Deals tab (assuming it's the last tab, index 2)
+        if hasattr(dialog, 'tab_widget'):
+            dialog.tab_widget.setCurrentIndex(2)
+        dialog.exec() 
