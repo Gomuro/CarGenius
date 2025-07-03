@@ -66,6 +66,25 @@ async def get_chat_history(db: AsyncSession, user_id: str, limit: int = 5):
     return logs  # returning the list of logs
 
 
+async def clear_chat_history(db: AsyncSession, user_id: str):
+    """ Clear all chat history for a user. """
+    if not user_id:
+        return 0
+    
+    # Get count of records to be deleted
+    count_stmt = select(GPTPromptLog).where(GPTPromptLog.user_id == user_id)
+    count_result = await db.execute(count_stmt)
+    records_to_delete = count_result.scalars().all()
+    deleted_count = len(records_to_delete)
+    
+    # Delete all records for the user
+    for record in records_to_delete:
+        await db.delete(record)
+    
+    await db.commit()
+    return deleted_count
+
+
 async def get_user_filters(db: AsyncSession, user_id: str):
     """ Retrieve the filters for a user. """
     if not user_id:
