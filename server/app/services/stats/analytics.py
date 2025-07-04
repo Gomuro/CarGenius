@@ -12,10 +12,7 @@ from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, Technica
 from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment
 
 
-async def get_filtered_for_ml(
-        db: AsyncSession,
-        license_key: LicenseKey
-) -> list[ListingSchemaML]:
+async def build_filter_groups_from_license_key(license_key: LicenseKey) -> list:
     """
     Filtering listings with JOIN on TechnicalDetails and Equipment.
     This logic assumes filters for different car models are ORed,
@@ -80,7 +77,11 @@ async def get_filtered_for_ml(
         all_conditions = listing_conditions + tech_conditions + equip_conditions
         if all_conditions:
             filter_groups.append(and_(*all_conditions))
+    return filter_groups
 
+
+async def get_filtered_for_ml(db: AsyncSession, license_key: LicenseKey) -> List[ListingSchemaML]:
+    filter_groups = await build_filter_groups_from_license_key(license_key)
     # Base query to get all listings
     stmt = (
         select(ListingMobileDe)
@@ -91,13 +92,11 @@ async def get_filtered_for_ml(
             joinedload(ListingMobileDe.equipment)
         )
     )
-    
     # Apply filters if any
     if filter_groups:
         stmt = stmt.where(or_(*filter_groups))
 
     result = await db.execute(stmt)
-
     listings = list(result.scalars().all())
     return [ListingSchemaML.from_orm(item) for item in listings]
 
@@ -113,7 +112,7 @@ async def get_filtered(
     listing_conditions = filtered_listings(listing_filters)
     techdetails_conditions = filtered_tech_details(tech_filters)
     equipment_conditions = filtered_equipment(equipment_filters)
-    
+
     all_conditions = and_(*listing_conditions, *techdetails_conditions, *equipment_conditions)
 
     # First, get the total count for pagination
@@ -125,7 +124,7 @@ async def get_filtered(
     )
     count_result = await db.execute(count_stmt)
     total_count = count_result.scalar_one_or_none() or 0
-    
+
     # Then, fetch the paginated data
     offset = (page - 1) * size if page > 0 else 0
     stmt = (
@@ -160,7 +159,7 @@ async def get_filtered(
         avg_price, min_price, max_price = stats_result.one_or_none()
     else:
         avg_price = min_price = max_price = 0
-        
+
     total_pages = int(math.ceil(total_count / size)) if size > 0 else 0
 
     return ListingFilteredResponse(

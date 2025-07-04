@@ -11,6 +11,7 @@ from app.models.license import LicenseKey
 from app.schemas.stats.analytics import ListingSchemaML, ListingSchema, TechnicalDetailsSchema, EquipmentSchema, \
     ListingFilteredResponse
 from app.services.stats.analytics import get_filtered_for_ml, get_filtered
+from app.routers.stats.analytics import get_models_for_brand, get_colors_for_filters
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # /home/.../CarGenius/server/app/tests
 PROJECT_ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))  # /home/.../CarGenius/server
@@ -157,7 +158,8 @@ async def test_get_filtered(session):
         db=session,
         listing_filters=listing_filters,
         tech_filters=tech_filters,
-        equipment_filters=equipment_filters
+        equipment_filters=equipment_filters,
+        page=1, size=10, total=10
     )
 
     # Check results
@@ -171,3 +173,66 @@ async def test_get_filtered(session):
     assert listing_out.brand == "Audi"
     assert listing_out.technical_details.engine_type == "Elektro"
     assert listing_out.equipment.abs is True
+
+
+@pytest.mark.asyncio
+async def test_get_models_for_brand(client, session):
+    response = await client.get("/api/v1/analytics/filter-options/models?brand=Audi")
+    assert response.status_code == 200, f"Expected status code 200, got: {response.status_code}"
+    data = response.json()
+    assert isinstance(data, list), "Response should be a list"
+    assert len(data) > 0, "Expected non-empty list of models"
+    assert "A6" in data, "Expected model 'A6' to be in the list of models for brand 'Audi'"
+
+
+@pytest.mark.asyncio
+async def test_get_colors_for_filters(client, session):
+    response = await client.get("/api/v1/analytics/filter-options/colors?brand=Audi&model=A6")
+    assert response.status_code == 200, f"Expected status code 200, got: {response.status_code}"
+    data = response.json()
+    assert isinstance(data, list), "Response should be a list"
+    assert len(data) > 0, "Expected non-empty list of colors"
+    assert "Schwarz" in data, "Expected color 'Schwarz' to be in the list of colors for Audi A6"
+
+
+@pytest.mark.asyncio
+async def test_get_filter_options(client, session):
+    await session.execute(delete(ListingMobileDe))
+    await session.execute(delete(TechnicalDetails))
+    await session.execute(delete(Equipment))
+    await session.commit()
+    # Creating test records in the database
+    session.add_all([
+        ListingMobileDe(brand="Audi", model="Q8", registration_year=2024, color="Gray", price=60000,
+                        url=f"https://example.com/audi-a6-{uuid.uuid4()}", is_active=True),
+        ListingMobileDe(brand="Audi", model="A4", registration_year=2022, color="Schwarz", price=25000,
+                        url=f"https://example.com/audi-a6-{uuid.uuid4()}", is_active=True),
+        ListingMobileDe(brand="BMW", model="X5", registration_year=2023, color="White", price=45000,
+                        url=f"https://example.com/audi-a6-{uuid.uuid4()}", is_active=True),
+        ListingMobileDe(brand="Inactive", model="Z", registration_year=2021, color="Blue", price=10000,
+                        url=f"https://example.com/audi-a6-{uuid.uuid4()}", is_active=False),
+    ])
+    await session.commit()
+
+    # Request to endpoint
+    response = await client.get("/api/v1/analytics/filter-options")
+    assert response.status_code == 200
+
+    data = response.json()
+
+    # Checking only active records with non -expensive fields
+    assert "brands" in data
+    assert sorted(data["brands"]) == ["Audi", "BMW"]
+
+    assert "models" in data
+    assert sorted(data["models"]) == ["A4", "Q8", "X5"]
+
+    assert "colors" in data
+    assert sorted(data["colors"]) == ["Gray", "Schwarz", "White"]
+
+    assert "years" in data
+    assert sorted(data["years"], reverse=True) == [2024, 2023, 2022]
+
+    assert "price_range" in data
+    assert data["price_range"]["min"] == 25000
+    assert data["price_range"]["max"] == 60000
