@@ -89,13 +89,13 @@ async def get_models_for_brand(brand: str = None, db: AsyncSession = Depends(get
     try:
         query = select(distinct(ListingMobileDe.model)).where(ListingMobileDe.is_active == True)
 
-        if brand and brand != "Any Brand":
-            query = query.where(ListingMobileDe.brand == brand)
+        if brand is not None and brand != "Any Brand":
+            query = query.where(ListingMobileDe.brand.ilike(f"%{brand}%"))
 
         query = query.order_by(ListingMobileDe.model)
 
         result = await db.execute(query)
-        models = [model for model in result.scalars().all() if model is not None]
+        models = [str(model) for model in result.scalars().all() if model is not None]
         return models
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving models: {str(e)}")
@@ -115,11 +115,11 @@ async def get_colors_for_filters(
     try:
         query = select(distinct(ListingMobileDe.color)).where(ListingMobileDe.is_active == True)
 
-        if brand and brand != "Any Brand":
-            query = query.where(ListingMobileDe.brand == brand)
-        if model and model != "Any Model":
-            query = query.where(ListingMobileDe.model == model)
-        if registration_year:
+        if brand is not None and brand != "Any Brand":
+            query = query.where(ListingMobileDe.brand.ilike(f"{brand}"))
+        if model is not None and model != "Any Model":
+            query = query.where(ListingMobileDe.model.ilike(f"{model}"))
+        if registration_year is not None:
             query = query.where(ListingMobileDe.registration_year == registration_year)
 
         query = query.order_by(ListingMobileDe.color)

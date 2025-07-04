@@ -3,7 +3,6 @@ import asyncio
 from openai import OpenAI
 from sqlalchemy import desc
 from sqlalchemy.future import select
-
 from app.core.config import OPENAI_KEY
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.constants import BASE_SYSTEM_PROMPT
@@ -70,33 +69,19 @@ async def clear_chat_history(db: AsyncSession, user_id: str):
     """ Clear all chat history for a user. """
     if not user_id:
         return 0
-    
+
     # Get count of records to be deleted
     count_stmt = select(GPTPromptLog).where(GPTPromptLog.user_id == user_id)
     count_result = await db.execute(count_stmt)
     records_to_delete = count_result.scalars().all()
     deleted_count = len(records_to_delete)
-    
+
     # Delete all records for the user
     for record in records_to_delete:
         await db.delete(record)
-    
+
     await db.commit()
     return deleted_count
-
-
-async def get_user_filters(db: AsyncSession, user_id: str):
-    """ Retrieve the filters for a user. """
-    if not user_id:
-        return {
-            "filters": [],
-            "message": "user_id is required to retrieve filters."
-        }
-    stmt = select(LicenseKey).where(LicenseKey.key == user_id)
-    result = await db.execute(stmt)
-    license_data = result.scalar_one_or_none()
-    return {
-        "filters": license_data.filters if license_data and license_data.filters else []}  # returning the filters list
 
 
 if __name__ == "__main__":
