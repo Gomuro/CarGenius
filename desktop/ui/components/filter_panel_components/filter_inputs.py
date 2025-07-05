@@ -95,7 +95,7 @@ class FilterInputs(QWidget):
         self._load_filter_options()
 
     # =============================================================================
-    # БЛОК 1: ІНІЦІАЛІЗАЦІЯ ТА ЗАВАНТАЖЕННЯ ДАНИХ
+    # BLOCK 1: INITIALIZATION AND DATA LOADING
     # =============================================================================
     
     def _load_filter_options(self):
@@ -149,7 +149,7 @@ class FilterInputs(QWidget):
         self.price_input.setEnabled(enabled)
 
     # =============================================================================
-    # БЛОК 2: СТВОРЕННЯ ІНТЕРФЕЙСУ
+    # BLOCK 2: UI CREATION
     # =============================================================================
     
     def _create_ui(self):
@@ -297,7 +297,7 @@ class FilterInputs(QWidget):
         return combo
 
     # =============================================================================
-    # БЛОК 3: КАСКАДНА ЛОГІКА ФІЛЬТРАЦІЇ
+    # BLOCK 3: CASCADING LOGIC FOR FILTERS
     # =============================================================================
     
     def _setup_cascading_behavior(self):
@@ -382,7 +382,7 @@ class FilterInputs(QWidget):
         fade_out_group.start()
 
     # =============================================================================
-    # БЛОК 4: МЕТОДИ ЗАПОВНЕННЯ ФІЛЬТРІВ
+    # BLOCK 4: METHODS FOR POPULATING FILTERS
     # =============================================================================
     
     def _populate_brands(self):
@@ -523,7 +523,7 @@ class FilterInputs(QWidget):
             self.search_button.setText("Error updating count")
 
     # =============================================================================
-    # БЛОК 5: МЕТОДИ СКИДАННЯ ФІЛЬТРІВ
+    # BLOCK 5: METHODS FOR RESETING FILTERS
     # =============================================================================
     
     def _reset_dropdown(self, dropdown, default_text, is_loading: bool):
@@ -537,7 +537,7 @@ class FilterInputs(QWidget):
             dropdown.setStyleSheet("QComboBox { color: #9E9E9E; }")
 
     # =============================================================================
-    # БЛОК 7: ПУБЛІЧНЕ API
+    # BLOCK 7: PUBLIC API
     # =============================================================================
     
     def get_criteria(self) -> dict:

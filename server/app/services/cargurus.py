@@ -17,8 +17,8 @@ class CarGurusService:
         label: Optional[str] = None
     ) -> CarGurus:
         """
-        Вставляє новий запис або оновлює існуючий.
-        Забезпечує, що один entity_id має тільки одну мітку.
+        Inserts a new record or updates an existing one.
+        Ensures that one entity_id has only one label.
         """
         result = await db.execute(
             select(CarGurus).filter(CarGurus.entity_id == entity_id)
@@ -51,7 +51,7 @@ class CarGurusService:
     
     @staticmethod
     async def get_by_entity_id(db: AsyncSession, entity_id: str) -> Optional[CarGurus]:
-        """Отримати запис за entity_id"""
+        """Get a record by entity_id"""
         result = await db.execute(
             select(CarGurus).filter(CarGurus.entity_id == entity_id)
         )
@@ -59,7 +59,7 @@ class CarGurusService:
     
     @staticmethod
     async def get_by_label(db: AsyncSession, name: str) -> List[CarGurus]:
-        """Отримати записи за назвою мітки"""
+        """Get records by label name"""
         result = await db.execute(
             select(CarGurus).filter(CarGurus.label.ilike(f"%{name}%"))
         )
@@ -67,7 +67,7 @@ class CarGurusService:
 
     @staticmethod
     async def update_label(db: AsyncSession, entity_id: str, new_label: str) -> Optional[CarGurus]:
-        """Оновити мітку для існуючого entity_id"""
+        """Update the label for an existing entity_id"""
         result = await db.execute(
             select(CarGurus).filter(CarGurus.entity_id == entity_id)
         )
@@ -82,7 +82,7 @@ class CarGurusService:
 
     @staticmethod
     async def load_cargurus_labels(db: AsyncSession) -> list[CarGurus]:
-        """Завантажити всі мітки з CarGurus API та зберегти в БД"""
+        """Load all labels from the CarGurus API and save them to the DB"""
         url = "https://www.cargurus.com/research/price-trends?entityIds=Index&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends._index"
         
         try:
