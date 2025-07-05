@@ -1,0 +1,389 @@
+/* Analytics Dialog Styles */
+
+/* Date Edit Widgets */
+QDateEdit {
+    background-color: #3E3E3E;
+    border: 1px solid #5D5D5D;
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #E0E0E0;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+QDateEdit:hover {
+    border-color: #5D94FB;
+    background-color: #4A4A4A;
+}
+
+QDateEdit:focus {
+    border-color: #5D94FB;
+    background-color: #4A4A4A;
+}
+
+QDateEdit::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 24px;
+    border: none;
+    border-left: 1px solid #5D5D5D;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: #4A4A4A;
+}
+
+QDateEdit::drop-down:hover {
+    background-color: #5D94FB;
+}
+
+QDateEdit::down-arrow {
+    image: none;
+    border: 2px solid #E0E0E0;
+    border-color: #E0E0E0 transparent transparent transparent;
+    width: 0px;
+    height: 0px;
+    margin: 0px 2px;
+}
+
+QDateEdit::down-arrow:hover {
+    border-color: white transparent transparent transparent;
+}
+
+/* Calendar Widget */
+QCalendarWidget {
+    background-color: #2D2D2D;
+    color: #E0E0E0;
+    font-size: 12px;
+    border: 1px solid #5D5D5D;
+    border-radius: 8px;
+}
+
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: #3E3E3E;
+    border-bottom: 1px solid #5D5D5D;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px;
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth,
+QCalendarWidget QToolButton#qt_calendar_nextmonth {
+    background-color: #5D94FB;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    margin: 2px;
+    font-weight: bold;
+    font-size: 14px;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth:hover,
+QCalendarWidget QToolButton#qt_calendar_nextmonth:hover {
+    background-color: #7DA6FD;
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth:pressed,
+QCalendarWidget QToolButton#qt_calendar_nextmonth:pressed {
+    background-color: #4A7CE8;
+}
+
+QCalendarWidget QToolButton#qt_calendar_monthbutton,
+QCalendarWidget QToolButton#qt_calendar_yearbutton {
+    background-color: #4A4A4A;
+    color: #E0E0E0;
+    border: 1px solid #6B6B6B;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin: 2px 4px;
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 80px;
+    min-height: 32px;
+}
+
+QCalendarWidget QToolButton#qt_calendar_monthbutton:hover,
+QCalendarWidget QToolButton#qt_calendar_yearbutton:hover {
+    background-color: #5D94FB;
+    border-color: #5D94FB;
+    color: white;
+}
+
+QCalendarWidget QToolButton {
+    background-color: #4A4A4A;
+    color: #E0E0E0;
+    border: 1px solid #6B6B6B;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 3px;
+    font-weight: 600;
+    font-size: 12px;
+    min-width: 60px;
+    min-height: 28px;
+}
+
+QCalendarWidget QToolButton:hover {
+    background-color: #5D94FB;
+    border-color: #5D94FB;
+    color: white;
+}
+
+QCalendarWidget QToolButton:pressed {
+    background-color: #4A7CE8;
+    border-color: #4A7CE8;
+}
+
+QCalendarWidget QToolButton::menu-indicator {
+    image: none;
+    width: 0px;
+    height: 0px;
+}
+
+QCalendarWidget QToolButton::menu-arrow {
+    image: none;
+    width: 0px;
+    height: 0px;
+}
+
+QCalendarWidget QMenu {
+    background-color: #3E3E3E;
+    color: #E0E0E0;
+    border: 2px solid #5D94FB;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QCalendarWidget QMenu::item {
+    background-color: transparent;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin: 1px;
+}
+
+QCalendarWidget QMenu::item:selected {
+    background-color: #5D94FB;
+    color: white;
+}
+
+QCalendarWidget QMenu::item:hover {
+    background-color: #4A4A4A;
+}
+
+QCalendarWidget QSpinBox {
+    background-color: #4A4A4A;
+    color: #E0E0E0;
+    border: 1px solid #6B6B6B;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 50px;
+    min-height: 28px;
+}
+
+QCalendarWidget QSpinBox:hover {
+    border-color: #5D94FB;
+    background-color: #525252;
+}
+
+QCalendarWidget QSpinBox:focus {
+    border-color: #5D94FB;
+    background-color: #525252;
+}
+
+QCalendarWidget QSpinBox::up-button,
+QCalendarWidget QSpinBox::down-button {
+    background-color: #6B6B6B;
+    border: none;
+    border-radius: 3px;
+    width: 16px;
+    height: 14px;
+    margin: 1px;
+}
+
+QCalendarWidget QSpinBox::up-button:hover,
+QCalendarWidget QSpinBox::down-button:hover {
+    background-color: #5D94FB;
+}
+
+QCalendarWidget QSpinBox::up-button:pressed,
+QCalendarWidget QSpinBox::down-button:pressed {
+    background-color: #4A7CE8;
+}
+
+QCalendarWidget QSpinBox::up-arrow,
+QCalendarWidget QSpinBox::down-arrow {
+    width: 6px;
+    height: 6px;
+}
+
+QCalendarWidget QTableView {
+    background-color: #2D2D2D;
+    color: #E0E0E0;
+    gridline-color: #5D5D5D;
+    selection-background-color: #5D94FB;
+    selection-color: white;
+}
+
+QCalendarWidget QTableView::item {
+    padding: 10px 8px;
+    border: 1px solid transparent;
+    margin: 1px;
+    text-align: center;
+    font-weight: 500;
+}
+
+QCalendarWidget QTableView::item:hover {
+    background-color: #4A4A4A;
+    border-radius: 6px;
+    border: 1px solid #6B6B6B;
+}
+
+QCalendarWidget QTableView::item:selected {
+    background-color: #5D94FB;
+    color: white;
+    border-radius: 6px;
+    border: 1px solid #5D94FB;
+    font-weight: bold;
+}
+
+QCalendarWidget QTableView::item:disabled {
+    color: #666666;
+    background-color: transparent;
+}
+
+QCalendarWidget QTableView::item:enabled:selected:today {
+    background-color: #7DA6FD;
+    border: 2px solid white;
+    font-weight: bold;
+}
+
+QCalendarWidget QTableView::item:enabled:today {
+    background-color: #5D5D5D;
+    border: 1px solid #5D94FB;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+QCalendarWidget QHeaderView::section {
+    background-color: #4A4A4A;
+    color: #5D94FB;
+    padding: 10px 8px;
+    border: none;
+    border-bottom: 2px solid #5D94FB;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+QCalendarWidget QHeaderView::section:first {
+    border-top-left-radius: 0px;
+}
+
+QCalendarWidget QHeaderView::section:last {
+    border-top-right-radius: 0px;
+}
+
+QCalendarWidget QAbstractItemView:enabled {
+    color: #E0E0E0;
+    background-color: #2D2D2D;
+    selection-background-color: #5D94FB;
+    selection-color: white;
+}
+
+/* Preset Buttons */
+QPushButton[objectName="preset_button"] {
+    background-color: #3E3E3E;
+    border: 1px solid #5D5D5D;
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: #E0E0E0;
+    font-size: 10px;
+    font-weight: 500;
+    min-width: 25px;
+}
+
+QPushButton[objectName="preset_button"]:hover {
+    background-color: #5D94FB;
+    border-color: #5D94FB;
+    color: white;
+}
+
+QPushButton[objectName="preset_button"]:pressed {
+    background-color: #4A7CE8;
+}
+
+/* Date Labels */
+QLabel[objectName="date_label"] {
+    color: #E0E0E0;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 0px 5px;
+}
+
+/* Time Series Graph Widget */
+QFrame[objectName="graph_widget"] {
+    background-color: #2D2D2D;
+    border: 1px solid #5D5D5D;
+    border-radius: 8px;
+    margin: 5px 0px;
+}
+
+QFrame[objectName="graph_widget"]:hover {
+    border-color: #5D94FB;
+    background-color: #343434;
+}
+
+/* Loading and Error States */
+QLabel[objectName="loading_label"] {
+    color: #5D94FB;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel[objectName="error_label"] {
+    color: #E74C3C;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Progress Bar */
+QProgressBar {
+    background-color: #3E3E3E;
+    border: 1px solid #5D5D5D;
+    border-radius: 8px;
+    text-align: center;
+    color: #E0E0E0;
+    font-weight: 600;
+}
+
+QProgressBar::chunk {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #5D94FB,
+        stop: 1 #7DA6FD
+    );
+    border-radius: 7px;
+}
+
+/* Section Titles */
+QLabel[objectName="section_title"] {
+    color: #E0E0E0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Analytics Title */
+QLabel[objectName="analytics_title"] {
+    color: #5D94FB;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+QLabel[objectName="analytics_subtitle"] {
+    color: #B0B0B0;
+    font-size: 12px;
+} 

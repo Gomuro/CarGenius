@@ -1,15 +1,17 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, 
-                             QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QFrame, QHBoxLayout, QGridLayout, QSpacerItem, QSizePolicy, QProgressBar)
-from PyQt6.QtCore import Qt, QRectF, QPointF, QThread, pyqtSignal, QTimer
+                             QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QFrame, QHBoxLayout, QGridLayout, QSpacerItem, QSizePolicy, QProgressBar, QDateEdit)
+from PyQt6.QtCore import Qt, QRectF, QPointF, QThread, pyqtSignal, QTimer, QDate
 from PyQt6.QtGui import QFont, QPalette
 import random
 import math
+from datetime import datetime, timedelta
 
 # Import the new graph widget
 from .analytics_dialog_components.time_series_graph_widget import TimeSeriesLineGraphWidget
 from desktop.services.main_api_service import APIService
 from .result_table_components.car_listing_widget import CarListingWidget
 from desktop.GLOBAL import GLOBAL
+from desktop.services.cargurus_api_service import CargurusAPIService
 
 class FilterSummaryCard(QFrame):
     """Custom widget for displaying filter information in a card format"""
@@ -177,6 +179,14 @@ class AnalyticsDialog(QDialog):
         self.api_service = api_service
         self.license_key = GLOBAL.LICENSE.get_license_key()
         
+        # Date range for trends tab
+        self.trends_start_date = QDate.currentDate().addYears(-1)
+        self.trends_end_date = QDate.currentDate()
+        
+        # Error notification state
+        self.last_error_message = None
+        self.error_shown = False
+        
         # Hot deals state management
         self.ml_worker = None
         self.hot_deals_widget = None
@@ -185,7 +195,13 @@ class AnalyticsDialog(QDialog):
         self.cache_timer = QTimer()
         self.cache_timer.timeout.connect(self._clear_hot_deals_cache)
         
+        # Price trends state management
+        self.trends_worker = None
+        self.trends_widget = None
+        self.trends_loaded = False
+        
         self._load_tracked_filters_from_api()
+        self._load_analytics_styles()
         self._create_ui()
         
     def closeEvent(self, event):
@@ -194,6 +210,11 @@ class AnalyticsDialog(QDialog):
         if self.ml_worker and self.ml_worker.isRunning():
             self.ml_worker.terminate()
             self.ml_worker.wait()
+            
+        # Stop and cleanup trends worker
+        if self.trends_worker and self.trends_worker.isRunning():
+            self.trends_worker.terminate()
+            self.trends_worker.wait()
             
         # Stop cache timer
         if hasattr(self, 'cache_timer'):
@@ -289,6 +310,12 @@ class AnalyticsDialog(QDialog):
         
         # Clear hot deals cache when filters change
         self._clear_hot_deals_cache()
+        
+        # Reset trends loading state
+        self.trends_loaded = False
+        if self.trends_worker and self.trends_worker.isRunning():
+            self.trends_worker.terminate()
+            self.trends_worker.wait()
         
         # Remove all tabs
         while self.tab_widget.count() > 0:
@@ -431,8 +458,15 @@ class AnalyticsDialog(QDialog):
     def _generate_mock_time_series(self, num_points=10, base_price=30000, volatility=5000):
         data = []
         current_price = base_price + random.uniform(-volatility/2, volatility/2)
+        current_time = datetime.now()
+        
         for i in range(num_points):
-            data.append((i, current_price))
+            # Calculate timestamp for each point (going backwards in time)
+            days_ago = (num_points - 1 - i) * 7  # Weekly intervals going backwards
+            timestamp_date = current_time - timedelta(days=days_ago)
+            timestamp = int(timestamp_date.timestamp() * 1000)  # Convert to milliseconds
+            
+            data.append((i, current_price, timestamp))
             current_price += random.uniform(-volatility * 0.3, volatility * 0.3)
             current_price = max(5000, current_price) # Ensure price doesn't go too low
         return data
@@ -482,45 +516,111 @@ class AnalyticsDialog(QDialog):
         return widget
 
     def _create_price_trends_tab(self):
-        # This tab will now hold a scrollable list of individual graphs
-        scroll_widget = QWidget() # Widget to hold the layout of graphs
-        scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setContentsMargins(20, 20, 20, 20)
-        scroll_layout.setSpacing(30)
-
-        if not self.tracked_models_criteria:
-            empty_widget = EmptyStateWidget(
-                "No price trends available",
-                "Add tracked filters to see price trend analysis over time."
-            )
-            scroll_layout.addWidget(empty_widget)
-        else:
-            for criteria in self.tracked_models_criteria:
-                model_name_parts = []
-                if criteria.get("brand") and criteria.get("brand") != "N/A":
-                    model_name_parts.append(criteria.get("brand"))
-                if criteria.get("model") and criteria.get("model") != "N/A":
-                    model_name_parts.append(criteria.get("model"))
-                if criteria.get("registration_year") and criteria.get("registration_year") != "N/A":
-                    model_name_parts.append(str(criteria.get("registration_year")))
-                model_display_name = " ".join(model_name_parts) if model_name_parts else "Unknown Model"
-
-                # Generate mock data for this model
-                # Adjust base_price and volatility based on criteria if desired
-                mock_data = self._generate_mock_time_series(num_points=random.randint(5,12), base_price=random.randint(15000, 60000))
-                
-                graph_widget = TimeSeriesLineGraphWidget(mock_data, model_display_name)
-                scroll_layout.addWidget(graph_widget)
+        # Store reference to the widget for updating
+        self.trends_widget = QWidget()
+        layout = QVBoxLayout(self.trends_widget)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
         
-        scroll_layout.addStretch(1) # Add stretch at the end of the vertical layout
+        # Header with refresh button
+        header_layout = QHBoxLayout()
+        header_label = QLabel("📈 Price Trends Analysis")
+        header_label.setObjectName("section_title")
+        header_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        header_layout.addWidget(header_label)
+        
+        header_layout.addStretch()
+        
+        # Start Date
+        start_label = QLabel("From:")
+        start_label.setObjectName("date_label")
+        header_layout.addWidget(start_label)
+        
+        self.start_date_edit = QDateEdit()
+        self.start_date_edit.setObjectName("date_picker")
+        self.start_date_edit.setCalendarPopup(True)
+        self.start_date_edit.setDate(self.trends_start_date)
+        self.start_date_edit.setDisplayFormat("dd.MM.yyyy")
+        self.start_date_edit.setMinimumWidth(120)
+        self._configure_calendar_widget(self.start_date_edit)
+        header_layout.addWidget(self.start_date_edit)
 
-        # Put the scroll_widget inside a QScrollArea
+        # End Date
+        end_label = QLabel("To:")
+        end_label.setObjectName("date_label")
+        header_layout.addWidget(end_label)
+        
+        self.end_date_edit = QDateEdit()
+        self.end_date_edit.setObjectName("date_picker")
+        self.end_date_edit.setCalendarPopup(True)
+        self.end_date_edit.setDate(self.trends_end_date)
+        self.end_date_edit.setDisplayFormat("dd.MM.yyyy")
+        self.end_date_edit.setMinimumWidth(120)
+        self._configure_calendar_widget(self.end_date_edit)
+        header_layout.addWidget(self.end_date_edit)
+
+        # Preset buttons
+        preset_layout = QHBoxLayout()
+        
+        last_month_btn = QPushButton("1M")
+        last_month_btn.setObjectName("preset_button")
+        last_month_btn.setToolTip("Last 30 days")
+        last_month_btn.clicked.connect(lambda: self._set_preset_range(30))
+        preset_layout.addWidget(last_month_btn)
+        
+        last_3_months_btn = QPushButton("3M")
+        last_3_months_btn.setObjectName("preset_button")
+        last_3_months_btn.setToolTip("Last 3 months")
+        last_3_months_btn.clicked.connect(lambda: self._set_preset_range(90))
+        preset_layout.addWidget(last_3_months_btn)
+        
+        last_6_months_btn = QPushButton("6M")
+        last_6_months_btn.setObjectName("preset_button")
+        last_6_months_btn.setToolTip("Last 6 months")
+        last_6_months_btn.clicked.connect(lambda: self._set_preset_range(180))
+        preset_layout.addWidget(last_6_months_btn)
+        
+        last_year_btn = QPushButton("1Y")
+        last_year_btn.setObjectName("preset_button")
+        last_year_btn.setToolTip("Last year")
+        last_year_btn.clicked.connect(lambda: self._set_preset_range(365))
+        preset_layout.addWidget(last_year_btn)
+        
+
+            
+        header_layout.addLayout(preset_layout)
+        
+        # Apply button
+        apply_button = QPushButton("Apply")
+        apply_button.setObjectName("action_button")
+        apply_button.clicked.connect(self._apply_date_range)
+        header_layout.addWidget(apply_button)
+        
+        # Refresh button
+        refresh_button = QPushButton("🔄 Refresh")
+        refresh_button.setObjectName("small_button")
+        refresh_button.clicked.connect(self._refresh_price_trends)
+        refresh_button.setToolTip("Refresh price trends data")
+        header_layout.addWidget(refresh_button)
+        
+        layout.addLayout(header_layout)
+        
+        # Content container that we'll replace based on state
+        self.trends_content = QWidget()
+        self.trends_content_layout = QVBoxLayout(self.trends_content)
+        self.trends_content_layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.trends_content)
+        
+        # Load initial content
+        self._load_price_trends_content()
+        
+        # Create scroll area
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setWidget(scroll_widget)
+        scroll_area.setWidget(self.trends_widget)
 
-        return scroll_area # The tab now gets the scroll_area
+        return scroll_area
 
     def _create_profitable_offers_tab(self):
         # Store reference to the widget for updating
@@ -734,6 +834,317 @@ class AnalyticsDialog(QDialog):
         print("[AnalyticsDialog] Manual hot deals refresh triggered")
         self._clear_hot_deals_cache()
         self._load_hot_deals_content()
+        
+    def _load_price_trends_content(self):
+        """Load the appropriate content for price trends tab based on state."""
+        # Clear existing content
+        while self.trends_content_layout.count():
+            child = self.trends_content_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        # Check if no tracked filters
+        if not self.tracked_models_criteria:
+            self._show_trends_empty_state()
+            return
+            
+        # Check if already loading
+        if self.trends_worker and self.trends_worker.isRunning():
+            return  # Already loading
+            
+        # Start loading from API
+        self._show_trends_loading_state()
+        self._start_trends_loading()
+        
+    def _show_trends_empty_state(self):
+        """Show empty state when no tracked filters."""
+        empty_widget = EmptyStateWidget(
+            "No price trends available",
+            "Add tracked filters to see price trend analysis over time."
+        )
+        self.trends_content_layout.addWidget(empty_widget)
+        
+    def _show_trends_loading_state(self):
+        """Show loading indicator while fetching trends data."""
+        loading_widget = QWidget()
+        loading_layout = QVBoxLayout(loading_widget)
+        loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        loading_layout.setSpacing(15)
+        
+        # Loading indicator
+        loading_label = QLabel("📈 Loading price trends...")
+        loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        loading_label.setFont(QFont("Segoe UI", 14))
+        loading_layout.addWidget(loading_label)
+        
+        # Progress bar
+        progress_bar = QProgressBar()
+        progress_bar.setRange(0, 0)  # Indeterminate
+        progress_bar.setMaximumWidth(300)
+        loading_layout.addWidget(progress_bar)
+        
+        loading_text = QLabel("Fetching CarGurus data and generating trend graphs for your tracked filters...")
+        loading_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        loading_text.setWordWrap(True)
+        loading_text.setObjectName("empty_state_action")
+        loading_layout.addWidget(loading_text)
+        
+        self.trends_content_layout.addWidget(loading_widget)
+        
+    def _show_trends_error_state(self, error_message):
+        """Show error state with retry option."""
+        error_widget = QWidget()
+        error_layout = QVBoxLayout(error_widget)
+        error_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        error_layout.setSpacing(15)
+        
+        # Error icon and message
+        error_label = QLabel("❌ Failed to load price trends")
+        error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        error_label.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        error_layout.addWidget(error_label)
+        
+        # Error details
+        details_label = QLabel(f"Error: {error_message}")
+        details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        details_label.setWordWrap(True)
+        details_label.setObjectName("empty_state_action")
+        error_layout.addWidget(details_label)
+        
+        # Retry button
+        retry_button = QPushButton("🔄 Retry")
+        retry_button.setObjectName("action_button")
+        retry_button.clicked.connect(self._refresh_price_trends)
+        retry_button.setMaximumWidth(150)
+        error_layout.addWidget(retry_button)
+        
+        self.trends_content_layout.addWidget(error_widget)
+        
+    def _display_trends_graphs(self, graphs_data):
+        """Display the loaded trend graphs."""
+        for i, graph_data in enumerate(graphs_data):
+            graph_widget = TimeSeriesLineGraphWidget(graph_data['data'], graph_data['title'])
+            self.trends_content_layout.addWidget(graph_widget)
+            
+            # Stagger the animation start for a cascading effect
+            def start_delayed_animation(widget, delay_ms, index):
+                def trigger():
+                    print(f"[Analytics] Starting animation for graph {index} with delay {delay_ms}ms")
+                    widget.startDrawingAnimation()
+                # Use QTimer to delay animation start
+                from PyQt6.QtCore import QTimer
+                QTimer.singleShot(delay_ms, trigger)
+            
+            # Start animations with 400ms delays between each graph
+            start_delayed_animation(graph_widget, i * 400, i)
+        
+        # Add stretch
+        self.trends_content_layout.addStretch(1)
+        
+    def _start_trends_loading(self):
+        """Start the trends worker thread to load graph data."""
+        start_date_ts = int(datetime(self.trends_start_date.year(), self.trends_start_date.month(), self.trends_start_date.day()).timestamp() * 1000)
+        end_date_ts = int(datetime(self.trends_end_date.year(), self.trends_end_date.month(), self.trends_end_date.day(), 23, 59, 59).timestamp() * 1000)
+        
+        self.trends_worker = TrendsDataWorker(self.tracked_models_criteria, start_date_ts, end_date_ts)
+        self.trends_worker.finished.connect(self._on_trends_loaded)
+        self.trends_worker.error.connect(self._on_trends_error)
+        self.trends_worker.start()
+        
+    def _on_trends_loaded(self, graphs_data):
+        """Handle successful trends loading."""
+        try:
+            self.trends_loaded = True
+            
+            # Clear existing content
+            while self.trends_content_layout.count():
+                child = self.trends_content_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+            
+            # Display graphs
+            self._display_trends_graphs(graphs_data)
+            
+            print(f"[AnalyticsDialog] Loaded {len(graphs_data)} trend graphs")
+            
+        except Exception as e:
+            print(f"[AnalyticsDialog] Error processing trends data: {e}")
+            self._on_trends_error(f"Error processing data: {str(e)}")
+            
+    def _on_trends_error(self, error_message):
+        """Handle trends loading error."""
+        print(f"[AnalyticsDialog] Trends loading error: {error_message}")
+        
+        # Clear existing content
+        while self.trends_content_layout.count():
+            child = self.trends_content_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+                
+        # Show error state
+        self._show_trends_error_state(error_message)
+        
+    def _refresh_price_trends(self):
+        """Manually refresh price trends data."""
+        print("[AnalyticsDialog] Manual price trends refresh triggered")
+        self.trends_loaded = False
+        if self.trends_worker and self.trends_worker.isRunning():
+            self.trends_worker.terminate()
+            self.trends_worker.wait()
+        self._load_price_trends_content()
+
+    def _load_analytics_styles(self):
+        """Load external analytics stylesheet."""
+        try:
+            import os
+            style_path = os.path.join(os.path.dirname(__file__), "..", "themes", "analytics_styles.qss")
+            
+            with open(style_path, 'r', encoding='utf-8') as f:
+                stylesheet = f.read()
+                self.setStyleSheet(stylesheet)
+                print("[AnalyticsDialog] Loaded analytics styles successfully")
+        except Exception as e:
+            print(f"[AnalyticsDialog] Failed to load analytics styles: {e}")
+    
+    def _configure_calendar_widget(self, date_edit):
+        """Configure calendar widget properties."""
+        calendar = date_edit.calendarWidget()
+        if calendar:
+            calendar.setMinimumSize(380, 320)
+            calendar.setGridVisible(True)
+            calendar.setVerticalHeaderFormat(calendar.VerticalHeaderFormat.NoVerticalHeader)
+            calendar.setHorizontalHeaderFormat(calendar.HorizontalHeaderFormat.ShortDayNames)
+            calendar.setNavigationBarVisible(True)
+            calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
+            
+    def _apply_date_range(self):
+        """Apply the selected date range and refresh the trends tab."""
+        start_date = self.start_date_edit.date()
+        end_date = self.end_date_edit.date()
+        
+        # Clear any previous error styling
+        self._clear_date_validation_errors()
+        
+        if start_date >= end_date:
+            # Show validation error
+            self._show_date_validation_error("Start date must be before end date")
+            return
+            
+        # Check if date range is too large (more than 5 years)
+        if start_date.daysTo(end_date) > 1825:  # 5 years
+            self._show_date_validation_error("Date range cannot exceed 5 years")
+            return
+            
+        # Check if dates are too far in the future
+        if end_date > QDate.currentDate():
+            self._show_date_validation_error("End date cannot be in the future")
+            return
+            
+        self.trends_start_date = start_date
+        self.trends_end_date = end_date
+        
+        print(f"[AnalyticsDialog] Applying new date range: {self.trends_start_date.toString('yyyy-MM-dd')} to {self.trends_end_date.toString('yyyy-MM-dd')}")
+        self._refresh_price_trends()
+        
+    def _show_date_validation_error(self, message):
+        """Show date validation error styling and user notification."""
+        # Prevent duplicate error notifications
+        if self.error_shown and self.last_error_message == message:
+            return
+            
+        error_style = """
+        QDateEdit {
+            background-color: #4A2B2B;
+            border: 2px solid #E74C3C;
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: #E0E0E0;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        """
+        
+        # Apply error styling to both date edits
+        self.start_date_edit.setStyleSheet(error_style)
+        self.end_date_edit.setStyleSheet(error_style)
+        
+        # Show tooltip with error message
+        self.start_date_edit.setToolTip(message)
+        self.end_date_edit.setToolTip(message)
+        
+        # Show user-friendly notification
+        self._show_date_error_notification(message)
+        
+        # Track error state
+        self.last_error_message = message
+        self.error_shown = True
+        
+        print(f"[AnalyticsDialog] Date validation error: {message}")
+    
+    def _show_date_error_notification(self, message):
+        """Show a temporary notification to the user about date validation error."""
+        # Import required modules
+        from PyQt6.QtWidgets import QLabel
+        from PyQt6.QtCore import QTimer
+        
+        # Create error notification label
+        if not hasattr(self, 'error_notification'):
+            self.error_notification = QLabel()
+            self.error_notification.setObjectName("date_error_notification")
+            self.error_notification.setWordWrap(True)
+            
+            # Find the main trends widget layout to insert the error notification
+            trends_widget_layout = self.trends_widget.layout()
+            if trends_widget_layout:
+                trends_widget_layout.insertWidget(1, self.error_notification)  # Insert after header
+        
+        # Set error message and show
+        self.error_notification.setText(f"⚠️ {message}")
+        self.error_notification.show()
+        
+        # Auto-hide after 4 seconds
+        if not hasattr(self, 'error_timer'):
+            self.error_timer = QTimer()
+            self.error_timer.setSingleShot(True)
+            self.error_timer.timeout.connect(self._hide_date_error_notification)
+        
+        self.error_timer.start(4000)  # 4 seconds
+    
+    def _hide_date_error_notification(self):
+        """Hide the date error notification."""
+        if hasattr(self, 'error_notification'):
+            self.error_notification.hide()
+        
+        # Reset error state when hiding notification
+        self.error_shown = False
+        
+    def _clear_date_validation_errors(self):
+        """Clear date validation error styling."""
+        # Clear inline styles to restore QSS styles
+        self.start_date_edit.setStyleSheet("")
+        self.end_date_edit.setStyleSheet("")
+        
+        # Clear tooltips
+        self.start_date_edit.setToolTip("")
+        self.end_date_edit.setToolTip("")
+        
+        # Hide error notification
+        self._hide_date_error_notification()
+        
+        # Reset error state
+        self.last_error_message = None
+        self.error_shown = False
+        
+    def _set_preset_range(self, days):
+        """Set date range to a preset number of days from today."""
+        end_date = QDate.currentDate()
+        start_date = end_date.addDays(-days)
+        
+        self.start_date_edit.setDate(start_date)
+        self.end_date_edit.setDate(end_date)
+        
+        # Automatically apply the preset range
+        self._apply_date_range()
 
 # Worker thread for loading ML data
 class MLBestOffersWorker(QThread):
@@ -759,6 +1170,107 @@ class MLBestOffersWorker(QThread):
                 self.error.emit("No response from server")
         except Exception as e:
             self.error.emit(str(e))
+
+# Worker thread for loading trends data
+class TrendsDataWorker(QThread):
+    """Worker thread for loading price trends data from CarGurus API"""
+    finished = pyqtSignal(list)
+    error = pyqtSignal(str)
+    
+    def __init__(self, tracked_criteria, start_date, end_date):
+        super().__init__()
+        self.tracked_criteria = tracked_criteria
+        self.start_date = start_date
+        self.end_date = end_date
+        
+    def run(self):
+        try:
+            graphs_data = []
+            cargurus_api_service = CargurusAPIService()
+            
+            # Get general CarGurus data first to find entity IDs
+            general_data = None
+            try:
+                general_data = cargurus_api_service.get_cargurus_data_sync(
+                    entity_ids=["Index"],
+                    start_date=self.start_date,
+                    end_date=self.end_date
+                )
+            except Exception as e:
+                print(f"Failed to fetch general CarGurus data: {e}")
+            
+            for criteria in self.tracked_criteria:
+                model_name_parts = []
+                if criteria.get("brand") and criteria.get("brand") != "N/A":
+                    model_name_parts.append(criteria.get("brand"))
+                if criteria.get("model") and criteria.get("model") != "N/A":
+                    model_name_parts.append(criteria.get("model"))
+                if criteria.get("registration_year") and criteria.get("registration_year") != "N/A":
+                    model_name_parts.append(str(criteria.get("registration_year")))
+                model_display_name = " ".join(model_name_parts) if model_name_parts else "Unknown Model"
+
+                brand_name = criteria.get("brand")
+                graph_data = None
+                
+                if brand_name and general_data:
+                    try:
+                        # Find entity ID for the brand
+                        entity_id = cargurus_api_service.get_entity_id_by_brand(brand_name, general_data)
+                        
+                        if entity_id:
+                            # Get specific data for this entity
+                            brand_data = cargurus_api_service.get_cargurus_data_sync(
+                                entity_ids=[entity_id],
+                                start_date=self.start_date,
+                                end_date=self.end_date
+                            )
+                            
+                            if brand_data:
+                                # Format data for graph
+                                formatted_data = cargurus_api_service.format_price_trends_for_graph(brand_data)
+                                graph_data = {
+                                    'data': formatted_data,
+                                    'title': model_display_name
+                                }
+                                
+                    except Exception as e:
+                        print(f"Error fetching CarGurus data for {brand_name}: {e}")
+                
+                # Fall back to mock data if real data couldn't be loaded
+                if not graph_data:
+                    mock_data = self._generate_mock_time_series()
+                    suffix = " (Mock Data)" if brand_name else " (Mock Data)"
+                    graph_data = {
+                        'data': mock_data,
+                        'title': f"{model_display_name}{suffix}"
+                    }
+                
+                graphs_data.append(graph_data)
+            
+            self.finished.emit(graphs_data)
+            
+        except Exception as e:
+            self.error.emit(str(e))
+    
+    def _generate_mock_time_series(self, num_points=10, base_price=30000, volatility=5000):
+        """Generate mock time series data for fallback"""
+        import random
+        from datetime import datetime, timedelta
+        
+        data = []
+        current_price = base_price + random.uniform(-volatility/2, volatility/2)
+        current_time = datetime.now()
+        
+        for i in range(num_points):
+            # Calculate timestamp for each point (going backwards in time)
+            days_ago = (num_points - 1 - i) * 7  # Weekly intervals going backwards
+            timestamp_date = current_time - timedelta(days=days_ago)
+            timestamp = int(timestamp_date.timestamp() * 1000)  # Convert to milliseconds
+            
+            data.append((i, current_price, timestamp))
+            current_price += random.uniform(-volatility * 0.3, volatility * 0.3)
+            current_price = max(5000, current_price)  # Ensure price doesn't go too low
+        return data
 
 if __name__ == '__main__':
     import sys
