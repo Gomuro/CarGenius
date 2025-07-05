@@ -7,20 +7,20 @@ from app.schemas.cargurus import CarGurusCreate, CarGurusUpdate
 router = APIRouter()
 
 
-@router.get("/load_brands")
-async def load_brands(db: AsyncSession = Depends(get_db)):
-    """load all brands from CarGurus API and save to DB"""
+@router.get("/load_labels")
+async def load_labels(db: AsyncSession = Depends(get_db)):
+    """load all labels from CarGurus API and save to DB"""
     try:
-        await CarGurusService.load_cargurus_brands(db)
-        return {"message": "Brands loaded successfully"}
+        await CarGurusService.load_cargurus_labels(db)
+        return {"message": "Labels loaded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/get_brand_by_name")
-async def get_brand_by_name(db: AsyncSession = Depends(get_db), name: str = Query(..., description="Name of the brand")):
-    """get brand by name"""
+@router.get("/get_by_label")
+async def get_by_label(db: AsyncSession = Depends(get_db), name: str = Query(..., description="Name of the label")):
+    """get label by name"""
     try:
-        brand = await CarGurusService.get_brand_by_name(db, name)
+        brand = await CarGurusService.get_by_label(db, name)
         return brand
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

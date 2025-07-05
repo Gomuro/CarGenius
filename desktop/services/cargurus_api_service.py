@@ -94,29 +94,29 @@ class CargurusAPIService:
             # print(f"Error formatting price trends: {e}")
             return [(0, 25000, 0)]  # Fallback data
 
-    def get_entity_id_by_brand(self, brand_name: str, cargurus_data: Dict) -> Optional[str]:
+    def get_entity_id_by_label(self, label: str, cargurus_data: Dict) -> Optional[str]:
         """
-        Find entity ID for a given brand name from CarGurus data
+        Find entity ID for a given label from CarGurus data
         """
         try:
-            for price_trend_section in cargurus_data["priceTrends"]:
-                if price_trend_section.get("type") == "MAKES":
+            for price_trend_section in cargurus_data.get("priceTrends", []):
+                if price_trend_section.get("type") in ["MAKES", "MODELS"]:
                     entities = price_trend_section.get("entities", [])
                     for entity in entities:
-                        if entity.get("label", "").lower() == brand_name.lower():
+                        if entity.get("label", "").lower() == label.lower():
                             return entity.get("entityId")
             return None
         except Exception as e:
-            # print(f"Error finding entity ID for brand {brand_name}: {e}")
+            # print(f"Error finding entity ID for label {label}: {e}")
             return None
 
-    def get_brand_from_server(self, brand_name: str) -> Optional[Dict]:
+    def get_label_from_server(self, label_name: str) -> Optional[Dict]:
         """
-        Get brand data from your server's CarGurus database
+        Get label data from your server's CarGurus database
         """
         try:
-            server_url = f"{GLOBAL.API_BASE_URL}/cargurus/get_brand_by_name"
-            params = {"name": brand_name}
+            server_url = f"{GLOBAL.API_BASE_URL}/cargurus/get_by_label"
+            params = {"name": label_name}
             
             response = requests.get(server_url, params=params)
             if response.status_code == 200:
@@ -125,6 +125,6 @@ class CargurusAPIService:
                 # print(f"Server returned status {response.status_code}")
                 return None
         except Exception as e:
-            # print(f"Error getting brand from server: {e}")
+            # print(f"Error getting label from server: {e}")
             return None
 

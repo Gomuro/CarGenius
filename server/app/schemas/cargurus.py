@@ -4,7 +4,7 @@ from typing import Optional
 
 class CarGurusBase(BaseModel):
     entity_id: str
-    cargurus_brand: Optional[str] = None
+    label: Optional[str] = None
 
 
 class CarGurusCreate(CarGurusBase):
@@ -13,7 +13,7 @@ class CarGurusCreate(CarGurusBase):
 
 class CarGurusUpdate(BaseModel):
     entity_id: Optional[str] = None
-    cargurus_brand: Optional[str] = None
+    label: Optional[str] = None
 
 
 class CarGurusResponse(CarGurusBase):

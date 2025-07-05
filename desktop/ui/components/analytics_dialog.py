@@ -1184,73 +1184,75 @@ class TrendsDataWorker(QThread):
         self.end_date = end_date
         
     def run(self):
-        try:
-            graphs_data = []
-            cargurus_api_service = CargurusAPIService()
-            
-            # Get general CarGurus data first to find entity IDs
-            general_data = None
-            try:
-                general_data = cargurus_api_service.get_cargurus_data_sync(
-                    entity_ids=["Index"],
-                    start_date=self.start_date,
-                    end_date=self.end_date
-                )
-            except Exception as e:
-                print(f"Failed to fetch general CarGurus data: {e}")
-            
-            for criteria in self.tracked_criteria:
-                model_name_parts = []
-                if criteria.get("brand") and criteria.get("brand") != "N/A":
-                    model_name_parts.append(criteria.get("brand"))
-                if criteria.get("model") and criteria.get("model") != "N/A":
-                    model_name_parts.append(criteria.get("model"))
-                if criteria.get("registration_year") and criteria.get("registration_year") != "N/A":
-                    model_name_parts.append(str(criteria.get("registration_year")))
-                model_display_name = " ".join(model_name_parts) if model_name_parts else "Unknown Model"
+        """Fetch and process data for all tracked models."""
+        cargurus_api_service = CargurusAPIService()
+        graphs_data = []
 
-                brand_name = criteria.get("brand")
-                graph_data = None
+        try:
+            # First, get the general CarGurus data which contains all brand/model mappings
+            general_data = cargurus_api_service.get_cargurus_data_sync(entity_ids=[])
+            if not general_data:
+                self.error.emit("Could not load initial data from CarGurus.")
+                return
+
+            for criteria in self.tracked_criteria:
+                label_name = criteria.get('brand') or criteria.get('model')
+                if not label_name:
+                    continue
+
+                # Find the entity_id for the current brand/model
+                entity_id = cargurus_api_service.get_entity_id_by_label(label_name, general_data)
+
+                # Fallback: if not found in general data, query server DB
+                if not entity_id:
+                    server_data = cargurus_api_service.get_label_from_server(label_name)
+                    if server_data and isinstance(server_data, list) and server_data:
+                        entity_id = server_data[0].get('entity_id')
+
+                if not entity_id:
+                    print(f"Could not find entity_id for {label_name}")
+                    # Create a mock graph with an error message
+                    mock_graph_data = self._generate_mock_time_series()
+                    graphs_data.append({
+                        "title": f"{label_name} (Not Found)",
+                        "data": mock_graph_data
+                    })
+                    continue
+
+                # Fetch detailed price data for this entity
+                if isinstance(self.start_date, QDate):
+                    start_timestamp = int(self.start_date.toPyDateTime().timestamp() * 1000)
+                else:
+                    start_timestamp = self.start_date
+
+                if isinstance(self.end_date, QDate):
+                    end_timestamp = int(self.end_date.toPyDateTime().timestamp() * 1000)
+                else:
+                    end_timestamp = self.end_date
+
+                specific_data = cargurus_api_service.get_cargurus_data_sync(
+                    entity_ids=[entity_id],
+                    start_date=start_timestamp,
+                    end_date=end_timestamp
+                )
                 
-                if brand_name and general_data:
-                    try:
-                        # Find entity ID for the brand
-                        entity_id = cargurus_api_service.get_entity_id_by_brand(brand_name, general_data)
-                        
-                        if entity_id:
-                            # Get specific data for this entity
-                            brand_data = cargurus_api_service.get_cargurus_data_sync(
-                                entity_ids=[entity_id],
-                                start_date=self.start_date,
-                                end_date=self.end_date
-                            )
-                            
-                            if brand_data:
-                                # Format data for graph
-                                formatted_data = cargurus_api_service.format_price_trends_for_graph(brand_data)
-                                graph_data = {
-                                    'data': formatted_data,
-                                    'title': model_display_name
-                                }
-                                
-                    except Exception as e:
-                        print(f"Error fetching CarGurus data for {brand_name}: {e}")
-                
-                # Fall back to mock data if real data couldn't be loaded
-                if not graph_data:
-                    mock_data = self._generate_mock_time_series()
-                    suffix = " (Mock Data)" if brand_name else " (Mock Data)"
-                    graph_data = {
-                        'data': mock_data,
-                        'title': f"{model_display_name}{suffix}"
-                    }
-                
-                graphs_data.append(graph_data)
+                if specific_data:
+                    graph_data = cargurus_api_service.format_price_trends_for_graph(specific_data)
+                    graphs_data.append({
+                        "title": label_name,
+                        "data": graph_data
+                    })
+                else:
+                    # Handle case where specific data fails
+                    mock_graph_data = self._generate_mock_time_series()
+                    graphs_data.append({
+                        "title": f"{label_name} (Data Error)",
+                        "data": mock_graph_data
+                    })
             
             self.finished.emit(graphs_data)
-            
         except Exception as e:
-            self.error.emit(str(e))
+            self.error.emit(f"An unexpected error occurred: {e}")
     
     def _generate_mock_time_series(self, num_points=10, base_price=30000, volatility=5000):
         """Generate mock time series data for fallback"""

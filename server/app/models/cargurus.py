@@ -5,4 +5,4 @@ class CarGurus(Base):
     __tablename__ = "cargurus"
     id = Column(Integer, primary_key=True, index=True)
     entity_id = Column(String, unique=True, index=True, nullable=False)
-    cargurus_brand = Column(String, index=True)
+    label = Column(String, index=True)
