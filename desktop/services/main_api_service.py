@@ -157,6 +157,35 @@ class APIService:
         """Clear chat history on server for a specific user."""
         endpoint = f"/gpt/history/{user_id}"
         return await self._request("DELETE", endpoint)
+    
+    async def get_id_by_label(self, name: str) -> Optional[Dict]:
+        """Get ID by label (legacy method)"""
+        endpoint = "/cargurus/get_by_label"
+        return await self._request("GET", endpoint, {"name": name})
+    
+    async def get_id_by_criteria(self, brand: str = None, model: str = None, year: str = None) -> Optional[Dict]:
+        """Get ID by specific criteria (brand, model, year) - more accurate search"""
+        endpoint = "/cargurus/get_by_criteria"
+        
+        # Validate inputs
+        if not any([brand, model, year]):
+            print("[APIService] get_id_by_criteria: No criteria provided")
+            return None
+        
+        # Build parameters, ensuring no empty strings
+        params = {}
+        if brand and brand.strip():
+            params["brand"] = brand.strip()
+        if model and model.strip():
+            params["model"] = model.strip()
+        if year and str(year).strip():
+            params["year"] = str(year).strip()
+            
+        if not params:
+            print("[APIService] get_id_by_criteria: All criteria are empty after cleaning")
+            return None
+            
+        return await self._request("GET", endpoint, params)
 
     # Sync wrapper methods
     def validate_license_sync(self, key: str, client_info: str, device_id: Optional[str] = None) -> Optional[Dict]:
@@ -217,3 +246,11 @@ class APIService:
     def get_listings_count_sync(self, filters: dict) -> int:
         """Synchronous wrapper for get_listings_count."""
         return asyncio.run(self.get_listings_count(filters))
+    
+    def get_id_by_label_sync(self, name: str) -> Optional[Dict]:
+        """Synchronous wrapper for get_id_by_label"""
+        return asyncio.run(self.get_id_by_label(name))
+    
+    def get_id_by_criteria_sync(self, brand: str = None, model: str = None, year: str = None) -> Optional[Dict]:
+        """Synchronous wrapper for get_id_by_criteria"""
+        return asyncio.run(self.get_id_by_criteria(brand, model, year))

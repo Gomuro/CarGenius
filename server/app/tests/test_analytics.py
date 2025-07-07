@@ -44,7 +44,7 @@ async def test_save_listing_to_db(client, session):
     assert "skipped" in data, "Response should contain 'skipped' key"
     assert "saved" in data["message"], f"Unexpected message format: {data['message']}"
 
-    # Можна витягнути created з message, якщо треба
+    # You can extract 'created' from the message if needed
     import re
     match = re.search(r"saved (\d+) listings", data["message"])  # search number of saved listings
     assert match, "Message should contain number of saved listings"

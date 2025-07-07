@@ -68,6 +68,10 @@ class GLOBAL:
     # Add API configuration
     API_BASE_URL = "http://localhost:8000"  # This can be changed for production
     API_PREFIX = "/api/v1"
+    CARGURUS_API_BASE_URL = "https://www.cargurus.com"
+    CARGURUS_API_PREFIX = "/research/price-trends?entityIds="
+    CARGURUS_API_RAW_DATA_ENDPOINT = "&_data=routes%2F%28%24intl%29.research.price-trends._index"
+    
     LICENSE_VALIDATE_ENDPOINT = "/license/validate"
 
     class LOG:
