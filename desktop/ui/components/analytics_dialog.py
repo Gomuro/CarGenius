@@ -175,9 +175,15 @@ class AnalyticsDialog(QDialog):
         self.setWindowTitle("Car Analytics & Price Trends")
         self.setMinimumSize(900, 700)
         self.resize(1200, 800)
-        self.tracked_models_criteria = tracked_models_criteria.copy() if tracked_models_criteria else []
+        
+        # Validate and initialize critical components
+        self.tracked_models_criteria = tracked_models_criteria.copy() if tracked_models_criteria and isinstance(tracked_models_criteria, list) else []
+        
+        if not api_service:
+            raise ValueError("APIService instance is required")
         self.api_service = api_service
-        self.license_key = GLOBAL.LICENSE.get_license_key()
+        
+        self.license_key = GLOBAL.LICENSE.get_license_key() if hasattr(GLOBAL, 'LICENSE') and GLOBAL.LICENSE else None
         
         # Date range for trends tab
         self.trends_start_date = QDate.currentDate().addYears(-1)
@@ -946,7 +952,7 @@ class AnalyticsDialog(QDialog):
         start_date_ts = int(datetime(self.trends_start_date.year(), self.trends_start_date.month(), self.trends_start_date.day()).timestamp() * 1000)
         end_date_ts = int(datetime(self.trends_end_date.year(), self.trends_end_date.month(), self.trends_end_date.day(), 23, 59, 59).timestamp() * 1000)
         
-        self.trends_worker = TrendsDataWorker(self.tracked_models_criteria, start_date_ts, end_date_ts)
+        self.trends_worker = TrendsDataWorker(self.tracked_models_criteria, start_date_ts, end_date_ts, self.api_service)
         self.trends_worker.finished.connect(self._on_trends_loaded)
         self.trends_worker.error.connect(self._on_trends_error)
         self.trends_worker.start()
@@ -1159,17 +1165,22 @@ class MLBestOffersWorker(QThread):
         
     def run(self):
         try:
-            if not self.license_key:
-                self.error.emit("No license key available")
+            if not self.license_key or not isinstance(self.license_key, str) or not self.license_key.strip():
+                self.error.emit("No valid license key available")
+                return
+            
+            if not self.api_service:
+                self.error.emit("API service not available")
                 return
                 
-            result = self.api_service.get_best_offer_sync(self.license_key)
-            if result:
+            result = self.api_service.get_best_offer_sync(self.license_key.strip())
+            if result and isinstance(result, dict):
                 self.finished.emit(result)
             else:
-                self.error.emit("No response from server")
+                self.error.emit("No valid response from server")
         except Exception as e:
-            self.error.emit(str(e))
+            print(f"[MLBestOffersWorker] Error in run(): {e}")
+            self.error.emit(f"Failed to fetch ML recommendations: {str(e)}")
 
 # Worker thread for loading trends data
 class TrendsDataWorker(QThread):
@@ -1177,81 +1188,197 @@ class TrendsDataWorker(QThread):
     finished = pyqtSignal(list)
     error = pyqtSignal(str)
     
-    def __init__(self, tracked_criteria, start_date, end_date):
+    def __init__(self, tracked_criteria, start_date, end_date, api_service):
         super().__init__()
         self.tracked_criteria = tracked_criteria
         self.start_date = start_date
         self.end_date = end_date
+        self.api_service = api_service
         
+    def _create_display_name(self, brand: str = None, model: str = None, year: str = None) -> str:
+        """Create a display name from brand, model, and year criteria"""
+        # Ensure we have strings to work with
+        safe_brand = str(brand).strip() if brand else ""
+        safe_model = str(model).strip() if model else ""
+        safe_year = str(year).strip() if year else ""
+        
+        if safe_brand and safe_model and safe_year:
+            return f"{safe_brand} {safe_model} {safe_year}"
+        elif safe_model and safe_year:
+            return f"{safe_model} {safe_year}"
+        elif safe_model:
+            return safe_model
+        elif safe_brand:
+            return safe_brand
+        elif safe_year:
+            return f"Year {safe_year}"
+        else:
+            return "Unknown Filter"
+
     def run(self):
         """Fetch and process data for all tracked models."""
         cargurus_api_service = CargurusAPIService()
         graphs_data = []
 
         try:
+            # Validate tracked_criteria
+            if not self.tracked_criteria or not isinstance(self.tracked_criteria, list):
+                print("[TrendsDataWorker] No tracked criteria or invalid format")
+                self.error.emit("No tracked filters available for analysis")
+                return
+                
             # First, get the general CarGurus data which contains all brand/model mappings
-            general_data = cargurus_api_service.get_cargurus_data_sync(entity_ids=[])
-            if not general_data:
-                self.error.emit("Could not load initial data from CarGurus.")
+            general_data = None
+            try:
+                general_data = cargurus_api_service.get_cargurus_data_sync(entity_ids=[])
+                if not general_data:
+                    self.error.emit("Could not load initial data from CarGurus.")
+                    return
+            except Exception as e:
+                self.error.emit(f"Failed to fetch CarGurus data: {str(e)}")
                 return
 
             for criteria in self.tracked_criteria:
-                label_name = criteria.get('brand') or criteria.get('model')
-                if not label_name:
+                # Ensure criteria is a dictionary
+                if not isinstance(criteria, dict):
+                    print(f"[TrendsDataWorker] Skipping invalid criteria (not dict): {criteria}")
+                    continue
+                # Extract and validate criteria with type safety
+                brand = str(criteria.get('brand', '')).strip() if criteria.get('brand') else None
+                model = str(criteria.get('model', '')).strip() if criteria.get('model') else None
+                
+                # Handle year with proper type conversion and validation
+                year_raw = criteria.get('registration_year') or criteria.get('year')
+                year = None
+                if year_raw is not None:
+                    try:
+                        year_int = int(year_raw)
+                        if 1900 <= year_int <= 2030:  # Reasonable year range
+                            year = str(year_int)
+                        else:
+                            print(f"[TrendsDataWorker] Invalid year {year_int}, ignoring")
+                    except (ValueError, TypeError):
+                        print(f"[TrendsDataWorker] Could not convert year '{year_raw}' to integer, ignoring")
+                
+                # Skip if completely empty criteria
+                if not any([brand, model, year]):
+                    print(f"[TrendsDataWorker] Skipping empty criteria: {criteria}")
                     continue
 
-                # Find the entity_id for the current brand/model
-                entity_id = cargurus_api_service.get_entity_id_by_label(label_name, general_data)
-
-                # Fallback: if not found in general data, query server DB
-                if not entity_id:
-                    server_data = cargurus_api_service.get_label_from_server(label_name)
+                # Find the entity_id using the improved search method
+                entity_id = None
+                try:
+                    server_data = self.api_service.get_id_by_criteria_sync(brand=brand, model=model, year=year)
                     if server_data and isinstance(server_data, list) and server_data:
                         entity_id = server_data[0].get('entity_id')
+                except Exception as e:
+                    print(f"Error fetching entity_id for brand={brand}, model={model}, year={year}: {e}")
+                
+                # Fallback: try legacy method with constructed label
+                if not entity_id:
+                    label_name = None
+                    try:
+                        # Construct label as before for fallback
+                        if model and year:
+                            label_name = f"{year} {model}"
+                        elif model:
+                            label_name = model
+                        elif brand:
+                            label_name = brand
+                        
+                        if label_name:
+                            print(f"[TrendsDataWorker] Trying fallback search with label: {label_name}")
+                            server_data = self.api_service.get_id_by_label_sync(label_name)
+                            if server_data and isinstance(server_data, list) and server_data:
+                                entity_id = server_data[0].get('entity_id')
+                                print(f"[TrendsDataWorker] Found entity_id via fallback: {entity_id}")
+                    except Exception as e:
+                        fallback_label = label_name or "unknown"
+                        print(f"[TrendsDataWorker] Error in fallback search for '{fallback_label}': {e}")
+                
+                # Final fallback: try to find in general data
+                if not entity_id:
+                    try:
+                        if model:
+                            entity_id = cargurus_api_service.get_entity_id_by_label(model, general_data)
+                            if entity_id:
+                                print(f"[TrendsDataWorker] Found entity_id via general data for model '{model}': {entity_id}")
+                        
+                        if not entity_id and brand:
+                            entity_id = cargurus_api_service.get_entity_id_by_label(brand, general_data)
+                            if entity_id:
+                                print(f"[TrendsDataWorker] Found entity_id via general data for brand '{brand}': {entity_id}")
+                    except Exception as e:
+                        print(f"[TrendsDataWorker] Error in general data fallback: {e}")
 
                 if not entity_id:
-                    print(f"Could not find entity_id for {label_name}")
+                    display_name = self._create_display_name(brand, model, year)
+                    print(f"Could not find entity_id for {display_name}")
                     # Create a mock graph with an error message
                     mock_graph_data = self._generate_mock_time_series()
                     graphs_data.append({
-                        "title": f"{label_name} (Not Found)",
+                        "title": f"{display_name} (Not Found)",
                         "data": mock_graph_data
                     })
                     continue
 
                 # Fetch detailed price data for this entity
-                if isinstance(self.start_date, QDate):
-                    start_timestamp = int(self.start_date.toPyDateTime().timestamp() * 1000)
-                else:
-                    start_timestamp = self.start_date
+                try:
+                    # Safe timestamp conversion
+                    if isinstance(self.start_date, QDate):
+                        start_timestamp = int(self.start_date.toPyDateTime().timestamp() * 1000)
+                    elif isinstance(self.start_date, (int, float)):
+                        start_timestamp = int(self.start_date)
+                    else:
+                        print(f"[TrendsDataWorker] Invalid start_date type: {type(self.start_date)}")
+                        start_timestamp = int((datetime.now() - timedelta(days=365)).timestamp() * 1000)
 
-                if isinstance(self.end_date, QDate):
-                    end_timestamp = int(self.end_date.toPyDateTime().timestamp() * 1000)
-                else:
-                    end_timestamp = self.end_date
+                    if isinstance(self.end_date, QDate):
+                        end_timestamp = int(self.end_date.toPyDateTime().timestamp() * 1000)
+                    elif isinstance(self.end_date, (int, float)):
+                        end_timestamp = int(self.end_date)
+                    else:
+                        print(f"[TrendsDataWorker] Invalid end_date type: {type(self.end_date)}")
+                        end_timestamp = int(datetime.now().timestamp() * 1000)
 
-                specific_data = cargurus_api_service.get_cargurus_data_sync(
-                    entity_ids=[entity_id],
-                    start_date=start_timestamp,
-                    end_date=end_timestamp
-                )
+                    specific_data = cargurus_api_service.get_cargurus_data_sync(
+                        entity_ids=[entity_id],
+                        start_date=start_timestamp,
+                        end_date=end_timestamp
+                    )
+                except Exception as e:
+                    print(f"[TrendsDataWorker] Error fetching specific data for entity {entity_id}: {e}")
+                    specific_data = None
+                
+                # Create display name for successful graph
+                display_name = self._create_display_name(brand, model, year)
                 
                 if specific_data:
                     graph_data = cargurus_api_service.format_price_trends_for_graph(specific_data)
                     graphs_data.append({
-                        "title": label_name,
+                        "title": display_name,
                         "data": graph_data
                     })
                 else:
                     # Handle case where specific data fails
                     mock_graph_data = self._generate_mock_time_series()
                     graphs_data.append({
-                        "title": f"{label_name} (Data Error)",
+                        "title": f"{display_name} (Data Error)",
                         "data": mock_graph_data
                     })
             
+            # Ensure we have at least some data to show
+            if not graphs_data:
+                print("[TrendsDataWorker] No graph data generated, creating empty result message")
+                graphs_data.append({
+                    "title": "No Data Available",
+                    "data": self._generate_mock_time_series(num_points=5, base_price=0, volatility=0)
+                })
+            
             self.finished.emit(graphs_data)
+            
         except Exception as e:
+            print(f"[TrendsDataWorker] Unexpected error in run(): {e}")
             self.error.emit(f"An unexpected error occurred: {e}")
     
     def _generate_mock_time_series(self, num_points=10, base_price=30000, volatility=5000):

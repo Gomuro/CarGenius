@@ -60,11 +60,160 @@ class CarGurusService:
     
     @staticmethod
     async def get_by_label(db: AsyncSession, name: str) -> List[CarGurus]:
-        """Get records by label name"""
+        """Get records by label name (legacy method)"""
         result = await db.execute(
             select(CarGurus).filter(CarGurus.label.ilike(f"%{name}%"))
         )
         return result.scalars().all()
+    
+    @staticmethod
+    async def get_by_criteria(
+        db: AsyncSession, 
+        brand: Optional[str] = None, 
+        model: Optional[str] = None, 
+        year: Optional[str] = None
+    ) -> List[CarGurus]:
+        """
+        Get records by specific criteria (brand, model, year)
+        More accurate than free-text search
+        """
+        from sqlalchemy import and_, or_
+        
+        # Input validation
+        if not any([brand, model, year]):
+            return []
+        
+        # Sanitize inputs to prevent SQL injection (even though we're using parameterized queries)
+        if brand:
+            brand = brand.strip()[:100]  # Limit length
+        if model:
+            model = model.strip()[:100]  # Limit length  
+        if year:
+            year = year.strip()[:4]  # Years should be 4 digits max
+        
+        # Build search patterns based on the data structure
+        search_conditions = []
+        
+        # Case 1: Brand only - exact match
+        if brand and not model and not year:
+            search_conditions.append(CarGurus.label.ilike(f"{brand}"))
+        
+        # Case 2: Model only - try various patterns
+        elif model and not year and not brand:
+            search_conditions.extend([
+                CarGurus.label.ilike(f"{model}"),
+                CarGurus.label.ilike(f"{model}%")  # Model with potential year suffix
+            ])
+        
+        # Case 3: Model + Year - most specific search
+        elif model and year:
+            search_conditions.extend([
+                CarGurus.label.ilike(f"{year} {model}"),
+                CarGurus.label.ilike(f"{model} {year}"),
+                CarGurus.label.ilike(f"{year}%{model}%"),
+                CarGurus.label.ilike(f"{model}%{year}%")
+            ])
+        
+        # Case 4: Brand + Model (no year)
+        elif brand and model and not year:
+            search_conditions.extend([
+                CarGurus.label.ilike(f"{model}"),
+                CarGurus.label.ilike(f"{brand} {model}"),
+                CarGurus.label.ilike(f"{model}%")
+            ])
+        
+        # Case 5: Brand + Year (no model) - less common
+        elif brand and year and not model:
+            search_conditions.extend([
+                CarGurus.label.ilike(f"%{brand}%{year}%"),
+                CarGurus.label.ilike(f"{year}%{brand}%")
+            ])
+        
+        # Case 6: All three provided
+        elif brand and model and year:
+            search_conditions.extend([
+                CarGurus.label.ilike(f"{year} {model}"),
+                CarGurus.label.ilike(f"{model} {year}"),
+                CarGurus.label.ilike(f"{brand} {model} {year}"),
+                CarGurus.label.ilike(f"{year} {brand} {model}"),
+                CarGurus.label.ilike(f"{model}%{year}%")
+            ])
+        
+        if not search_conditions:
+            return []
+        
+        # Execute query with OR conditions
+        result = await db.execute(
+            select(CarGurus).filter(or_(*search_conditions))
+        )
+        
+        results = result.scalars().all()
+        
+        # Post-process results to rank by accuracy
+        return CarGurusService._rank_search_results(results, brand, model, year)
+    
+    @staticmethod
+    def _rank_search_results(
+        results: List[CarGurus], 
+        brand: Optional[str] = None, 
+        model: Optional[str] = None, 
+        year: Optional[str] = None
+    ) -> List[CarGurus]:
+        """
+        Rank search results by accuracy/relevance
+        Most specific matches first
+        """
+        if not results:
+            return results
+        
+        def calculate_score(item: CarGurus) -> int:
+            label = item.label.lower() if item.label else ""
+            score = 0
+            
+            # Exact matches get highest scores
+            if brand and model and year:
+                target = f"{model} {year}".lower()
+                if label == target:
+                    score += 100
+                elif label.startswith(target):
+                    score += 90
+                elif target in label:
+                    score += 80
+            
+            elif model and year:
+                target = f"{model} {year}".lower()
+                if label == target:
+                    score += 100
+                elif label.startswith(target):
+                    score += 90
+            
+            elif model:
+                target = model.lower()
+                if label == target:
+                    score += 100
+                elif label.startswith(target):
+                    score += 90
+                elif target in label:
+                    score += 70
+            
+            elif brand:
+                target = brand.lower()
+                if label == target:
+                    score += 100
+                elif label.startswith(target):
+                    score += 90
+            
+            # Penalty for extra words (less specific matches)
+            word_count = len(label.split())
+            expected_words = sum([1 for x in [brand, model, year] if x])
+            if word_count > expected_words:
+                score -= (word_count - expected_words) * 5
+            
+            return score
+        
+        # Sort by score (highest first)
+        ranked_results = sorted(results, key=calculate_score, reverse=True)
+        return ranked_results
 
     @staticmethod
     async def update_label(db: AsyncSession, entity_id: str, new_label: str) -> Optional[CarGurus]:
