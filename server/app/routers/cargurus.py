@@ -2,9 +2,24 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.services.cargurus import CarGurusService
-from app.schemas.cargurus import CarGurusCreate, CarGurusUpdate
 
 router = APIRouter()
+
+
+@router.post("/load-cars")
+async def load_from_url_to_db(db: AsyncSession = Depends(get_db)):
+    result = await CarGurusService.save_to_db_from_url_service(db)
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to save data from URL")
+    return {"message": "saving completed", **result}
+
+
+@router.get("/get-cars")
+async def get_data_from_url(db: AsyncSession = Depends(get_db)):
+    result = await CarGurusService.get_data_from_url_service(db)
+    if not result:
+        raise HTTPException(status_code=404, detail="No data found for the given URL")
+    return {"message": "Data retrieved successfully", "data": result}
 
 
 @router.get("/load_labels")
@@ -16,6 +31,7 @@ async def load_labels(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/get_by_label")
 async def get_by_label(db: AsyncSession = Depends(get_db), name: str = Query(..., description="Name of the label")):
     """get label by name (legacy method)"""
@@ -25,27 +41,28 @@ async def get_by_label(db: AsyncSession = Depends(get_db), name: str = Query(...
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/get_by_criteria")
 async def get_by_criteria(
-    db: AsyncSession = Depends(get_db),
-    brand: str = Query(None, description="Brand name"),
-    model: str = Query(None, description="Model name"), 
-    year: str = Query(None, description="Year")
+        db: AsyncSession = Depends(get_db),
+        brand: str = Query(None, description="Brand name"),
+        model: str = Query(None, description="Model name"),
+        year: str = Query(None, description="Year")
 ):
     """get labels by specific criteria (brand, model, year) - more accurate search"""
     try:
         # Validate input parameters
         if not any([brand, model, year]):
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="At least one search parameter (brand, model, or year) must be provided"
             )
-        
+
         # Clean and validate parameters
         clean_brand = brand.strip() if brand else None
         clean_model = model.strip() if model else None
         clean_year = year.strip() if year else None
-        
+
         # Validate year format if provided
         if clean_year:
             try:
@@ -60,16 +77,16 @@ async def get_by_criteria(
                     status_code=400,
                     detail="Year must be a valid number"
                 )
-        
+
         results = await CarGurusService.get_by_criteria(
-            db, 
-            brand=clean_brand, 
-            model=clean_model, 
+            db,
+            brand=clean_brand,
+            model=clean_model,
             year=clean_year
         )
-        
+
         return results
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
