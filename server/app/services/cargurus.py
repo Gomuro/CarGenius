@@ -347,20 +347,22 @@ class CarGurusService:
         return saved_year_entity
 
     @staticmethod
-    async def load_search_data_and_base_url() -> tuple[str, dict]:
+    async def load_search_data_and_base_url(page_number = 1) -> tuple[str, dict]:
         base_url = "https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?searchId=44c42ccf-d280-4429-b154-b5641978bfc1&zip=92562&distance=100&entitySelectingHelper.selectedEntity=meContext=untrackedWithinSite_false_0&sortDir=ASC&sortType=BEST_MATCH&makeModelTrimPaths=m4&makeModelTrimPaths=m4%2Fd3387&srpVariation=DEFAULT_SEARCH&isDeliveryEnabled=true&nonShippableBaseline=0#listing=415154644/NONE/DEFAULT"
+        search_url = "https://www.cargurus.com/Cars/searchPage.action?searchId=cd991113-d908-44d1-b918-131871d60d58&zip=92562&distance=100&sourceContext=untrackedWithinSite_false_0&sortDir=ASC&sortType=BEST_MATCH&srpVariation=DEFAULT_SEARCH&isDeliveryEnabled=true&nonShippableBaseline=0&pageReceipt=eyJwYWdlQWxpZ25tZW50IjpbMTgsMjFdLCJzZWVuU3BvbnNvcmVkTGlzdGluZ0lkcyI6WzQxNjc5Mzg5NSw0MTk0MzY4MDMsNDE3MTIyMjM0LDQxMTgzMzQ0NCw0MDMxMzc3NzJdfQ==&pageNumber={page_number}&filtersModified=true"
+        
         try:
-            with open(FILE_PATH, 'r', encoding='utf-8') as f:
-                search_data = json.load(f)
-            print("✅ Loaded search data")
+            response = requests.get(search_url)
+            search_data = response.json()   
             return base_url, search_data
         except FileNotFoundError:
             print("❌ The file searchPage.action.json was not found")
             return base_url, {}
 
     @staticmethod
-    async def generate_urls_from_listing_ids_service(db: AsyncSession) -> List[str] or None:
+    async def generate_urls_from_listing_ids_service(db: AsyncSession) -> Optional[List[str]]:
         urls = []
+        
         base_url, search_data = await CarGurusService.load_search_data_and_base_url()
         if not search_data:
             return []
@@ -383,8 +385,8 @@ class CarGurusService:
         return urls
 
     @staticmethod
-    async def get_data_from_url_service(db: AsyncSession):
-        base_url, search_data = await CarGurusService.load_search_data_and_base_url()
+    async def get_data_from_url_service(db: AsyncSession, page_number = 1):
+        base_url, search_data = await CarGurusService.load_search_data_and_base_url(page_number)
         if not search_data:
             return []
         # Create extractor
@@ -399,7 +401,6 @@ class CarGurusService:
         for test_url in urls:
             time.sleep(1)
             test_url = test_url.strip()
-            print(f"▶️  Downloading and validation of data with URL:\n{test_url}")
             validator = CarGurusValidator()
             result = await validator.validate_from_url(test_url)
             data_lst.append(result)
@@ -410,51 +411,59 @@ class CarGurusService:
         """
         Loads data from Cargurus, checks whether exist and stores in a database.
         """
-        data_lst = await CarGurusService.get_data_from_url_service(db)
+        page_number = 1
+        for page_number in range(1, 1000):
+            data_lst = await CarGurusService.get_data_from_url_service(db, page_number)
+            
+            if not data_lst:
+                break
 
-        created = 0
-        skipped = 0
-        for item in data_lst:
-            if not item.success:
-                continue
+            created = 0
+            skipped = 0
+            for item in data_lst:
+                if not item.success:
+                    continue
 
-            listing_data = item.listing_data
-            tech_data = item.technical_data
-            equipment_data = item.equipment_data
+                listing_data = item.listing_data
+                tech_data = item.technical_data
+                equipment_data = item.equipment_data
 
-            existing_listing = await db.execute(
-                select(ListingMobileDe).where(ListingMobileDe.url == listing_data["url"])
-            )
+                existing_listing = await db.execute(
+                    select(ListingMobileDe).where(ListingMobileDe.url == listing_data["url"])
+                )
 
-            if existing_listing.scalar_one_or_none():
-                skipped += 1
-                continue
+                if existing_listing.scalar_one_or_none():
+                    skipped += 1
+                    continue
 
-            # Creating an object listingMobilede
-            listing = ListingMobileDe(
-                brand=listing_data["brand"],
-                model=listing_data["model"],
-                registration_year=listing_data["registration_year"],
-                mileage=listing_data.get("mileage"),
-                city_or_postal_code=listing_data.get("city_or_postal_code"),
-                color=listing_data.get("color"),
-                price=listing_data["price"],
-                currency=listing_data.get("currency", "EUR"),
-                url=listing_data["url"],
-                is_active=listing_data.get("is_active", True)
-            )
-            db.add(listing)
-            await db.flush()
+                # Creating an object listingMobilede
+                listing = ListingMobileDe(
+                    brand=listing_data["brand"],
+                    model=listing_data["model"],
+                    registration_year=listing_data["registration_year"],
+                    mileage=listing_data.get("mileage"),
+                    city_or_postal_code=listing_data.get("city_or_postal_code"),
+                    color=listing_data.get("color"),
+                    price=listing_data["price"],
+                    currency=listing_data.get("currency", "EUR"),
+                    url=listing_data["url"],
+                    is_active=listing_data.get("is_active", True)
+                )
+                db.add(listing)
+                await db.flush()
 
-            # Creating technical data
-            tech = TechnicalDetails(**tech_data, listing_id=listing.id)
-            db.add(tech)
+                # Creating technical data
+                tech = TechnicalDetails(**tech_data, listing_id=listing.id)
+                db.add(tech)
 
-            # Creating equipment
-            equip = Equipment(**equipment_data, listing_id=listing.id)
-            db.add(equip)
+                # Creating equipment
+                equip = Equipment(**equipment_data, listing_id=listing.id)
+                db.add(equip)
 
-            created += 1
+                created += 1
 
-        await db.commit()
+            await db.commit()
+            print(f"✅ Page {page_number} saved")
+            print(f"✅ Cars saved: {created}")
+            page_number += 1
         return {"created": created, "skipped": skipped}
