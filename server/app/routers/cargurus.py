@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.post("/load-cars")
 async def load_from_url_to_db(db: AsyncSession = Depends(get_db)):
-    result = await CarGurusService.save_to_db_from_url_service(db)
+    result = await CarGurusService.save_to_db_from_url_service(db)   # (db, 10) # means proceed 10 pages
     if not result:
         raise HTTPException(status_code=500, detail="Failed to save data from URL")
     return {"message": "saving completed", **result}

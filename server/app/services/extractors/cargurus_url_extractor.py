@@ -76,9 +76,9 @@ class CarGurusUrlExtractor:
 
         for listing_id in listing_ids:
             # Build URL parameters
-            params = [f"inventoryListing={listing_id}"]
-            for key, value in default_params.items():
-                params.append(f"{key}={value}")
+            params = [f"inventoryListing={listing_id}"]   # params looks like: ['inventoryListing=1234567890']
+            for key, value in default_params.items():   # key, value looks like: 'searchZip', '92562'
+                params.append(f"{key}={value}")   # params looks like: ['inventoryListing=1234567890', 'searchZip=92562', ...]
 
             url = f"{self.base_url}?{'&'.join(params)}"
             urls.append(url)
