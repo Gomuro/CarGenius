@@ -81,9 +81,11 @@ class FilterSummaryCard(QFrame):
             status_label.setObjectName("filter_card_status_success")
             layout.addWidget(status_label)
         else:
-            # Error state
-            error_label = QLabel("⚠ No data available")
+            # Error state with filter info
+            filter_title = self._create_filter_title()
+            error_label = QLabel(f"⚠ No data available for: <b>{filter_title}</b>")
             error_label.setObjectName("filter_card_status_error")
+            error_label.setTextFormat(Qt.TextFormat.RichText)
             layout.addWidget(error_label)
     
     def _create_filter_title(self):
