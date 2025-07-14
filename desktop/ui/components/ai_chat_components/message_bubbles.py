@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (QLabel, QFrame, QVBoxLayout, QHBoxLayout, QSizePolicy)
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QDesktopServices
 
 class MessageBubble(QFrame):
     """Widget representing a single chat message bubble"""
@@ -29,7 +29,14 @@ class MessageBubble(QFrame):
         message_label = QLabel(message)
         message_label.setObjectName("message_content")
         message_label.setWordWrap(True)
-        message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        # Enable rich text format for clickable links
+        message_label.setTextFormat(Qt.TextFormat.RichText)
+        # Enable text selection and link interaction
+        message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
+        # Connect link clicks to open in browser
+        message_label.linkActivated.connect(QDesktopServices.openUrl)
+        # Enable link hover effects
+        message_label.setOpenExternalLinks(True)
         message_label.setFont(QFont("Segoe UI", 10))
         message_label.setAlignment(Qt.AlignmentFlag.AlignTop)
         message_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
