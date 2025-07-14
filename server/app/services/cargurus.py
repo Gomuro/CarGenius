@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
 from app.models.cargurus import CarGurus
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 import requests
 from fastapi import HTTPException
 from app.services.extractors.cargurus_url_extractor import CarGurusUrlExtractor
@@ -483,7 +483,7 @@ class CarGurusService:
         return {"created": created, "skipped": skipped}
 
     @staticmethod
-    async def check_car_status_service(url: str) -> Dict[str, bool]:
+    async def check_car_status_service(url: str) -> Dict[str, Union[bool, int, str]]:
         """
         Check if a car listing is still active and whether it's new on the site.
         """
@@ -504,8 +504,7 @@ class CarGurusService:
                 }
 
             data = response.json()
-
-            days_on_market = data.get("daysOnMarket", 999)
+            days_on_market = data.get("listing", {}).get("listingHistory", {}).get("daysOnCarGurus", 999)
             is_new = days_on_market <= 3
 
             return {
