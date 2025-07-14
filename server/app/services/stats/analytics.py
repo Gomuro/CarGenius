@@ -94,9 +94,14 @@ async def get_filtered_for_ml(db: AsyncSession, license_key: LicenseKey) -> List
     )
     # Apply filters if any
     if filter_groups:
+        print(f"!!!!!!!!!!!!!!filter_groups: {filter_groups}")
         stmt = stmt.where(or_(*filter_groups))
-
+        print(f"!!!!!!!!!!!!!!stmt: {stmt}")
+    else:
+        print(f"!!!!!!!!!!!!!!no filter_groups")
+        return []
     result = await db.execute(stmt)
+    print(f"!!!!!!!!!!!!!!result: {result}")
     listings = list(result.scalars().all())
     return [ListingSchemaML.from_orm(item) for item in listings]
 

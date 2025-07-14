@@ -283,8 +283,11 @@ class AddContextDialog(QDialog):
         if current_item:
             filter_data = current_item.data(Qt.ItemDataRole.UserRole)
             # Remove None values from the filter data
-            filter_data = {k: v for k, v in filter_data.items() if v is not None}
-            self.add_filters_context_signal.emit(filter_data)
+            if filter_data is not None:
+                filter_data = {k: v for k, v in filter_data.items() if v is not None}
+                self.add_filters_context_signal.emit(filter_data)
+            else:
+                self._show_error_popup("Error", "Selected filter is empty.")
         self.accept()
 
     def _clear_results(self):

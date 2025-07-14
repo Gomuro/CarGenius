@@ -63,16 +63,20 @@ async def gpt_ask(request: GPTAskRequest, db: AsyncSession = Depends(get_db)):
         history_messages.append({"role": "assistant", "content": log.gpt_response})
 
     context = request.context
+    car = context.get('car', {})
     filters = {}
     filters = context.get('filters', filters)
     if filters == {}:
         print(f"No filters found in request context")
 
-    ml_response = await (ml_best_price_search(request.user_id, db))
-    best_price_offer = ml_response["top_offers"]
+    ml_response = await ml_best_price_search(request.user_id, db)
+    if isinstance(ml_response, dict) and "top_offers" in ml_response:
+        best_price_offer = ml_response["top_offers"]
+    else:
+        best_price_offer = {}
 
     try:
-        gpt_response = await gpt_client.start_gpt(history_messages, filters, best_price_offer, request.gpt_prompt)
+        gpt_response = await gpt_client.start_gpt(car, history_messages, filters, best_price_offer, request.gpt_prompt)
         await log_gpt_prompt(db, request.user_id, request.gpt_prompt, gpt_response)
         return GPTAskResponse(
             user_id=request.user_id,

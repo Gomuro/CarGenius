@@ -224,7 +224,7 @@ async def ml_best_price_search(key: str, db: AsyncSession = Depends(get_db)):
             }
             input_for_model.append(features)
             valid_indexes.append(i)
-            print(f"✅ Listing #{i} is valid for model input: {valid_indexes}")
+            # print(f"✅ Listing #{i} is valid for model input: {valid_indexes}")
 
         except Exception as e:
             print(f"Skip listing #{i} due to error: {e}")
