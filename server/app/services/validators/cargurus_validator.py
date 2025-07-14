@@ -7,6 +7,8 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 import re
 import logging
+
+import httpx
 import requests
 
 logger = logging.getLogger(__name__)
@@ -139,6 +141,14 @@ class CarGurusValidator:
             }
             response = requests.get(url, headers=headers, timeout=20) #request will wait up to 20 seconds for a response
             response.raise_for_status()   # Raise an error for bad responses (4xx, 5xx)
+
+            if "no longer available" in response.text.lower():
+                result.success = True
+                result.listing_data = {"url": url, "is_active": False}
+                result.technical_data = {}
+                result.equipment_data = {}
+                return result
+
             cargurus_data = response.json()
             valid_convert = await self.validate_and_convert(cargurus_data)
             return valid_convert

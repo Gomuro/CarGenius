@@ -1,6 +1,9 @@
+import requests
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
+from app.schemas.cargurus import CheckCarStatusResponse
 from app.services.cargurus import CarGurusService
 
 router = APIRouter()
@@ -16,7 +19,7 @@ async def load_from_url_to_db(db: AsyncSession = Depends(get_db)):
 
 @router.get("/get-cars")
 async def get_data_from_url(db: AsyncSession = Depends(get_db)):
-    result = await CarGurusService.get_data_from_url_service(db)
+    result = await CarGurusService.get_data_from_url_service(db, 2)
     if not result:
         raise HTTPException(status_code=404, detail="No data found for the given URL")
     return {"message": "Data retrieved successfully", "data": result}
@@ -92,3 +95,12 @@ async def get_by_criteria(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/check-active-new-car", response_model=CheckCarStatusResponse)
+async def check_car_status(url: HttpUrl = Query(..., description="Detail listing URL")):
+    """
+    Check if a car listing is still active, new, and how many days it has been on the market.
+    """
+    result = await CarGurusService.check_car_status_service(url)
+    return result

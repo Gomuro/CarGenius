@@ -20,4 +20,14 @@ class CarGurusResponse(CarGurusBase):
     id: int
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
+
+
+class CheckCarStatusResponse(BaseModel):
+    is_active: bool
+    is_new: bool
+    days_on_market: int
+    message: str
+
+    class Config:
+        orm_mode = True
