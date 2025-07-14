@@ -14,15 +14,23 @@ class GPTClient:
     def __init__(self, api_key=OPENAI_KEY):
         self.client = OpenAI(api_key=api_key)
 
-    async def start_gpt(self, history: list[dict], filters: list[dict], best_price_offer: dict[dict, dict],
-                        prompt: str):
+    async def start_gpt(self, car: dict = None, history: list[dict] = None, filters: list[dict] = None,
+                        best_price_offer: dict[dict, dict] = None, prompt: str = None):
+        if filters is None:
+            filters = {}
+        if best_price_offer is None:
+            best_price_offer = {}
         system_message = {
             "role": "system",
             "content": f"{BASE_SYSTEM_PROMPT}"
-                       f"\nUser preferences: {filters}"
-                       f"\nTop 10 car deals: {best_price_offer}"
         }
         messages = [system_message] + history + [{"role": "user", "content": prompt}]
+        if car:
+            messages.append({"role": "user", "content": f"\nCar: {car}"})
+        if filters:
+            messages.append({"role": "user", "content": f"\nUser preferences: {filters}"})
+        if best_price_offer:
+            messages.append({"role": "user", "content": f"\nTop 10 car deals: {best_price_offer}"})
 
         response = await asyncio.to_thread(
             lambda: self.client.chat.completions.create(
