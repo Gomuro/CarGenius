@@ -4,6 +4,7 @@ import os
 import random
 import time
 import httpx
+from pydantic import HttpUrl
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
@@ -247,7 +248,9 @@ class CarGurusService:
         url = "https://www.cargurus.com/research/price-trends?entityIds=Index&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends._index"
 
         try:
-            response = requests.get(url)
+            # response = requests.get(url)
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(url)
             if response.status_code == 200:
                 data = response.json()
                 saved_brand_entity = []
@@ -303,7 +306,9 @@ class CarGurusService:
     async def _fetch_data_model(db: AsyncSession, brand_label: str, brand_id: str) -> Optional[Dict]:
         await asyncio.sleep(0.5)
         url = f"https://www.cargurus.com/research/price-trends/{brand_label}-{brand_id}?entityIds={brand_id}&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends.%24makeModelSlug"
-        response = requests.get(url)
+        # response = requests.get(url)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url)
         data = response.json()
         price_trends = data.get("priceTrends", [])
         models = []
@@ -328,7 +333,9 @@ class CarGurusService:
             Optional[Dict]:
         await asyncio.sleep(1)
         url = f"https://www.cargurus.com/research/price-trends/{brand_label}-{model_label}-{model_id}?entityIds={model_id}&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends.%24makeModelSlug"
-        response = requests.get(url)
+        # response = requests.get(url)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url)
         data = response.json()
         price_trends = data.get("priceTrends", [])
         saved_year_entity = []
@@ -437,7 +444,12 @@ class CarGurusService:
                 existing_listing = await db.execute(
                     select(ListingMobileDe).where(ListingMobileDe.url == listing_data["url"])
                 )
-                if existing_listing.scalar_one_or_none():
+                existing = existing_listing.scalar_one_or_none()
+
+                if existing:
+                    if not listing_data.get("is_active", True):
+                        existing.is_active = False
+                        await db.commit()
                     skipped += 1
                     continue
 
@@ -469,3 +481,44 @@ class CarGurusService:
             page_number += 1
 
         return {"created": created, "skipped": skipped}
+
+    @staticmethod
+    async def check_car_status_service(url: str) -> Dict[str, bool]:
+        """
+        Check if a car listing is still active and whether it's new on the site.
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+        try:
+            response = requests.get(str(url), headers=headers, timeout=15)
+            response.raise_for_status()
+
+            if "no longer available" in response.text.lower():
+                return {
+                    "is_active": False,
+                    "is_new": False,
+                    "days_on_market": 0,
+                    "message": "Listing is no longer available"
+                }
+
+            data = response.json()
+
+            days_on_market = data.get("daysOnMarket", 999)
+            is_new = days_on_market <= 3
+
+            return {
+                "is_active": True,
+                "is_new": is_new,
+                "days_on_market": days_on_market,
+                "message": "Listing is active"
+            }
+
+        except requests.exceptions.RequestException as e:
+            return {
+                "is_active": False,
+                "is_new": False,
+                "days_on_market": 0,
+                "message": f"Request failed: {e}"
+            }
