@@ -45,9 +45,23 @@ class ContextDisplayWidget(QFrame):
         # Handle car context
         if 'car' in context and isinstance(context.get('car'), dict):
             car_info = context['car']
-            brand = car_info.get('brand', '')
-            model = car_info.get('model', '')
-            if brand or model:
+            
+            # Try to get brand and model from _api_data first (most reliable)
+            api_data = car_info.get('_api_data', {})
+            brand = api_data.get('brand', '')
+            model = api_data.get('model', '')
+            
+            # If not found in _api_data, try direct fields
+            if not brand or not model:
+                brand = brand or car_info.get('brand', '')
+                model = model or car_info.get('model', '')
+            
+            # If still not found, use the title as fallback
+            if not brand and not model:
+                title = car_info.get('title', '')
+                if title:
+                    display_parts.append(f"Car: {title}")
+            else:
                 display_parts.append(f"Car: {brand} {model}".strip())
         
         # Handle filters context
