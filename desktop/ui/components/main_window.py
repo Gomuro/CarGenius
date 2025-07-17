@@ -192,17 +192,37 @@ class MainWindow(QMainWindow):
             # Connect close event to update button state
             self.ai_chat_window.closeEvent = self.handle_chat_close
         
-        # Show the window
+        # Ensure the window is properly shown and focused
         self.ai_chat_window.show()
-        self.ai_chat_window.activateWindow()
+        self.ai_chat_window.raise_()  # Bring to front
+        self.ai_chat_window.activateWindow()  # Give focus
+        self.ai_chat_window.setWindowState(self.ai_chat_window.windowState() & ~Qt.WindowState.WindowMinimized)  # Unminimize if needed
     
     def _on_car_context_requested(self, car_data: dict):
         """Opens the chat and sends car data as context."""
-        if not self.ai_chat_window or not self.ai_chat_window.isVisible():
-            self.open_ai_chat()
+        print(f"[MainWindow] Car context requested: {car_data.get('title', 'Unknown')}")
         
-        # Use a QTimer to ensure the window is visible and ready before setting context
-        QTimer.singleShot(100, lambda: self.ai_chat_window.set_context('car', car_data))
+        # Always ensure the chat window is properly opened and focused
+        self.open_ai_chat()
+        
+        # Update the floating button state
+        self.chat_fab.setChecked(True)
+        self.chat_fab.setToolTip("Close AI Chat")
+        self.chat_fab.setObjectName("chat_fab_active")
+        self.chat_fab.style().unpolish(self.chat_fab)
+        self.chat_fab.style().polish(self.chat_fab)
+        
+        # Use a longer delay to ensure the window is fully ready and focused
+        QTimer.singleShot(200, lambda: self._set_context_and_focus(car_data))
+    
+    def _set_context_and_focus(self, car_data: dict):
+        """Helper method to set context and ensure focus."""
+        if self.ai_chat_window:
+            self.ai_chat_window.set_context('car', car_data)
+            # Ensure the window stays focused after setting context
+            self.ai_chat_window.raise_()
+            self.ai_chat_window.activateWindow()
+            print(f"[MainWindow] Context set and window focused for: {car_data.get('title', 'Unknown')}")
     
     def _handle_search_request(self, criteria):
         """Handles search requests from the filter panel."""
