@@ -1,6 +1,7 @@
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import (QLabel, QFrame, QVBoxLayout, QHBoxLayout, QSizePolicy)
-from PyQt6.QtGui import QFont, QDesktopServices
+from PyQt6.QtWidgets import (QLabel, QFrame, QVBoxLayout, QHBoxLayout, QSizePolicy, QTextEdit)
+from PyQt6.QtGui import QFont, QTextOption
+import markdown
 
 class MessageBubble(QFrame):
     """Widget representing a single chat message bubble"""
@@ -26,21 +27,25 @@ class MessageBubble(QFrame):
         sender.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         layout.addWidget(sender)
         
-        message_label = QLabel(message)
+        # Use QLabel with RichText for simple, reliable text display without scrolling
+        message_label = QLabel()
         message_label.setObjectName("message_content")
         message_label.setWordWrap(True)
-        # Enable rich text format for clickable links
         message_label.setTextFormat(Qt.TextFormat.RichText)
-        # Enable text selection and link interaction
-        message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
-        # Connect link clicks to open in browser
-        message_label.linkActivated.connect(QDesktopServices.openUrl)
-        # Enable link hover effects
         message_label.setOpenExternalLinks(True)
+        message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
         message_label.setFont(QFont("Segoe UI", 10))
         message_label.setAlignment(Qt.AlignmentFlag.AlignTop)
         message_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        message_label.setMinimumHeight(20)  # Ensure minimum height for single lines
+        
+        # Convert Markdown to HTML for better formatting
+        html_message = markdown.markdown(message, extensions=["extra", "nl2br"])
+        message_label.setText(html_message)
+        
+        # Ensure the label can grow to fit all content
+        message_label.setMinimumHeight(20)  # Start with minimum height
+        message_label.adjustSize()  # Let it size itself based on content
+        
         layout.addWidget(message_label)
         
         self.setProperty("align", "right" if is_user else "left")
