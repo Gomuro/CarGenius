@@ -34,8 +34,8 @@ jobs:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: testdb
-      DATABASE_URL: postgresql+asyncpg://fastapi_user:test@postgres_cargenius:5432/fastapi_project_db
-      TEST_DATABASE_URL: postgresql+asyncpg://test_fastapi:test_fastapi@test_db:5432/test_cargenius_db
+      DATABASE_URL: postgresql+asyncpg://testuser:testpass@postgres:5432/testdb
+      TEST_DATABASE_URL: postgresql+asyncpg://testuser:testpass@postgres:5432/testdb
       CELERY_BROKER_URL: redis://localhost:6379/0
       CELERY_RESULT_BACKEND: redis://localhost:6379/0
       PYTHONPATH: /workdir_docker
