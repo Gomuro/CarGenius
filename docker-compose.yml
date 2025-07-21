@@ -115,11 +115,14 @@ services:
         alembic -c alembic_test.ini upgrade head || (echo 'Alembic failed!' && exit 1) &&
         echo 'Waiting for DB...' &&
         sleep 5 &&
-        echo 'Running tests...' &&
-        pytest --maxfail=1 --tb=short -q"
+        echo 'Running tests with coverage...' &&
+        coverage run -m pytest &&
+        coverage report &&
+        coverage html"
 
     volumes:
       - ./server:/workdir_docker
+      - ./server/htmlcov:/workdir_docker/htmlcov
     depends_on:
       - test_db
 
