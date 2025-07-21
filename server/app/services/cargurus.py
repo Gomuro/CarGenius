@@ -1,13 +1,17 @@
+import asyncio
 import json
 import os
+import random
 import time
+import httpx
+from pydantic import HttpUrl
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
 from app.models.cargurus import CarGurus
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 import requests
 from fastapi import HTTPException
 from app.services.extractors.cargurus_url_extractor import CarGurusUrlExtractor
@@ -244,7 +248,9 @@ class CarGurusService:
         url = "https://www.cargurus.com/research/price-trends?entityIds=Index&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends._index"
 
         try:
-            response = requests.get(url)
+            # response = requests.get(url)
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(url)
             if response.status_code == 200:
                 data = response.json()
                 saved_brand_entity = []
@@ -298,9 +304,11 @@ class CarGurusService:
 
     @staticmethod
     async def _fetch_data_model(db: AsyncSession, brand_label: str, brand_id: str) -> Optional[Dict]:
-        time.sleep(0.5)
+        await asyncio.sleep(0.5)
         url = f"https://www.cargurus.com/research/price-trends/{brand_label}-{brand_id}?entityIds={brand_id}&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends.%24makeModelSlug"
-        response = requests.get(url)
+        # response = requests.get(url)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url)
         data = response.json()
         price_trends = data.get("priceTrends", [])
         models = []
@@ -322,10 +330,12 @@ class CarGurusService:
 
     @staticmethod
     async def _fetch_data_model_with_year(db: AsyncSession, model_label: str, model_id: str, brand_label: str) -> \
-    Optional[Dict]:
-        time.sleep(1)
+            Optional[Dict]:
+        await asyncio.sleep(1)
         url = f"https://www.cargurus.com/research/price-trends/{brand_label}-{model_label}-{model_id}?entityIds={model_id}&startDate=1738620000000&endDate=1751662799999&_data=routes%2F%28%24intl%29.research.price-trends.%24makeModelSlug"
-        response = requests.get(url)
+        # response = requests.get(url)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url)
         data = response.json()
         price_trends = data.get("priceTrends", [])
         saved_year_entity = []
@@ -347,96 +357,102 @@ class CarGurusService:
         return saved_year_entity
 
     @staticmethod
-    async def load_search_data_and_base_url(page_number = 1) -> tuple[str, dict]:
-        base_url = "https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?searchId=44c42ccf-d280-4429-b154-b5641978bfc1&zip=92562&distance=100&entitySelectingHelper.selectedEntity=meContext=untrackedWithinSite_false_0&sortDir=ASC&sortType=BEST_MATCH&makeModelTrimPaths=m4&makeModelTrimPaths=m4%2Fd3387&srpVariation=DEFAULT_SEARCH&isDeliveryEnabled=true&nonShippableBaseline=0#listing=415154644/NONE/DEFAULT"
-        search_url = "https://www.cargurus.com/Cars/searchPage.action?searchId=cd991113-d908-44d1-b918-131871d60d58&zip=92562&distance=100&sourceContext=untrackedWithinSite_false_0&sortDir=ASC&sortType=BEST_MATCH&srpVariation=DEFAULT_SEARCH&isDeliveryEnabled=true&nonShippableBaseline=0&pageReceipt=eyJwYWdlQWxpZ25tZW50IjpbMTgsMjFdLCJzZWVuU3BvbnNvcmVkTGlzdGluZ0lkcyI6WzQxNjc5Mzg5NSw0MTk0MzY4MDMsNDE3MTIyMjM0LDQxMTgzMzQ0NCw0MDMxMzc3NzJdfQ==&pageNumber={page_number}&filtersModified=true"
-        
+    async def load_search_data_and_base_url(page_number: int) -> dict:
+        search_url_template = (
+            "https://www.cargurus.com/Cars/searchPage.action?"
+            "searchId=cd991113-d908-44d1-b918-131871d60d58&zip=92562&distance=100"
+            "&sourceContext=untrackedWithinSite_false_0&sortDir=ASC&sortType=BEST_MATCH"
+            "&srpVariation=DEFAULT_SEARCH&isDeliveryEnabled=true&nonShippableBaseline=0"
+            "&pageNumber={page_number}&filtersModified=true"
+        )
+        url = search_url_template.format(page_number=page_number)
         try:
-            response = requests.get(search_url)
-            search_data = response.json()   
-            return base_url, search_data
-        except FileNotFoundError:
-            print("❌ The file searchPage.action.json was not found")
-            return base_url, {}
+            # response = requests.get(url)
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(url)
+            return response.json()
+        except Exception as e:
+            print(f"❌ Failed to fetch search page {page_number}: {e}")
+            return {}
 
     @staticmethod
-    async def generate_urls_from_listing_ids_service(db: AsyncSession) -> Optional[List[str]]:
-        urls = []
-        
-        base_url, search_data = await CarGurusService.load_search_data_and_base_url()
-        if not search_data:
-            return []
-        # Create extractor
+    async def fetch_validated_results_from_page(page_number: int) -> List:
         extractor = CarGurusUrlExtractor()
+        validator = CarGurusValidator()
+
+        print(f"🔍 Fetching page {page_number}")
+        search_data = await CarGurusService.load_search_data_and_base_url(page_number)
+        if not search_data:
+            print(f"❌ No data on page {page_number}.")
+            return []
 
         listing_ids = await extractor.extract_listing_ids(search_data)
-        if "#listing=" not in base_url:
-            raise ValueError("Base URL must contain '#listing=' fragment.")
-
-        prefix, fragment = base_url.split("#listing=", 1)
-        # fragment looks like: 415154644/NONE/DEFAULT
-
-        for listing_id in listing_ids:
-            # Replace the first part (before the first slash) with the new ID
-            parts = fragment.split("/", 1)
-            new_fragment = f"{listing_id}/{parts[1]}" if len(parts) > 1 else str(listing_id)
-            new_url = f"{prefix}#listing={new_fragment}"
-            urls.append(new_url)
-        return urls
-
-    @staticmethod
-    async def get_data_from_url_service(db: AsyncSession, page_number = 1):
-        base_url, search_data = await CarGurusService.load_search_data_and_base_url(page_number)
-        if not search_data:
+        if not listing_ids:
+            print(f"❌ No listing IDs found on page {page_number}.")
             return []
-        # Create extractor
-        extractor = CarGurusUrlExtractor()
 
-        listing_ids = await extractor.extract_listing_ids(search_data)
-        if "#listing=" not in base_url:
-            raise ValueError("Base URL must contain '#listing=' fragment.")
-        data_lst = []
-        extractor = CarGurusUrlExtractor()
-        urls = await extractor.generate_detail_urls(listing_ids, search_data)
-        for test_url in urls:
-            time.sleep(1)
-            test_url = test_url.strip()
-            validator = CarGurusValidator()
-            result = await validator.validate_from_url(test_url)
-            data_lst.append(result)
-        return data_lst
+        detail_urls = await extractor.generate_detail_urls(listing_ids, search_data)
+
+        results = []
+        for detail_url in detail_urls:
+            await asyncio.sleep(random.uniform(0.7, 1))
+            result = await validator.validate_from_url(detail_url.strip())
+            results.append(result)
+
+        return results
 
     @staticmethod
-    async def save_to_db_from_url_service(db: AsyncSession) -> dict:
-        """
-        Loads data from Cargurus, checks whether exist and stores in a database.
-        """
+    async def get_data_from_url_service(db: AsyncSession, max_pages: Optional[int] = None) -> List[dict]:
+        all_data = []
         page_number = 1
-        for page_number in range(1, 1000):
-            data_lst = await CarGurusService.get_data_from_url_service(db, page_number)
-            
-            if not data_lst:
+
+        while True:
+            if max_pages is not None and page_number > max_pages:
                 break
 
-            created = 0
-            skipped = 0
-            for item in data_lst:
-                if not item.success:
+            results = await CarGurusService.fetch_validated_results_from_page(page_number)
+            if not results:
+                break
+
+            all_data.extend(results)
+            page_number += 1
+
+        return all_data
+
+    @staticmethod
+    async def save_to_db_from_url_service(db: AsyncSession, max_pages: Optional[int] = None) -> dict:
+        created = 0
+        skipped = 0
+        page_number = 1
+
+        while True:
+            if max_pages is not None and page_number > max_pages:
+                break
+
+            results = await CarGurusService.fetch_validated_results_from_page(page_number)
+            if not results:
+                break
+
+            for result in results:
+                if not result.success:
                     continue
 
-                listing_data = item.listing_data
-                tech_data = item.technical_data
-                equipment_data = item.equipment_data
+                listing_data = result.listing_data
+                tech_data = result.technical_data
+                equipment_data = result.equipment_data
 
                 existing_listing = await db.execute(
                     select(ListingMobileDe).where(ListingMobileDe.url == listing_data["url"])
                 )
+                existing = existing_listing.scalar_one_or_none()
 
-                if existing_listing.scalar_one_or_none():
+                if existing:
+                    if not listing_data.get("is_active", True):
+                        existing.is_active = False
+                        await db.commit()
                     skipped += 1
                     continue
 
-                # Creating an object listingMobilede
                 listing = ListingMobileDe(
                     brand=listing_data["brand"],
                     model=listing_data["model"],
@@ -452,18 +468,56 @@ class CarGurusService:
                 db.add(listing)
                 await db.flush()
 
-                # Creating technical data
                 tech = TechnicalDetails(**tech_data, listing_id=listing.id)
                 db.add(tech)
 
-                # Creating equipment
                 equip = Equipment(**equipment_data, listing_id=listing.id)
                 db.add(equip)
 
+                await db.commit()
                 created += 1
 
-            await db.commit()
-            print(f"✅ Page {page_number} saved")
-            print(f"✅ Cars saved: {created}")
+            print(f"✅ Page {page_number} saved. Created: {created}, Skipped: {skipped}")
             page_number += 1
+
         return {"created": created, "skipped": skipped}
+
+    @staticmethod
+    async def check_car_status_service(url: str) -> Dict[str, Union[bool, int, str]]:
+        """
+        Check if a car listing is still active and whether it's new on the site.
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+        try:
+            response = requests.get(str(url), headers=headers, timeout=15)
+            response.raise_for_status()
+
+            if "no longer available" in response.text.lower():
+                return {
+                    "is_active": False,
+                    "is_new": False,
+                    "days_on_market": 0,
+                    "message": "Listing is no longer available"
+                }
+
+            data = response.json()
+            days_on_market = data.get("listing", {}).get("listingHistory", {}).get("daysOnCarGurus", 999)
+            is_new = days_on_market <= 3
+
+            return {
+                "is_active": True,
+                "is_new": is_new,
+                "days_on_market": days_on_market,
+                "message": "Listing is active"
+            }
+
+        except requests.exceptions.RequestException as e:
+            return {
+                "is_active": False,
+                "is_new": False,
+                "days_on_market": 0,
+                "message": f"Request failed: {e}"
+            }
