@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ serhiy ]
+    branches: [ main, dev, serhiy ]
   pull_request:
-    branches: [ serhiy ]
+    branches: [ main, dev, serhiy ]
 
 jobs:
   test:
@@ -31,7 +31,7 @@ jobs:
           - 6379:6379
 
     env:
-      # Основні змінні для тестової БД та брокера
+      # Basic variables for the test DB and broker
       POSTGRES_USER: test_fastapi
       POSTGRES_PASSWORD: test_fastapi
       POSTGRES_DB: test_cargenius_db
@@ -40,7 +40,7 @@ jobs:
 
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # Для сумісності з app/core/config.py та alembic
+      # For compatibility with app/core/config.py and alembic
       DATABASE_URL: postgresql+asyncpg://test_fastapi:test_fastapi@localhost:5432/test_cargenius_db
       TEST_DATABASE_URL: postgresql+asyncpg://test_fastapi:test_fastapi@localhost:5432/test_cargenius_db
 
@@ -53,7 +53,7 @@ jobs:
       CELERY_BROKER_URL: redis://localhost:6379/0
       CELERY_RESULT_BACKEND: redis://localhost:6379/0
 
-      # Щоб не падали імпорти, якщо у вас є PYTHONPATH
+      # To prevent imports from failing if you have PYTHONPATH
       PYTHONPATH: /workdir_docker
 
     steps:
