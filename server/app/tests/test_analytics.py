@@ -22,12 +22,18 @@ DESTINATION_PATH = os.path.join(PROJECT_ROOT, "car_data_Audi.json")  # path insi
 
 @pytest.fixture(scope="function", autouse=True)
 def copy_test_json_file():
-    if TEST_SOURCE_PATH != DESTINATION_PATH:
-        shutil.copy(TEST_SOURCE_PATH,
-                    DESTINATION_PATH)  # copies to the project root. shutil.copy copies a file from src to dst.
-    yield  # the test itself takes place here
-    # if os.path.exists(DESTINATION_PATH):
-    os.remove(DESTINATION_PATH)
+    # Current working directory (In CI is /home/runner/work/CarGenius/CarGenius/server)
+    cwd = os.getcwd()
+    # Path to the test source (always relative to this file)
+    test_source = os.path.join(os.path.dirname(__file__), "test_data", "test_car_data_Audi_1.json")
+    # Target path (in the same folder where the endpoint is waiting)
+    dest = os.path.join(cwd, "car_data_Audi_1.json")
+
+    shutil.copy(test_source, dest)
+    yield
+    if os.path.exists(dest):
+        os.remove(dest)
+
 
 
 @pytest.mark.asyncio
@@ -35,6 +41,7 @@ async def test_save_listing_to_db(client, session):
     """
     Test saving a car listing to the database.
     """
+    assert os.path.exists("car_data_Audi_1.json"), "Test data file is missing!"
     response = await client.post("/api/v1/analytics/json-to-db")
     assert response.status_code == 200, f"Expected status code 200, got: {response.status_code}"
 

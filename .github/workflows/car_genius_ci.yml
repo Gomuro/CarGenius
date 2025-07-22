@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev, serhiy ]
+  pull_request:
+    branches: [ main, dev, serhiy ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: test_fastapi
+          POSTGRES_PASSWORD: test_fastapi
+          POSTGRES_DB: test_cargenius_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:6.2-alpine
+        ports:
+          - 6379:6379
+
+    env:
+      # Basic variables for the test DB and broker
+      POSTGRES_USER: test_fastapi
+      POSTGRES_PASSWORD: test_fastapi
+      POSTGRES_DB: test_cargenius_db
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      # For compatibility with app/core/config.py and alembic
+      DATABASE_URL: postgresql+asyncpg://test_fastapi:test_fastapi@localhost:5432/test_cargenius_db
+      TEST_DATABASE_URL: postgresql+asyncpg://test_fastapi:test_fastapi@localhost:5432/test_cargenius_db
+
+      TEST_POSTGRES_USER: test_fastapi
+      TEST_POSTGRES_PASSWORD: test_fastapi
+      TEST_POSTGRES_HOST: localhost
+      TEST_POSTGRES_DB: test_cargenius_db
+      TEST_POSTGRES_PORT: 5432
+
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/0
+
+      # To prevent imports from failing if you have PYTHONPATH
+      PYTHONPATH: /workdir_docker
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Alembic migrations
+        run: |
+          cd server
+          alembic -c alembic_test.ini upgrade head
+
+      - name: Run tests with coverage
+        run: |
+          cd server
+          coverage run -m pytest
+          coverage report
