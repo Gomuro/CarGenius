@@ -35,6 +35,7 @@ async def test_save_listing_to_db(client, session):
     """
     Test saving a car listing to the database.
     """
+    assert os.path.exists("car_data_Audi_1.json"), "Test data file is missing!"
     response = await client.post("/api/v1/analytics/json-to-db")
     assert response.status_code == 200, f"Expected status code 200, got: {response.status_code}"
 
