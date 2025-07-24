@@ -14,7 +14,7 @@ engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True, future=True)
 async_session_maker = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
-    expire_on_commit=False
+    expire_on_commit=False   # This means that objects will not be expired after commit, allowing them to be used immediately after a commit
 )
 
 # Base class for all ORM models
