@@ -1,14 +1,10 @@
 # app/tests/test_gpt.py
-from typing import List
 import pytest
-from httpx import AsyncClient
 from sqlalchemy import delete
 from app.models.car import ListingMobileDe, TechnicalDetails, Equipment
 from app.models.gpt import GPTPromptLog
 from unittest.mock import AsyncMock, patch
 from app.models.license import LicenseKey
-from app.schemas.stats.analytics import ListingSchemaML
-from app.services.license import generate_license_key, update_license_filters
 
 
 @pytest.mark.asyncio
@@ -38,20 +34,20 @@ async def test_gpt_ask(client, session):
     test_prompt = "Which car will fit me?"
     # Define a mock response from the ML model for best car offers.
     best_price_offer = {
-  "top_offers": [
-    {
-      "actual_price": 62980,
-      "predicted_price": 75827.98,
-      "saving": 12847.979999999996,
-      "brand": "Audi",
-      "model": "Q8 e-tron",
-      "registration_year": 2024,
-      "meleage": 7060,
-      "color": "Grau",
-      "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=414311984&action=topInCategory&cn=DE&ms=1900%3B%3B%3B&od=up&ref=seo&refId=e9c3d823-068f-a924-a7fe-091857469190&s=Car&sb=rel&searchId=e9c3d823-068f-a924-a7fe-091857469190&vc=Car"
-    }  ],
-  "listings_count": 60
-}
+      "top_offers": [
+        {
+          "actual_price": 62980,
+          "predicted_price": 75827.98,
+          "saving": 12847.979999999996,
+          "brand": "Audi",
+          "model": "Q8 e-tron",
+          "registration_year": 2024,
+          "meleage": 7060,
+          "color": "Grau",
+          "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=414311984&action=topInCategory&cn=DE&ms=1900%3B%3B%3B&od=up&ref=seo&refId=e9c3d823-068f-a924-a7fe-091857469190&s=Car&sb=rel&searchId=e9c3d823-068f-a924-a7fe-091857469190&vc=Car"
+        }  ],
+      "listings_count": 60
+    }
     # Define a mock GPT response that will be returned instead of a real GPT call.
     mock_response = "Recommend Audi Q8 E-Tron with a price of 62980"
 
