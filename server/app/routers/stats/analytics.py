@@ -203,12 +203,12 @@ async def search_listings(
 
 
 @router.get("/ml_best_price_search", response_model=dict)
-async def ml_best_price_search(key: str, db: AsyncSession = Depends(get_db)):
+async def ml_best_price_search(key: str, db: AsyncSession = Depends(get_db), filters: dict = None):
     license_obj = await get_license_by_key(db, key)
     if not license_obj:
         raise HTTPException(status_code=404, detail="License not found")
 
-    listings = await get_filtered_for_ml(db=db, license_key=license_obj)
+    listings = await get_filtered_for_ml(db=db, license_key=license_obj, filters=filters)
     flat_listings = await flatten_listing_ml(listings)  # [{'brand': ..., 'mileage': ..., ...}, {...}, ...]
     if not flat_listings:
         return {"detail": "No listings found"}

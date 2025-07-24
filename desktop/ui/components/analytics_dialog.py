@@ -81,9 +81,11 @@ class FilterSummaryCard(QFrame):
             status_label.setObjectName("filter_card_status_success")
             layout.addWidget(status_label)
         else:
-            # Error state
-            error_label = QLabel("⚠ No data available")
+            # Error state with filter info
+            filter_title = self._create_filter_title()
+            error_label = QLabel(f"⚠ No data available for: <b>{filter_title}</b>")
             error_label.setObjectName("filter_card_status_error")
+            error_label.setTextFormat(Qt.TextFormat.RichText)
             layout.addWidget(error_label)
     
     def _create_filter_title(self):
@@ -790,6 +792,8 @@ class AnalyticsDialog(QDialog):
                 widget_data = self._convert_ml_offer_to_widget_format(offer)
                 if widget_data:
                     listing_widget = CarListingWidget(widget_data)
+                    # Connect the signal to open AI chat with context
+                    listing_widget.send_to_ai_signal.connect(self._on_car_context_selected)
                     self.hot_deals_content_layout.addWidget(listing_widget)
         
         # Add stretch
@@ -840,6 +844,19 @@ class AnalyticsDialog(QDialog):
         print("[AnalyticsDialog] Manual hot deals refresh triggered")
         self._clear_hot_deals_cache()
         self._load_hot_deals_content()
+        
+    def _on_car_context_selected(self, car_data: dict):
+        """Handle car selection from hot deals for AI context."""
+        print(f"[AnalyticsDialog] Car context selected: {car_data.get('title', 'Unknown')}")
+        
+        # Get the main window (parent) and use its method to open AI chat with context
+        main_window = self.parent()
+        if main_window and hasattr(main_window, '_on_car_context_requested'):
+            main_window._on_car_context_requested(car_data)
+            # Close the analytics dialog after successfully opening AI chat
+            self.accept()
+        else:
+            print("[AnalyticsDialog] Warning: Could not access main window to open AI chat")
         
     def _load_price_trends_content(self):
         """Load the appropriate content for price trends tab based on state."""
