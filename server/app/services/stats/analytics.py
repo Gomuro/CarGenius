@@ -12,7 +12,7 @@ from app.schemas.stats.analytics import AvgPriceByBrand, ListingSchema, Technica
 from app.services.stats.filter_mobilde import filtered_listings, filtered_tech_details, filtered_equipment
 
 
-async def build_filter_groups_from_license_key(license_key: LicenseKey) -> list:
+async def build_filter_groups_from_license_key(license_key: LicenseKey, filters: dict = None) -> list:
     """
     Filtering listings with JOIN on TechnicalDetails and Equipment.
     This logic assumes filters for different car models are ORed,
@@ -20,7 +20,9 @@ async def build_filter_groups_from_license_key(license_key: LicenseKey) -> list:
     """
     filter_groups = []
     # A filter group represents one set of criteria for a car (e.g. brand, model, and its tech details)
-    for raw_filter in license_key.filters:
+    # Use provided filters if available, otherwise use license_key.filters
+    filter_list = filters if filters else license_key.filters
+    for raw_filter in filter_list:
         # Skip if not a dictionary
         if not isinstance(raw_filter, dict):
             continue
@@ -80,8 +82,8 @@ async def build_filter_groups_from_license_key(license_key: LicenseKey) -> list:
     return filter_groups
 
 
-async def get_filtered_for_ml(db: AsyncSession, license_key: LicenseKey) -> List[ListingSchemaML]:
-    filter_groups = await build_filter_groups_from_license_key(license_key)
+async def get_filtered_for_ml(db: AsyncSession, license_key: LicenseKey, filters: dict = None) -> List[ListingSchemaML]:
+    filter_groups = await build_filter_groups_from_license_key(license_key, filters)
     # Base query to get all listings
     stmt = (
         select(ListingMobileDe)
