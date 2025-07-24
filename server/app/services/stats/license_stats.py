@@ -17,7 +17,7 @@ async def get_license_count_by_day(db: AsyncSession, days: int):
         List of tuples with (date, count) representing number of created licenses per date.
     """
     now = datetime.now(timezone.utc)
-    start_date = now - timedelta(days=days)
+    start_date = now - timedelta(days=days)   # in the last N days
 
     # Select date and count of licenses grouped by creation date
     result = await db.execute(

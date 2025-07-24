@@ -2,6 +2,7 @@
 import os
 import shutil
 import uuid
+from datetime import datetime, timezone
 from uuid import uuid4
 import pytest
 from sqlalchemy import delete
@@ -33,7 +34,6 @@ def copy_test_json_file():
     yield
     if os.path.exists(dest):
         os.remove(dest)
-
 
 
 @pytest.mark.asyncio
@@ -243,3 +243,42 @@ async def test_get_filter_options(client, session):
     assert "price_range" in data
     assert data["price_range"]["min"] == 25000
     assert data["price_range"]["max"] == 60000
+
+
+@pytest.mark.asyncio
+async def test_license_per_day(client, session):
+    # Clear previous license keys
+    await session.execute(delete(LicenseKey))
+    await session.commit()
+
+    # Add test license keys
+    for i in range(5):
+        license_key = LicenseKey(
+            key=f"test-license-key-{i}",  # Unique key for each license
+            created_at=datetime(2025, 6, i + 1, 0, 0, 0, tzinfo=timezone.utc),  # Simulating different creation dates
+            # created_at = f"2025-06-{i+1}T00:00:00Z",  # Simulating different creation dates
+        )
+        session.add(license_key)
+        await session.commit()
+
+        # Request to endpoint
+        response = await client.get("/api/v1/stats/licenses-per-day?days=60")
+
+        assert response.status_code == 200, f"Expected status code 200, got: {response.status_code}"
+        data = response.json()
+        for i, row in enumerate(data):
+            assert row["date"] == f"2025-06-{i + 1:02}", f"Expected date '2025-06-{i + 1}', got: {row['date']}"
+            assert row["count"] == 1, f"Expected count 1 for each date, got: {row['count']}"
+            assert isinstance(row["count"], int)
+    assert isinstance(data, list)  # Check that the response is a list
+    assert len(data) == 5, f"Expected 5 license keys, got: {len(data)}"
+    dates = [row["date"] for row in data]
+    assert dates == sorted(dates), "Dates should be sorted in ascending order"
+    assert len(set(dates)) == len(dates), "Dates should be unique"
+
+    # Edge case: No license keys created
+    await session.execute(delete(LicenseKey))
+    await session.commit()
+    response = await client.get("/api/v1/stats/licenses-per-day?days=60")
+    assert response.status_code == 200, f"Expected status code 200, got: {response.status_code}"
+    assert response.json() == [], "Expected empty list when no license keys are created"
