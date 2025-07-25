@@ -6,8 +6,9 @@ from app.models.gpt import GPTPromptLog
 from unittest.mock import AsyncMock, patch
 from app.models.license import LicenseKey
 
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
-@pytest.mark.asyncio
+
 async def test_gpt_ask(client, session):
     await session.execute(GPTPromptLog.__table__.delete())
     await session.execute(delete(ListingMobileDe))
@@ -34,19 +35,19 @@ async def test_gpt_ask(client, session):
     test_prompt = "Which car will fit me?"
     # Define a mock response from the ML model for best car offers.
     best_price_offer = {
-      "top_offers": [
-        {
-          "actual_price": 62980,
-          "predicted_price": 75827.98,
-          "saving": 12847.979999999996,
-          "brand": "Audi",
-          "model": "Q8 e-tron",
-          "registration_year": 2024,
-          "meleage": 7060,
-          "color": "Grau",
-          "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=414311984&action=topInCategory&cn=DE&ms=1900%3B%3B%3B&od=up&ref=seo&refId=e9c3d823-068f-a924-a7fe-091857469190&s=Car&sb=rel&searchId=e9c3d823-068f-a924-a7fe-091857469190&vc=Car"
-        }  ],
-      "listings_count": 60
+        "top_offers": [
+            {
+                "actual_price": 62980,
+                "predicted_price": 75827.98,
+                "saving": 12847.979999999996,
+                "brand": "Audi",
+                "model": "Q8 e-tron",
+                "registration_year": 2024,
+                "meleage": 7060,
+                "color": "Grau",
+                "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=414311984&action=topInCategory&cn=DE&ms=1900%3B%3B%3B&od=up&ref=seo&refId=e9c3d823-068f-a924-a7fe-091857469190&s=Car&sb=rel&searchId=e9c3d823-068f-a924-a7fe-091857469190&vc=Car"
+            }],
+        "listings_count": 60
     }
     # Define a mock GPT response that will be returned instead of a real GPT call.
     mock_response = "Recommend Audi Q8 E-Tron with a price of 62980"
@@ -74,11 +75,12 @@ async def test_gpt_ask(client, session):
             "chat_history": []
         })
 
-    assert response.status_code == 200           # Check that the response status code is 200 OK
-    data = response.json()                       # Parse the JSON response data
-    assert data["user_id"] == user_id            # Check that the user_id in the response matches the test user_id
-    assert data["gpt_prompt"] == test_prompt     # Check that the gpt_prompt in the response matches the test prompt
-    assert data["gpt_response"] == mock_response # Check that the gpt_response in the response matches the mock response
+    assert response.status_code == 200  # Check that the response status code is 200 OK
+    data = response.json()  # Parse the JSON response data
+    assert data["user_id"] == user_id  # Check that the user_id in the response matches the test user_id
+    assert data["gpt_prompt"] == test_prompt  # Check that the gpt_prompt in the response matches the test prompt
+    assert data[
+               "gpt_response"] == mock_response  # Check that the gpt_response in the response matches the mock response
 
     # Verify that the GPT prompt was saved to the database:
     # Execute a SELECT query on GPTPromptLog table filtering by user_id.
@@ -86,12 +88,10 @@ async def test_gpt_ask(client, session):
         GPTPromptLog.__table__.select().where(GPTPromptLog.user_id == user_id)
     )).fetchall()
     print(f"GPT logs for user {user_id}: {logs}")  # Print the fetched logs for debugging
-    assert len(logs) == 1   # # Assert that exactly one GPT prompt record was saved for this user
-    assert logs[0].gpt_prompt == test_prompt   # Assert that the saved GPT prompt matches the test prompt
+    assert len(logs) == 1  # # Assert that exactly one GPT prompt record was saved for this user
+    assert logs[0].gpt_prompt == test_prompt  # Assert that the saved GPT prompt matches the test prompt
 
 
-
-@pytest.mark.asyncio
 async def test_gpt_get_history(client, session):
     user_id = "test-user-123"
     # create fake records manually
@@ -112,7 +112,6 @@ async def test_gpt_get_history(client, session):
     assert data["count"] == len(data["history"])
 
 
-@pytest.mark.asyncio
 async def test_gpt_clear_history(client, session):
     user_id = "test-user-123"
     # add a few records
@@ -131,7 +130,7 @@ async def test_gpt_clear_history(client, session):
     # checking, that history is cleared
     remaining = (await session.execute(
         GPTPromptLog.__table__.select().where(GPTPromptLog.user_id == user_id)
-    )).fetchall()   # fetch all records for the user
+    )).fetchall()  # fetch all records for the user
     assert len(remaining) == 0
     await session.execute(
         GPTPromptLog.__table__.delete().where(GPTPromptLog.user_id == user_id)

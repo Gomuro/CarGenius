@@ -1,0 +1,2473 @@
+{
+  "tiles": [
+    {
+      "type": "LISTING_USED_PRIORITY",
+      "data": {
+        "id": 411794253,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-1",
+        "listingTitle": "2018 Ford F-150 XLT SuperCrew LB 4WD",
+        "makeName": "Ford",
+        "modelName": "F-150",
+        "makeId": "m2",
+        "modelId": "d337",
+        "entityId": "t73361",
+        "carYear": 2018,
+        "trimName": "XLT SuperCrew LB 4WD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg5",
+        "bodyTypeName": "Pickup Truck",
+        "salesStatus": "PAYING",
+        "sortScore": 951,
+        "options": [
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "Power Package",
+          "Navigation System",
+          "Alloy Wheels",
+          "Blind Spot Monitoring",
+          "Heated Seats",
+          "302A Luxury Equipment Group",
+          "Tow Package",
+          "SE Package",
+          "XLT Package",
+          "Appearance Package",
+          "Bluetooth",
+          "Backup Camera",
+          "Remote Start",
+          "Off Road Package"
+        ],
+        "mileage": 97057,
+        "mileageString": "97,057",
+        "unitMileage": {
+          "value": 97057,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Lead Foot",
+        "normalizedExteriorColor": "GRAY",
+        "price": 24995,
+        "priceString": "$24,995",
+        "expectedPrice": 25419,
+        "expectedPriceString": "$25,419",
+        "priceDifferential": 424,
+        "priceDifferentialString": "$424",
+        "dealScore": 2.2706354,
+        "daysOnMarket": 108,
+        "dealRating": "FAIR_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/04/24/15/30/2018_ford_f-150-pic-1925426983357075562-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 760509,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Pacific Auto Center",
+        "sellerCity": "Fontana, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92335",
+        "distance": 37.835022,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Pacific+Auto+Center+16416+Valley+Blvd%2CFontana+CA%2C+92335%2CUS",
+        "serviceProviderId": 285111,
+        "debugInfo": " / rank #: 35 / sellerId: 760509 / spId: 285111 / Paid Dealer: true / active partners: 52",
+        "serviceProviderName": "Pacific Auto Center",
+        "phoneNumber": "+1 909-347-5409",
+        "phoneNumberString": "(909) 347-5409",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "buyingOption": "CONVERT",
+        "localizedDriveTrain": "Four-Wheel Drive",
+        "localizedExteriorColor": "Gray (Lead Foot)",
+        "localizedInteriorColor": "Black",
+        "sellerRating": 3.54,
+        "reviewCount": 672,
+        "isNationwideShipperDealer": true,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2016/05/03/16/23/pacific_auto_center-pic-2293132385120258128-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "WESTLAKE",
+            "GLS",
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 0,
+        "cityFuelEconomy": {
+          "value": 17,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 23,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 19.7,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "17.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "20 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "375 hp 3.5L V6",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "1FTFW1EG1JFE23480",
+        "stockNumber": "57046",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_FEATURED",
+      "data": {
+        "id": 418614289,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Dealer Front-1",
+        "listingTitle": "2013 Toyota Highlander SE FWD",
+        "makeName": "Toyota",
+        "modelName": "Highlander",
+        "makeId": "m7",
+        "modelId": "d298",
+        "entityId": "t46545",
+        "carYear": 2013,
+        "trimName": "SE FWD",
+        "localizedTransmission": "5-Speed Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 960,
+        "options": [
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "SE Package",
+          "Alloy Wheels",
+          "Third Row Seating",
+          "Bluetooth",
+          "Backup Camera",
+          "Premium Package",
+          "Heated Seats"
+        ],
+        "mileage": 158493,
+        "mileageString": "158,493",
+        "unitMileage": {
+          "value": 158493,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "White",
+        "normalizedExteriorColor": "WHITE",
+        "price": 11595,
+        "priceString": "$11,595",
+        "expectedPrice": 12362,
+        "expectedPriceString": "$12,362",
+        "priceDifferential": 767,
+        "priceDifferentialString": "$767",
+        "dealScore": 1.6205463,
+        "daysOnMarket": 31,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/06/14/14/44/2013_toyota_highlander-pic-4292261172605571443-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 534642,
+        "listingPartnerId": 96,
+        "sellerType": "DEALER",
+        "dealerName": "Petra Auto Sales",
+        "sellerCity": "Bellflower, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "90706",
+        "distance": 55.67926,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Petra+Auto+Sales+15740+Lakewood+Blvd%2CBellflower+CA%2C+90706%2CUS",
+        "serviceProviderId": 284973,
+        "debugInfo": " / rank #: 26 / sellerId: 534642 / spId: 284973 / Paid Dealer: true / active partners: 96",
+        "serviceProviderName": "Petra Auto Sales",
+        "phoneNumber": "+1 424-396-6556",
+        "phoneNumberString": "(424) 396-6556",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "buyingOption": "CONVERT",
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "White",
+        "localizedInteriorColor": "Black",
+        "sellerRating": 5,
+        "reviewCount": 25,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2017/04/27/14/19/petra_auto_sales-pic-3654262846242525135-200x200.jpeg",
+        "offset": 0,
+        "cityFuelEconomy": {
+          "value": 18,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 24,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 20.7,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "18.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "21 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "270 hp 3.5L V6",
+        "ncapOverallSafetyRating": "4",
+        "vin": "5TDZK3EH0DS104959",
+        "stockNumber": "DS104959",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_FEATURED",
+      "data": {
+        "id": 418650425,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-1",
+        "listingTitle": "2016 Toyota Corolla L",
+        "makeName": "Toyota",
+        "modelName": "Corolla",
+        "makeId": "m7",
+        "modelId": "d295",
+        "entityId": "t59675",
+        "carYear": 2016,
+        "trimName": "L",
+        "localizedTransmission": "Continuously Variable Transmission",
+        "bodyTypeGroupId": "bg6",
+        "bodyTypeName": "Sedan",
+        "salesStatus": "PAYING",
+        "sortScore": 974,
+        "options": [
+          "Steel Wheels",
+          "Bluetooth",
+          "Backup Camera"
+        ],
+        "mileage": 108944,
+        "mileageString": "108,944",
+        "unitMileage": {
+          "value": 108944,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Classic Silver Metallic",
+        "normalizedExteriorColor": "SILVER",
+        "price": 11500,
+        "priceString": "$11,500",
+        "expectedPrice": 12209,
+        "expectedPriceString": "$12,209",
+        "priceDifferential": 709,
+        "priceDifferentialString": "$709",
+        "dealScore": 1.6042845,
+        "daysOnMarket": 30,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/03/11/53/2016_toyota_corolla-pic-7661899022708985087-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 1426369,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Performance Ford",
+        "sellerCity": "West Covina, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91791",
+        "distance": 51.620457,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Performance+Ford+2000+E+Garvey+Ave+S%2CWest+Covina+CA%2C+91791%2CUS",
+        "serviceProviderId": 367942,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Ford",
+        "debugInfo": " / rank #: 46 / sellerId: 1426369 / spId: 367942 / Paid Dealer: true / active partners: 52",
+        "serviceProviderName": "Performance Ford",
+        "phoneNumber": "+1 626-602-1130",
+        "phoneNumberString": "(626) 602-1130",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "buyingOption": "CONVERT",
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "Classic Silver Metallic",
+        "sellerRating": 4.2,
+        "reviewCount": 57,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2020/05/12/17/46/performance_ford-pic-14254111927329632274-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "WESTLAKE",
+            "CHASE",
+            "GLS",
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 1,
+        "cityFuelEconomy": {
+          "value": 27,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 36,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 31.05,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "27.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "31 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "132 hp 1.8L I4",
+        "ncapOverallSafetyRating": "5",
+        "vin": "2T1BURHE3GC501191",
+        "stockNumber": "S5119571A"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 377173941,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-1",
+        "listingTitle": "2023 Chevrolet Blazer 2LT AWD",
+        "makeName": "Chevrolet",
+        "modelName": "Blazer",
+        "makeId": "m1",
+        "modelId": "d602",
+        "entityId": "t102880",
+        "carYear": 2023,
+        "trimName": "2LT AWD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 981,
+        "options": [
+          "Driver Confidence Package",
+          "Power Package",
+          "Alloy Wheels",
+          "Preferred Package",
+          "Blind Spot Monitoring",
+          "Heated Seats",
+          "Android Auto",
+          "CarPlay",
+          "Multi Zone Climate Control",
+          "LT Package",
+          "Bluetooth",
+          "Backup Camera",
+          "Remote Start"
+        ],
+        "mileage": 18223,
+        "mileageString": "18,223",
+        "unitMileage": {
+          "value": 18223,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Sterling Metallic",
+        "normalizedExteriorColor": "UNKNOWN",
+        "price": 25995,
+        "priceString": "$25,995",
+        "expectedPrice": 28166,
+        "expectedPriceString": "$28,166",
+        "priceDifferential": 2171,
+        "priceDifferentialString": "$2,171",
+        "dealScore": 0.86565065,
+        "daysOnMarket": 527,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2024/10/06/08/15/2023_chevrolet_blazer-pic-3417382763079405041-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2227943,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Hatfield Buick GMC",
+        "sellerCity": "Redlands, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92373",
+        "distance": 35.921856,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Hatfield+Buick+GMC+301+E+Redlands+Blvd%2CRedlands+CA%2C+92373%2CUS",
+        "serviceProviderId": 47572,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Buick",
+        "debugInfo": " / rank #: 0 / sellerId: 2227943 / spId: 47572 / Paid Dealer: true / active partners: 52",
+        "serviceProviderName": "Hatfield Buick GMC",
+        "phoneNumber": "+1 855-701-4687",
+        "phoneNumberString": "(855) 701-4687",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "All-Wheel Drive",
+        "localizedExteriorColor": "Sterling Metallic",
+        "localizedInteriorColor": "Jet Black/Medium Ash Gray",
+        "reviewCount": 22,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2024/05/15/19/43/hatfield_buick_gmc-pic-5190106319171868094-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 0,
+        "cityFuelEconomy": {
+          "value": 22,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 27,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 24.25,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "22.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "24 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "228 hp 2L I4",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "3GNKBHR42PS223349",
+        "stockNumber": "U24004A",
+        "interiorColor": "Jet Black/Medium Ash Gray"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 413266037,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-0",
+        "listingTitle": "2019 BMW 6 Series Gran Turismo 640i xDrive AWD",
+        "makeName": "BMW",
+        "modelName": "6 Series Gran Turismo",
+        "makeId": "m3",
+        "modelId": "d2615",
+        "entityId": "t82390",
+        "carYear": 2019,
+        "trimName": "640i xDrive AWD",
+        "localizedTransmission": "8-Speed Automatic",
+        "bodyTypeGroupId": "bg9",
+        "bodyTypeName": "Wagon",
+        "salesStatus": "AVAILABLE",
+        "sortScore": 950,
+        "options": [
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "Navigation System",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera",
+          "Blind Spot Monitoring",
+          "Heated Seats",
+          "CarPlay"
+        ],
+        "mileage": 42167,
+        "mileageString": "42,167",
+        "unitMileage": {
+          "value": 42167,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Glacier Silver Metallic",
+        "normalizedExteriorColor": "SILVER",
+        "price": 23550,
+        "priceString": "$23,550",
+        "expectedPrice": 26434,
+        "msrp": 28990,
+        "expectedPriceString": "$26,434",
+        "priceDifferential": 2884,
+        "priceDifferentialString": "$2,884",
+        "dealScore": 0.878645,
+        "daysOnMarket": 92,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/04/25/07/33/2019_bmw_6_series_gran_turismo-pic-5554342610115275856-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 1491619,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Westlake Hyundai",
+        "sellerCity": "Westlake Village, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91362",
+        "distance": 99.30716,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Westlake+Hyundai+3610+Thousand+Oaks+Boulevard%2CWestlake+Village+CA%2C+91362%2CUS",
+        "serviceProviderId": 310474,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Hyundai",
+        "debugInfo": " / rank #: 1 / sellerId: 1491619 / spId: 310474 / active partners: 52",
+        "serviceProviderName": "Westlake Hyundai",
+        "useAnonymousContactEmail": true,
+        "localizedDriveTrain": "All-Wheel Drive",
+        "localizedExteriorColor": "Glacier Silver Metallic",
+        "localizedInteriorColor": "Black",
+        "sellerRating": 4,
+        "reviewCount": 15,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2023/08/02/09/40/westlake_hyundai-pic-12692294496324121174-1600x1200.png",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "GLS",
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 1,
+        "cityFuelEconomy": {
+          "value": 20,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 28,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 23.6,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "20.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "24 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "335 hp 3L I6",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "WBAJV6C51KBK08859",
+        "stockNumber": "25G0445A",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "MERCH",
+      "data": {
+        "eligibleProducts": [
+          "VIDEO_CAMPAIGN"
+        ],
+        "metadata": {
+          "videoUrl": "",
+          "pictureUrl": "https://cargurus-static3.s3.amazonaws.com/images/site-cars/srp/videocampaign/srp-viral-moment-text-2025-06-26_42bea8accadeafb298f90ec064e2d581e2e9091efb1d41dbf9a6b89a25466223.png"
+        }
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 417752100,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Frazer Computing-1",
+        "listingTitle": "2003 Chevrolet Corvette Convertible RWD",
+        "makeName": "Chevrolet",
+        "modelName": "Corvette",
+        "makeId": "m1",
+        "modelId": "d1",
+        "entityId": "t297",
+        "carYear": 2003,
+        "trimName": "Convertible RWD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg1",
+        "bodyTypeName": "Convertible",
+        "salesStatus": "PAYING",
+        "sortScore": 971,
+        "mileage": 41959,
+        "mileageString": "41,959",
+        "unitMileage": {
+          "value": 41959,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "YELLOW",
+        "normalizedExteriorColor": "YELLOW",
+        "price": 22000,
+        "priceString": "$22,000",
+        "expectedPrice": 22436,
+        "expectedPriceString": "$22,436",
+        "priceDifferential": 436,
+        "priceDifferentialString": "$436",
+        "dealScore": 2.0693152,
+        "daysOnMarket": 40,
+        "dealRating": "FAIR_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/29/19/20/2003_chevrolet_corvette-pic-4212486137298570546-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 747257,
+        "listingPartnerId": 62,
+        "sellerType": "DEALER",
+        "dealerName": "California Imports",
+        "sellerCity": "Huntington Beach, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92648",
+        "distance": 42.546185,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=California+Imports+19232+Beach+Blvd%2CHuntington+Beach+CA%2C+92648%2CUS",
+        "serviceProviderId": 285134,
+        "debugInfo": " / rank #: 2 / sellerId: 747257 / spId: 285134 / Paid Dealer: true / active partners: 62",
+        "serviceProviderName": "California Imports",
+        "phoneNumber": "+1 877-279-7144",
+        "phoneNumberString": "(877) 279-7144",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Rear-Wheel Drive",
+        "localizedExteriorColor": "Yellow",
+        "localizedInteriorColor": "Black",
+        "reviewCount": 28,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/01/11/15/29/california_imports-pic-190335043047512443-200x200.jpeg",
+        "offset": 2,
+        "cityFuelEconomy": {
+          "value": 16,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 23,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 19.15,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "16.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "19 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "350 hp 5.7L V8",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "1G1YY32GX35105877",
+        "stockNumber": "F-004",
+        "interiorColor": "BLACK"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 418410263,
+        "inclusionType": "DEFAULT",
+        "listingSource": "CarMax-1",
+        "listingTitle": "2022 BMW X3 sDrive30i RWD",
+        "makeName": "BMW",
+        "modelName": "X3",
+        "makeId": "m3",
+        "modelId": "d392",
+        "entityId": "t98713",
+        "carYear": 2022,
+        "trimName": "sDrive30i RWD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 1000,
+        "options": [
+          "Navigation System",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera",
+          "Blind Spot Monitoring",
+          "Parking Sensors",
+          "Android Auto",
+          "CarPlay"
+        ],
+        "mileage": 26866,
+        "mileageString": "26,866",
+        "unitMileage": {
+          "value": 26866,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Gray",
+        "normalizedExteriorColor": "GRAY",
+        "price": 29998,
+        "priceString": "$29,998",
+        "expectedPrice": 32827,
+        "expectedPriceString": "$32,827",
+        "priceDifferential": 2829,
+        "priceDifferentialString": "$2,829",
+        "dealScore": 0.72296095,
+        "daysOnMarket": 33,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/08/04/41/2022_bmw_x3-pic-2120005254907774385-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 1898181,
+        "listingPartnerId": 231,
+        "sellerType": "DEALER",
+        "dealerName": "CarMax Norco",
+        "sellerCity": "Norco, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92860",
+        "distance": 30.284506,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=CarMax+Norco+1550+2nd+St%2CNorco+CA%2C+92860%2CUS",
+        "serviceProviderId": 444090,
+        "debugInfo": " / rank #: 3 / sellerId: 1898181 / spId: 444090 / Paid Dealer: true / active partners: 231",
+        "serviceProviderName": "CarMax Norco",
+        "phoneNumber": "+1 334-309-8338",
+        "phoneNumberString": "(334) 309-8338",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Rear-Wheel Drive",
+        "localizedExteriorColor": "Gray",
+        "localizedInteriorColor": "Black",
+        "sellerRating": 5,
+        "reviewCount": 5,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/12/23/15/49/carmax_ontario-pic-6325381214938122770-1600x1200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 3,
+        "cityFuelEconomy": {
+          "value": 23,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 29,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 25.7,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "23.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "26 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "248 hp 2L I4",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "5UX43DP02N9M16980",
+        "stockNumber": "27428766",
+        "interiorColor": "BLACK"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 419378268,
+        "inclusionType": "DEFAULT",
+        "listingSource": "HomeNetAuto-1",
+        "listingTitle": "2019 MINI Cooper Convertible FWD",
+        "makeName": "MINI",
+        "modelName": "Cooper",
+        "makeId": "m45",
+        "modelId": "d436",
+        "entityId": "t78103",
+        "carYear": 2019,
+        "trimName": "Convertible FWD",
+        "localizedTransmission": "Manual",
+        "bodyTypeGroupId": "bg1",
+        "bodyTypeName": "Convertible",
+        "salesStatus": "PAYING",
+        "sortScore": 998,
+        "options": [
+          "LE Package",
+          "Sunroof/Moonroof",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera",
+          "Premium Package"
+        ],
+        "mileage": 103569,
+        "mileageString": "103,569",
+        "unitMileage": {
+          "value": 103569,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Blue",
+        "normalizedExteriorColor": "BLUE",
+        "price": 10888,
+        "priceString": "$10,888",
+        "expectedPrice": 11883,
+        "expectedPriceString": "$11,883",
+        "priceDifferential": 995,
+        "priceDifferentialString": "$995",
+        "dealScore": 1.5507846,
+        "daysOnMarket": 21,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/06/26/01/23/2019_mini_cooper-pic-3842359365440455854-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 882579,
+        "listingPartnerId": 46,
+        "sellerType": "DEALER",
+        "dealerName": "MINI of Monrovia",
+        "sellerCity": "Monrovia, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91016",
+        "distance": 58.134594,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=MINI+of+Monrovia+1451+S.+Mountain+Ave%2CMonrovia+CA%2C+91016%2CUS",
+        "serviceProviderId": 290505,
+        "isFranchiseDealer": true,
+        "franchiseMake": "MINI",
+        "debugInfo": " / rank #: 4 / sellerId: 882579 / spId: 290505 / Paid Dealer: true / active partners: 46",
+        "serviceProviderName": "MINI of Monrovia",
+        "phoneNumber": "+1 626-414-5863",
+        "phoneNumberString": "(626) 414-5863",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "Blue",
+        "localizedInteriorColor": "Black",
+        "reviewCount": 46,
+        "howToShop": "PICK_UP_ONLY",
+        "offset": 4,
+        "cityFuelEconomy": {
+          "value": 28,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 37,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 32.05,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "28.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "32 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "134 hp 1.5L I3",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "WMWWG5C56K3E22821",
+        "stockNumber": "TK3E22821",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 420834377,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Dealer Center-1",
+        "listingTitle": "2015 Chevrolet Camaro 1LT Coupe RWD",
+        "makeName": "Chevrolet",
+        "modelName": "Camaro",
+        "makeId": "m1",
+        "modelId": "d606",
+        "entityId": "t54896",
+        "carYear": 2015,
+        "trimName": "1LT Coupe RWD",
+        "localizedTransmission": "6-Speed Automatic",
+        "bodyTypeGroupId": "bg0",
+        "bodyTypeName": "Coupe",
+        "salesStatus": "PAYING",
+        "sortScore": 1000,
+        "options": [
+          "Performance Package",
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "Navigation System",
+          "Alloy Wheels",
+          "Parking Sensors",
+          "Heated Seats",
+          "CarPlay",
+          "Multi Zone Climate Control",
+          "SE Package",
+          "Appearance Package",
+          "LT Package",
+          "Security Package",
+          "Bluetooth",
+          "Backup Camera",
+          "Remote Start"
+        ],
+        "mileage": 60050,
+        "mileageString": "60,050",
+        "unitMileage": {
+          "value": 60050,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Black",
+        "normalizedExteriorColor": "BLACK",
+        "price": 14761,
+        "priceString": "$14,761",
+        "expectedPrice": 16926,
+        "expectedPriceString": "$16,926",
+        "priceDifferential": 2165,
+        "priceDifferentialString": "$2,165",
+        "dealScore": 0.86258614,
+        "daysOnMarket": 5,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/03/18/57/2015_chevrolet_camaro-pic-2402226570702210442-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2117466,
+        "listingPartnerId": 172,
+        "sellerType": "DEALER",
+        "dealerName": "LA Auto Center LLC",
+        "sellerCity": "Studio City, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91604",
+        "distance": 76.256,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=LA+Auto+Center+LLC+11640+Ventura+Blvd%2CStudio+City+CA%2C+91604%2CUS",
+        "serviceProviderId": 450009,
+        "debugInfo": " / rank #: 5 / sellerId: 2117466 / spId: 450009 / Paid Dealer: true / active partners: 172",
+        "serviceProviderName": "LA Auto Center LLC",
+        "phoneNumber": "+1 877-665-6470",
+        "phoneNumberString": "(877) 665-6470",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Rear-Wheel Drive",
+        "localizedExteriorColor": "Black",
+        "localizedInteriorColor": "Black",
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2023/08/23/16/50/la_auto_center_llc-pic-10019805573682095111-200x200.jpeg",
+        "offset": 5,
+        "cityFuelEconomy": {
+          "value": 19,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 30,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 23.95,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "19.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "24 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "323 hp 3.6L V6",
+        "ncapOverallSafetyRating": "5",
+        "vin": "2G1FD1E38F9133295",
+        "stockNumber": "133295",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 420986995,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Nexteppe-0",
+        "listingTitle": "2022 Subaru Crosstrek Premium AWD",
+        "makeName": "Subaru",
+        "modelName": "Crosstrek",
+        "makeId": "m53",
+        "modelId": "d2387",
+        "entityId": "t99930",
+        "carYear": 2022,
+        "trimName": "Premium AWD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "AVAILABLE",
+        "sortScore": 1000,
+        "options": [
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera",
+          "Heated Seats"
+        ],
+        "mileage": 21693,
+        "mileageString": "21,693",
+        "unitMileage": {
+          "value": 21693,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Crystal White Pearl",
+        "normalizedExteriorColor": "WHITE",
+        "price": 23888,
+        "priceString": "$23,888",
+        "expectedPrice": 25331,
+        "msrp": 24995,
+        "expectedPriceString": "$25,331",
+        "priceDifferential": 1443,
+        "priceDifferentialString": "$1,443",
+        "dealScore": 0.910846,
+        "daysOnMarket": 3,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/07/16/40/2022_subaru_crosstrek-pic-5654673090543252701-1024x768.jpeg",
+          "height": 768,
+          "width": 1024,
+          "ocrFilterList": [
+            {
+              "x1": 165,
+              "x2": 193,
+              "y1": 571,
+              "y2": 586
+            },
+            {
+              "x1": 151,
+              "x2": 190,
+              "y1": 528,
+              "y2": 542
+            },
+            {
+              "x1": 138,
+              "x2": 163,
+              "y1": 566,
+              "y2": 580
+            }
+          ]
+        },
+        "sellerId": 2291587,
+        "listingPartnerId": 121,
+        "sellerType": "DEALER",
+        "dealerName": "Subaru of Glendale",
+        "sellerCity": "Glendale, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91204",
+        "distance": 69.60511,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Subaru+of+Glendale+1308+S+Brand+Blvd%2CGlendale+CA%2C+91204%2CUS",
+        "serviceProviderId": 286354,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Subaru",
+        "debugInfo": " / rank #: 6 / sellerId: 2291587 / spId: 286354 / active partners: 121",
+        "serviceProviderName": "Subaru of Glendale",
+        "useAnonymousContactEmail": true,
+        "localizedDriveTrain": "All-Wheel Drive",
+        "localizedExteriorColor": "Crystal White Pearl",
+        "localizedInteriorColor": "Gray w/Orange Stitching",
+        "sellerRating": 5,
+        "reviewCount": 35,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2014/11/20/13/55/subaru_of_glendale-pic-5342583297550011116-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "WESTLAKE",
+            "GLS",
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 6,
+        "cityFuelEconomy": {
+          "value": 28,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 33,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 30.25,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "28.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "30 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "152 hp 2L H4",
+        "ncapOverallSafetyRating": "5",
+        "vin": "JF2GTAPC1N8202903",
+        "stockNumber": "SS1020A",
+        "interiorColor": "Gray w/Orange Stitching"
+      }
+    },
+    {
+      "type": "MERCH",
+      "data": {
+        "eligibleProducts": [
+          "C2D"
+        ],
+        "metadata": {
+          "image": {
+            "title": "SRP Reskin C2D Icon",
+            "uri": "//images.ctfassets.net/c9t6u0qhbv9e/79BOr2pgxeRUazn7Dd2SZt/47de0521bf95d2e81bbd0dfb0cbd9669/money_arrows.svg"
+          },
+          "ctaText": "Get your offers",
+          "cardType": "RESKIN_C2D_CARD",
+          "description": [
+            [
+              {
+                "text": "Get multiple cash offers in minutes."
+              }
+            ]
+          ],
+          "title": "Selling your car?",
+          "ctaLink": "C2D_HOMEPAGE"
+        }
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 406735010,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Dealer Center-1",
+        "listingTitle": "2013 Jaguar XF XF 3.0 AWD",
+        "makeName": "Jaguar",
+        "modelName": "XF",
+        "makeId": "m31",
+        "modelId": "d1136",
+        "entityId": "t49165",
+        "carYear": 2013,
+        "trimName": "XF 3.0 AWD",
+        "localizedTransmission": "8-Speed Automatic",
+        "bodyTypeGroupId": "bg6",
+        "bodyTypeName": "Sedan",
+        "salesStatus": "PAYING",
+        "sortScore": 977,
+        "options": [
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "Navigation System",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera",
+          "Parking Sensors",
+          "Heated Seats"
+        ],
+        "mileage": 34966,
+        "mileageString": "34,966",
+        "unitMileage": {
+          "value": 34966,
+          "unit": "MILES"
+        },
+        "normalizedExteriorColor": "UNKNOWN",
+        "price": 11995,
+        "priceString": "$11,995",
+        "expectedPrice": 12984,
+        "expectedPriceString": "$12,984",
+        "priceDifferential": 989,
+        "priceDifferentialString": "$989",
+        "dealScore": 1.4264162,
+        "daysOnMarket": 167,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/15/02/18/2013_jaguar_xf-pic-2853630470669654736-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 1428972,
+        "listingPartnerId": 172,
+        "sellerType": "DEALER",
+        "dealerName": "French Valley Flying Circus",
+        "sellerCity": "Winchester, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92596",
+        "distance": 9.105475,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=French+Valley+Flying+Circus+36580+Penfield+Lane%2CWinchester+CA%2C+92596%2CUS",
+        "serviceProviderId": 416763,
+        "debugInfo": " / rank #: 7 / sellerId: 1428972 / spId: 416763 / Paid Dealer: true / active partners: 172",
+        "serviceProviderName": "French Valley Flying Circus",
+        "phoneNumber": "+1 951-944-2699",
+        "phoneNumberString": "(951) 944-2699",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "All-Wheel Drive",
+        "sellerRating": 4.5,
+        "reviewCount": 14,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/01/07/15/03/french_valley_flying_circus-pic-3916902747304316717-200x200.jpeg",
+        "offset": 7,
+        "cityFuelEconomy": {
+          "value": 16,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 26,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 20.5,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "16.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "21 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "340 hp 3L V6",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "SAJWJ0EF1D8S78743",
+        "stockNumber": "S78743"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 415462328,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-1",
+        "listingTitle": "2022 Toyota Highlander XLE FWD",
+        "makeName": "Toyota",
+        "modelName": "Highlander",
+        "makeId": "m7",
+        "modelId": "d298",
+        "entityId": "t99542",
+        "carYear": 2022,
+        "trimName": "XLE FWD",
+        "localizedTransmission": "8-Speed Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 1000,
+        "options": [
+          "Sunroof/Moonroof",
+          "Adaptive Cruise Control",
+          "Alloy Wheels",
+          "Third Row Seating",
+          "Bluetooth",
+          "Backup Camera",
+          "Remote Start",
+          "Blind Spot Monitoring",
+          "Heated Seats",
+          "Android Auto",
+          "CarPlay"
+        ],
+        "mileage": 49030,
+        "mileageString": "49,030",
+        "unitMileage": {
+          "value": 49030,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Midnight Black Metallic",
+        "normalizedExteriorColor": "BLACK",
+        "price": 31995,
+        "priceString": "$31,995",
+        "expectedPrice": 33994,
+        "msrp": 35650,
+        "expectedPriceString": "$33,994",
+        "priceDifferential": 1999,
+        "priceDifferentialString": "$1,999",
+        "dealScore": 0.9420417,
+        "daysOnMarket": 68,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/03/14/22/2022_toyota_highlander-pic-927679253050683457-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2091087,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Rusnak Volvo Cars Westlake",
+        "sellerCity": "Thousand Oaks, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91362",
+        "distance": 99.10984,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Rusnak+Volvo+Cars+Westlake+3839+Auto+Mall+Dr%2CThousand+Oaks+CA%2C+91362%2CUS",
+        "serviceProviderId": 64796,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Volvo",
+        "debugInfo": " / rank #: 8 / sellerId: 2091087 / spId: 64796 / Paid Dealer: true / active partners: 52",
+        "serviceProviderName": "Rusnak Volvo Cars Westlake",
+        "phoneNumber": "+1 269-778-4371",
+        "phoneNumberString": "(269) 778-4371",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "buyingOption": "CONVERT",
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "Midnight Black Metallic",
+        "localizedInteriorColor": "Black",
+        "sellerRating": 5,
+        "reviewCount": 2,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2023/05/09/17/24/rusnak_volvo_cars_westlake-pic-15067922262856288327-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "WESTLAKE",
+            "CHASE"
+          ]
+        },
+        "offset": 8,
+        "cityFuelEconomy": {
+          "value": 20,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 28,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 23.6,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "20.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "24 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "295 hp 3.5L V6",
+        "ncapOverallSafetyRating": "5",
+        "vin": "5TDHZRAH0NS134786",
+        "stockNumber": "26T00589",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 419508082,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Nexteppe-0",
+        "listingTitle": "2022 Subaru Ascent Onyx Edition AWD",
+        "makeName": "Subaru",
+        "modelName": "Ascent",
+        "makeId": "m53",
+        "modelId": "d2650",
+        "entityId": "t98448",
+        "carYear": 2022,
+        "trimName": "Onyx Edition AWD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "AVAILABLE",
+        "sortScore": 999,
+        "options": [
+          "Adaptive Cruise Control",
+          "Alloy Wheels",
+          "Third Row Seating",
+          "Bluetooth",
+          "Backup Camera",
+          "Blind Spot Monitoring",
+          "Heated Seats"
+        ],
+        "mileage": 76449,
+        "mileageString": "76,449",
+        "unitMileage": {
+          "value": 76449,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Magnetite Gray Metallic",
+        "normalizedExteriorColor": "GRAY",
+        "price": 24933,
+        "priceString": "$24,933",
+        "expectedPrice": 27085,
+        "msrp": 25995,
+        "expectedPriceString": "$27,085",
+        "priceDifferential": 2152,
+        "priceDifferentialString": "$2,152",
+        "dealScore": 0.7755547,
+        "daysOnMarket": 20,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/06/18/23/37/2022_subaru_ascent-pic-6935228631421944224-1024x768.jpeg",
+          "height": 768,
+          "width": 1024,
+          "ocrFilterList": [
+            {
+              "x1": 158,
+              "x2": 181,
+              "y1": 577,
+              "y2": 587
+            },
+            {
+              "x1": 184,
+              "x2": 213,
+              "y1": 580,
+              "y2": 590
+            },
+            {
+              "x1": 170,
+              "x2": 209,
+              "y1": 540,
+              "y2": 552
+            }
+          ]
+        },
+        "sellerId": 2291587,
+        "listingPartnerId": 121,
+        "sellerType": "DEALER",
+        "dealerName": "Subaru of Glendale",
+        "sellerCity": "Glendale, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91204",
+        "distance": 69.60511,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Subaru+of+Glendale+1308+S+Brand+Blvd%2CGlendale+CA%2C+91204%2CUS",
+        "serviceProviderId": 286354,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Subaru",
+        "debugInfo": " / rank #: 9 / sellerId: 2291587 / spId: 286354 / active partners: 121",
+        "serviceProviderName": "Subaru of Glendale",
+        "useAnonymousContactEmail": true,
+        "localizedDriveTrain": "All-Wheel Drive",
+        "localizedExteriorColor": "Magnetite Gray Metallic",
+        "localizedInteriorColor": "Gray",
+        "sellerRating": 5,
+        "reviewCount": 35,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2014/11/20/13/55/subaru_of_glendale-pic-5342583297550011116-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "WESTLAKE",
+            "GLS",
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 9,
+        "cityFuelEconomy": {
+          "value": 20,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 26,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 22.7,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "20.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "23 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "260 hp 2.4L H4",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "4S4WMAGDXN3428009",
+        "stockNumber": "SS0969A",
+        "interiorColor": "Gray"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 419782760,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Nexteppe-1",
+        "listingTitle": "2013 Mercedes-Benz SL-Class SL 550",
+        "makeName": "Mercedes-Benz",
+        "modelName": "SL-Class",
+        "makeId": "m43",
+        "modelId": "d84",
+        "entityId": "t43703",
+        "carYear": 2013,
+        "trimName": "SL 550",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg1",
+        "bodyTypeName": "Convertible",
+        "salesStatus": "PAYING",
+        "sortScore": 998,
+        "options": [
+          "Leather Seats",
+          "Driver Assistance Package",
+          "Sunroof/Moonroof",
+          "Navigation System",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Adaptive Suspension",
+          "Blind Spot Monitoring",
+          "Heated Seats",
+          "Multi Zone Climate Control"
+        ],
+        "mileage": 72237,
+        "mileageString": "72,237",
+        "unitMileage": {
+          "value": 72237,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "White",
+        "normalizedExteriorColor": "WHITE",
+        "price": 23500,
+        "priceString": "$23,500",
+        "expectedPrice": 27446,
+        "msrp": 25500,
+        "expectedPriceString": "$27,446",
+        "priceDifferential": 3946,
+        "priceDifferentialString": "$3,946",
+        "dealScore": 0.91189116,
+        "daysOnMarket": 17,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/03/02/16/2013_mercedes-benz_sl-class-pic-7899298712791094615-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2290034,
+        "listingPartnerId": 121,
+        "sellerType": "DEALER",
+        "dealerName": "Volkswagen Pasadena",
+        "sellerCity": "Pasadena, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91107",
+        "distance": 63.490536,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Volkswagen+Pasadena+130+North+Sierra+Madre%2CPasadena+CA%2C+91107%2CUS",
+        "serviceProviderId": 60203,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Volkswagen",
+        "debugInfo": " / rank #: 10 / sellerId: 2290034 / spId: 60203 / Paid Dealer: true / active partners: 121",
+        "serviceProviderName": "Volkswagen Pasadena",
+        "phoneNumber": "+1 323-765-3457",
+        "phoneNumberString": "(323) 765-3457",
+        "localizedDriveTrain": "Rear-Wheel Drive",
+        "localizedExteriorColor": "White",
+        "sellerRating": 2.33,
+        "reviewCount": 36,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/07/31/17/20/volkswagen_pasadena-pic-8084561234949427652-200x200.jpeg",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "CHASE"
+          ]
+        },
+        "offset": 10,
+        "cityFuelEconomy": {
+          "value": 17,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 25,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 20.6,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "17.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "21 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "429 hp 4.7L V8",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "WDDJK7DA7DF016425",
+        "stockNumber": "28788A"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 420726610,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Dealer Center-1",
+        "listingTitle": "2019 Nissan Sentra SV FWD",
+        "makeName": "Nissan",
+        "modelName": "Sentra",
+        "makeId": "m12",
+        "modelId": "d249",
+        "entityId": "t83401",
+        "carYear": 2019,
+        "trimName": "SV FWD",
+        "bodyTypeGroupId": "bg6",
+        "bodyTypeName": "Sedan",
+        "salesStatus": "PAYING",
+        "sortScore": 1000,
+        "options": [
+          "Steel Wheels",
+          "Bluetooth",
+          "Backup Camera"
+        ],
+        "mileage": 98653,
+        "mileageString": "98,653",
+        "unitMileage": {
+          "value": 98653,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Silver",
+        "normalizedExteriorColor": "SILVER",
+        "price": 9995,
+        "priceString": "$9,995",
+        "expectedPrice": 10499,
+        "expectedPriceString": "$10,499",
+        "priceDifferential": 504,
+        "priceDifferentialString": "$504",
+        "dealScore": 1.9361155,
+        "daysOnMarket": 6,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/02/22/39/2019_nissan_sentra-pic-2831137424262919104-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2294711,
+        "listingPartnerId": 172,
+        "sellerType": "DEALER",
+        "dealerName": "Prestige Motors Imports",
+        "sellerCity": "El Cajon, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92020",
+        "distance": 55.106953,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Prestige+Motors+Imports+1017+El+Cajon+Blvd%2C+Ste+C%2CEl+Cajon+CA%2C+92020%2CUS",
+        "serviceProviderId": 460870,
+        "debugInfo": " / rank #: 11 / sellerId: 2294711 / spId: 460870 / Paid Dealer: true / active partners: 172",
+        "serviceProviderName": "Prestige Motors Imports",
+        "phoneNumber": "+1 619-768-2971",
+        "phoneNumberString": "(619) 768-2971",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "Silver",
+        "localizedInteriorColor": "Black",
+        "howToShop": "PICK_UP_ONLY",
+        "offset": 11,
+        "cityFuelEconomy": {
+          "value": 29,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 37,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 32.6,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "29.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "33 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "124 hp 1.8L I4",
+        "ncapOverallSafetyRating": "4",
+        "vin": "3N1AB7AP2KY358635",
+        "stockNumber": "358635",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 420994503,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Goxee Auto-1",
+        "listingTitle": "2001 Porsche 911",
+        "makeName": "Porsche",
+        "modelName": "911",
+        "makeId": "m48",
+        "modelId": "d404",
+        "entityId": "c3394",
+        "carYear": 2001,
+        "localizedTransmission": "Manual",
+        "bodyTypeGroupId": "bg0",
+        "bodyTypeName": "Coupe",
+        "salesStatus": "PAYING",
+        "sortScore": 995,
+        "options": [
+          "Heated Seats"
+        ],
+        "mileage": 78273,
+        "mileageString": "78,273",
+        "unitMileage": {
+          "value": 78273,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Arctic Silver Metallic",
+        "normalizedExteriorColor": "SILVER",
+        "price": 26950,
+        "priceString": "$26,950",
+        "expectedPrice": 28297,
+        "expectedPriceString": "$28,297",
+        "priceDifferential": 1347,
+        "priceDifferentialString": "$1,347",
+        "dealScore": 1.9745448,
+        "daysOnMarket": 3,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/07/05/16/10/2001_porsche_911-pic-6161520402168100771-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2215484,
+        "listingPartnerId": 142,
+        "sellerType": "DEALER",
+        "dealerName": "K/R Auto Group",
+        "sellerCity": "Palm Desert, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92211",
+        "distance": 57.29524,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=K%2FR+Auto+Group+77770+Country+Club+Dr%2C+Suite+B%2CPalm+Desert+CA%2C+92211%2CUS",
+        "serviceProviderId": 406848,
+        "debugInfo": " / rank #: 12 / sellerId: 2215484 / spId: 406848 / Paid Dealer: true / active partners: 142",
+        "serviceProviderName": "K/R Auto Group",
+        "phoneNumber": "+1 760-437-1124",
+        "phoneNumberString": "(760) 437-1124",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedExteriorColor": "Arctic Silver Metallic",
+        "localizedInteriorColor": "Gray",
+        "sellerRating": 4.2,
+        "reviewCount": 39,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/12/28/11/48/k_r_auto_group-pic-7491141032251784643-200x200.jpeg",
+        "offset": 12,
+        "localizedFuelType": "Gasoline",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "300 hp 3.4L H6",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "WP0CA29911S651392",
+        "stockNumber": "1804",
+        "interiorColor": "Grey"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 412141777,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Goxee Auto-1",
+        "listingTitle": "2016 GMC Terrain SLE1",
+        "makeName": "GMC",
+        "modelName": "Terrain",
+        "makeId": "m26",
+        "modelId": "d2042",
+        "entityId": "t58505",
+        "carYear": 2016,
+        "trimName": "SLE1",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 916,
+        "options": [
+          "Navigation System",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera"
+        ],
+        "mileage": 114500,
+        "mileageString": "114,500",
+        "unitMileage": {
+          "value": 114500,
+          "unit": "MILES"
+        },
+        "normalizedExteriorColor": "UNKNOWN",
+        "price": 7500,
+        "priceString": "$7,500",
+        "expectedPrice": 8916,
+        "expectedPriceString": "$8,916",
+        "priceDifferential": 1416,
+        "priceDifferentialString": "$1,416",
+        "dealScore": 1.1962352,
+        "daysOnMarket": 104,
+        "dealRating": "GOOD_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/08/22/34/2016_gmc_terrain-pic-3068716485323409327-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2278423,
+        "listingPartnerId": 142,
+        "sellerType": "DEALER",
+        "dealerName": "Socal Interprise Auto",
+        "sellerCity": "Huntington Beach, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92647",
+        "distance": 43.95811,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Socal+Interprise+Auto+7465+Edinger+Avenue%2CHuntington+Beach+CA%2C+92647%2CUS",
+        "serviceProviderId": 457563,
+        "debugInfo": " / rank #: 13 / sellerId: 2278423 / spId: 457563 / Paid Dealer: true / active partners: 142",
+        "serviceProviderName": "Socal Interprise Auto",
+        "phoneNumber": "+1 949-806-5001",
+        "phoneNumberString": "(949) 806-5001",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2025/06/30/00/00/socal_interprise_auto-pic-17546115139237582556-200x200.jpeg",
+        "offset": 13,
+        "cityFuelEconomy": {
+          "value": 22,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 32,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 26.5,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "22.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "27 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "182 hp 2.4L I4",
+        "ncapOverallSafetyRating": "4",
+        "vin": "2GKALMEK7G6287260",
+        "stockNumber": "287260"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 415788644,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Goxee Auto-1",
+        "listingTitle": "2017 MINI Cooper 2-Door Hatchback FWD",
+        "makeName": "MINI",
+        "modelName": "Cooper",
+        "makeId": "m45",
+        "modelId": "d436",
+        "entityId": "t69141",
+        "carYear": 2017,
+        "trimName": "2-Door Hatchback FWD",
+        "localizedTransmission": "Automatic",
+        "bodyTypeGroupId": "bg3",
+        "bodyTypeName": "Hatchback",
+        "salesStatus": "PAYING",
+        "sortScore": 992,
+        "options": [
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "Storage Package",
+          "Alloy Wheels",
+          "Technology Package",
+          "Heat Package",
+          "Premium Package",
+          "Heated Seats",
+          "Cold Weather Package",
+          "Multi Zone Climate Control",
+          "LE Package",
+          "LS Package",
+          "Bluetooth",
+          "Backup Camera",
+          "Comfort Package"
+        ],
+        "mileage": 62569,
+        "mileageString": "62,569",
+        "unitMileage": {
+          "value": 62569,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Blazing Red Metallic",
+        "normalizedExteriorColor": "RED",
+        "price": 10950,
+        "priceString": "$10,950",
+        "expectedPrice": 12295,
+        "expectedPriceString": "$12,295",
+        "priceDifferential": 1345,
+        "priceDifferentialString": "$1,345",
+        "dealScore": 0.9397519,
+        "daysOnMarket": 63,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/07/21/25/2017_mini_cooper-pic-9048633890782379936-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2215484,
+        "listingPartnerId": 142,
+        "sellerType": "DEALER",
+        "dealerName": "K/R Auto Group",
+        "sellerCity": "Palm Desert, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92211",
+        "distance": 57.29524,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=K%2FR+Auto+Group+77770+Country+Club+Dr%2C+Suite+B%2CPalm+Desert+CA%2C+92211%2CUS",
+        "serviceProviderId": 406848,
+        "debugInfo": " / rank #: 14 / sellerId: 2215484 / spId: 406848 / Paid Dealer: true / active partners: 142",
+        "serviceProviderName": "K/R Auto Group",
+        "phoneNumber": "+1 760-437-1124",
+        "phoneNumberString": "(760) 437-1124",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "Blazing Red Metallic",
+        "localizedInteriorColor": "Carbon Black",
+        "sellerRating": 4.2,
+        "reviewCount": 39,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/12/28/11/48/k_r_auto_group-pic-7491141032251784643-200x200.jpeg",
+        "offset": 14,
+        "cityFuelEconomy": {
+          "value": 27,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 36,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 31.05,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "27.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "31 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "134 hp 1.5L I3",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "WMWXP5C56H2D71114",
+        "stockNumber": "1795",
+        "interiorColor": "Carbon Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 416541734,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-0",
+        "listingTitle": "2020 Jeep Grand Cherokee Laredo E RWD",
+        "makeName": "Jeep",
+        "modelName": "Grand Cherokee",
+        "makeId": "m32",
+        "modelId": "d490",
+        "entityId": "t87084",
+        "carYear": 2020,
+        "trimName": "Laredo E RWD",
+        "localizedTransmission": "8-Speed Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "AVAILABLE",
+        "sortScore": 990,
+        "options": [
+          "LE Package",
+          "Navigation System",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Backup Camera",
+          "Blind Spot Monitoring",
+          "Heated Seats",
+          "Android Auto",
+          "Quick Order Package",
+          "CarPlay"
+        ],
+        "mileage": 90748,
+        "mileageString": "90,748",
+        "unitMileage": {
+          "value": 90748,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Velvet Red Pearlcoat",
+        "normalizedExteriorColor": "RED",
+        "price": 15997,
+        "priceString": "$15,997",
+        "expectedPrice": 18634,
+        "msrp": 18667,
+        "expectedPriceString": "$18,634",
+        "priceDifferential": 2637,
+        "priceDifferentialString": "$2,637",
+        "dealScore": 0.7198815,
+        "daysOnMarket": 55,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/15/07/04/2020_jeep_grand_cherokee-pic-4146356082675881584-1024x768.jpeg",
+          "height": 768,
+          "width": 1024,
+          "ocrFilterList": [
+            {
+              "x1": 744,
+              "x2": 815,
+              "y1": 23,
+              "y2": 38
+            },
+            {
+              "x1": 175,
+              "x2": 210,
+              "y1": 427,
+              "y2": 445
+            },
+            {
+              "x1": 218,
+              "x2": 341,
+              "y1": 24,
+              "y2": 38
+            },
+            {
+              "x1": 102,
+              "x2": 180,
+              "y1": 24,
+              "y2": 38
+            },
+            {
+              "x1": 817,
+              "x2": 1004,
+              "y1": 23,
+              "y2": 38
+            },
+            {
+              "x1": 185,
+              "x2": 213,
+              "y1": 24,
+              "y2": 38
+            }
+          ]
+        },
+        "sellerId": 2141766,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Mazda of Escondido",
+        "sellerCity": "Escondido, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92029",
+        "distance": 30.978727,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Mazda+of+Escondido+1560+Auto+Park+Way+North%2CEscondido+CA%2C+92029%2CUS",
+        "serviceProviderId": 63731,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Mazda",
+        "debugInfo": " / rank #: 15 / sellerId: 2141766 / spId: 63731 / active partners: 52",
+        "serviceProviderName": "Mazda of Escondido",
+        "useAnonymousContactEmail": true,
+        "localizedDriveTrain": "4X2",
+        "localizedExteriorColor": "Velvet Red Pearlcoat",
+        "localizedInteriorColor": "Black",
+        "sellerRating": 5,
+        "reviewCount": 5,
+        "howToShop": "PICK_UP_ONLY",
+        "financeDto": {
+          "financingEligibilityLookup": [
+            "WESTLAKE",
+            "CAPITAL_ONE"
+          ]
+        },
+        "offset": 15,
+        "cityFuelEconomy": {
+          "value": 19,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 26,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 22.15,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "19.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "22 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "295 hp 3.6L V6",
+        "ncapOverallSafetyRating": "4",
+        "vin": "1C4RJEAG6LC280992",
+        "stockNumber": "49724A",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 416766219,
+        "inclusionType": "DEFAULT",
+        "listingSource": "AutoManager-1",
+        "listingTitle": "2015 Mercedes-Benz S-Class S 550",
+        "makeName": "Mercedes-Benz",
+        "modelName": "S-Class",
+        "makeId": "m43",
+        "modelId": "d82",
+        "entityId": "t54930",
+        "carYear": 2015,
+        "trimName": "S 550",
+        "localizedTransmission": "7-Speed Automatic",
+        "bodyTypeGroupId": "bg6",
+        "bodyTypeName": "Sedan",
+        "salesStatus": "PAYING",
+        "sortScore": 998,
+        "options": [
+          "Leather Seats",
+          "Driver Assistance Package",
+          "Sunroof/Moonroof",
+          "Power Mirror Package",
+          "Executive Package",
+          "Power Package",
+          "Navigation System",
+          "Adaptive Cruise Control",
+          "DVD Entertainment System",
+          "Premium 1 Package",
+          "Adaptive Suspension",
+          "Premium Wheels",
+          "Blind Spot Monitoring",
+          "Parking Sensors",
+          "Premium Package",
+          "Heated Seats",
+          "Android Auto",
+          "CarPlay",
+          "Multi Zone Climate Control",
+          "AMG Sport Package",
+          "Comfort Package",
+          "Sound Package",
+          "Sport Package",
+          "Heat Package",
+          "LE Package",
+          "Bluetooth",
+          "Backup Camera"
+        ],
+        "mileage": 70170,
+        "mileageString": "70,170",
+        "unitMileage": {
+          "value": 70170,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "designo Diamond White Metallic",
+        "normalizedExteriorColor": "WHITE",
+        "price": 28449,
+        "priceString": "$28,449",
+        "expectedPrice": 26756,
+        "expectedPriceString": "$26,756",
+        "priceDifferential": -1693,
+        "priceDifferentialString": "$1,693",
+        "dealScore": 2.9630594,
+        "daysOnMarket": 53,
+        "dealRating": "FAIR_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/17/19/26/2015_mercedes-benz_s-class-pic-2885213522217853348-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2292974,
+        "listingPartnerId": 49,
+        "sellerType": "DEALER",
+        "dealerName": "Esotico Motors ",
+        "sellerCity": "San Diego, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "92111",
+        "distance": 50.198277,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Esotico+Motors++7710+Balboa+Ave%2C+Suite+222%2CSan+Diego+CA%2C+92111%2CUS",
+        "serviceProviderId": 460290,
+        "debugInfo": " / rank #: 16 / sellerId: 2292974 / spId: 460290 / Paid Dealer: true / active partners: 49",
+        "serviceProviderName": "Esotico Motors ",
+        "phoneNumber": "+1 858-956-7248",
+        "phoneNumberString": "(858) 956-7248",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "buyingOption": "CONVERT",
+        "localizedDriveTrain": "Rear-Wheel Drive",
+        "localizedExteriorColor": "designo Diamond White Metallic",
+        "localizedInteriorColor": "Brown (designo Silk Beige/Titanium Grey Pearl)",
+        "isNationwideShipperDealer": true,
+        "howToShop": "PICK_UP_ONLY",
+        "offset": 16,
+        "cityFuelEconomy": {
+          "value": 17,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 26,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 21.05,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "17.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "21 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "449 hp 4.7L V8",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "WDDUG8CB0FA186530",
+        "stockNumber": "1130",
+        "interiorColor": "designo Silk Beige/Titanium Grey Pearl"
+      }
+    },
+    {
+      "type": "LISTING_USED_STANDARD",
+      "data": {
+        "id": 417097741,
+        "inclusionType": "DEFAULT",
+        "listingSource": "Dealer Center-1",
+        "listingTitle": "2020 Nissan Murano SV FWD",
+        "makeName": "Nissan",
+        "modelName": "Murano",
+        "makeId": "m12",
+        "modelId": "d243",
+        "entityId": "t89026",
+        "carYear": 2020,
+        "trimName": "SV FWD",
+        "localizedTransmission": "Continuously Variable Transmission",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 996,
+        "options": [
+          "Navigation System",
+          "Adaptive Cruise Control",
+          "Alloy Wheels",
+          "Bluetooth",
+          "Premium Wheels",
+          "Backup Camera",
+          "Remote Start",
+          "Blind Spot Monitoring",
+          "Parking Sensors",
+          "Heated Seats"
+        ],
+        "mileage": 47557,
+        "mileageString": "47,557",
+        "unitMileage": {
+          "value": 47557,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Grey",
+        "normalizedExteriorColor": "GRAY",
+        "price": 17033,
+        "priceString": "$17,033",
+        "expectedPrice": 19217,
+        "expectedPriceString": "$19,217",
+        "priceDifferential": 2184,
+        "priceDifferentialString": "$2,184",
+        "dealScore": 0.88443774,
+        "daysOnMarket": 48,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/05/27/15/41/2020_nissan_murano-pic-7248664409344429814-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 2117466,
+        "listingPartnerId": 172,
+        "sellerType": "DEALER",
+        "dealerName": "LA Auto Center LLC",
+        "sellerCity": "Studio City, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91604",
+        "distance": 76.256,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=LA+Auto+Center+LLC+11640+Ventura+Blvd%2CStudio+City+CA%2C+91604%2CUS",
+        "serviceProviderId": 450009,
+        "debugInfo": " / rank #: 17 / sellerId: 2117466 / spId: 450009 / Paid Dealer: true / active partners: 172",
+        "serviceProviderName": "LA Auto Center LLC",
+        "phoneNumber": "+1 877-665-6470",
+        "phoneNumberString": "(877) 665-6470",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "localizedDriveTrain": "Front-Wheel Drive",
+        "localizedExteriorColor": "Gray",
+        "localizedInteriorColor": "Black",
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2023/08/23/16/50/la_auto_center_llc-pic-10019805573682095111-200x200.jpeg",
+        "offset": 17,
+        "cityFuelEconomy": {
+          "value": 20,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 28,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 23.6,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "20.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "24 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "260 hp 3.5L V6",
+        "ncapOverallSafetyRating": "5",
+        "vin": "5N1AZ2BJ6LN118326",
+        "stockNumber": "1074626",
+        "interiorColor": "Black"
+      }
+    },
+    {
+      "type": "LISTING_USED_FEATURED",
+      "data": {
+        "id": 417923020,
+        "inclusionType": "DEFAULT",
+        "listingSource": "vAuto-1",
+        "listingTitle": "2024 Genesis GV80 3.5T AWD",
+        "makeName": "Genesis",
+        "modelName": "GV80",
+        "makeId": "m203",
+        "modelId": "d3038",
+        "entityId": "t107296",
+        "carYear": 2024,
+        "trimName": "3.5T AWD",
+        "localizedTransmission": "8-Speed Automatic",
+        "bodyTypeGroupId": "bg7",
+        "bodyTypeName": "SUV / Crossover",
+        "salesStatus": "PAYING",
+        "sortScore": 975,
+        "options": [
+          "Leather Seats",
+          "Sunroof/Moonroof",
+          "Power Package",
+          "Navigation System",
+          "Adaptive Cruise Control",
+          "Alloy Wheels",
+          "Third Row Seating",
+          "Adaptive Suspension",
+          "Blind Spot Monitoring",
+          "Parking Sensors",
+          "Heated Seats",
+          "Android Auto",
+          "CarPlay",
+          "Multi Zone Climate Control",
+          "Bluetooth",
+          "Backup Camera",
+          "Remote Start",
+          "Cargo Package"
+        ],
+        "mileage": 11025,
+        "mileageString": "11,025",
+        "unitMileage": {
+          "value": 11025,
+          "unit": "MILES"
+        },
+        "exteriorColorName": "Cardiff Green",
+        "normalizedExteriorColor": "GREEN",
+        "price": 53795,
+        "priceString": "$53,795",
+        "expectedPrice": 57993,
+        "msrp": 60998,
+        "expectedPriceString": "$57,993",
+        "priceDifferential": 4198,
+        "priceDifferentialString": "$4,198",
+        "dealScore": 0.87346286,
+        "daysOnMarket": 39,
+        "dealRating": "GREAT_PRICE",
+        "pictureCount": 0,
+        "originalPictureData": {
+          "url": "https://static.cargurus.com/images/forsale/2025/06/06/20/51/2024_genesis_gv80-pic-6072381785433969170-1024x768.jpeg",
+          "height": 768,
+          "width": 1024
+        },
+        "sellerId": 1564287,
+        "listingPartnerId": 52,
+        "sellerType": "DEALER",
+        "dealerName": "Mercedes-Benz of Arcadia",
+        "sellerCity": "Arcadia, CA",
+        "sellerRegion": "CA",
+        "sellerPostalCode": "91007",
+        "distance": 60.250298,
+        "googleStaticMapUrl": "https://www.google.com/maps/dir/?api=1&destination=Mercedes-Benz+of+Arcadia+55+W.+Huntington+Drive%2CArcadia+CA%2C+91007%2CUS",
+        "serviceProviderId": 278938,
+        "isFranchiseDealer": true,
+        "franchiseMake": "Mercedes-Benz",
+        "debugInfo": " / rank #: 57 / sellerId: 1564287 / spId: 278938 / Paid Dealer: true / active partners: 52",
+        "serviceProviderName": "Mercedes-Benz of Arcadia",
+        "phoneNumber": "+1 715-641-6163",
+        "phoneNumberString": "(715) 641-6163",
+        "phoneNumberSMS": "+18883346545",
+        "supportsSms": true,
+        "buyingOption": "CONVERT",
+        "localizedDriveTrain": "All-Wheel Drive",
+        "localizedExteriorColor": "Cardiff Green",
+        "localizedInteriorColor": "Black/Black",
+        "sellerRating": 4,
+        "reviewCount": 90,
+        "howToShop": "PICK_UP_ONLY",
+        "dealerLogoUrl": "https://static.cargurus.com/images/site/2019/07/08/11/19/mercedes-benz_of_arcadia-pic-3460124258552657699-200x200.jpeg",
+        "offset": 2,
+        "cityFuelEconomy": {
+          "value": 18,
+          "unit": "MPG"
+        },
+        "highwayFuelEconomy": {
+          "value": 23,
+          "unit": "MPG"
+        },
+        "combinedFuelEconomy": {
+          "value": 20.25,
+          "unit": "MPG"
+        },
+        "localizedFuelEconomy": [
+          "18.0",
+          "MPG"
+        ],
+        "localizedFuelType": "Gasoline",
+        "localizedCombinedFuelEconomy": "20 MPG",
+        "evBatteryDto": {
+
+        },
+        "localizedEngineDisplayName": "375 hp 3.5L V6",
+        "ncapOverallSafetyRating": "Not Rated",
+        "vin": "KMUHCESC0RU148831",
+        "stockNumber": "35P02796",
+        "interiorColor": "Black/Black"
+      }
+    }
+  ],
+  "pageNumber": 1,
+  "pageReceipt": "eyJwYWdlQWxpZ25tZW50IjpbMTgsMjFdLCJzZWVuU3BvbnNvcmVkTGlzdGluZ0lkcyI6WzQxNjc5Mzg5NSw0MTg2MTQyODksNDE5NDM2ODAzLDQxNzkyMzAyMCw0MTcxMjIyMzQsNDExNzk0MjUzLDQxMTgzMzQ0NCw0MDMxMzc3NzIsNDE4NjUwNDI1XX0="
+}
