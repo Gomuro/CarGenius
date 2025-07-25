@@ -3,24 +3,6 @@ from app.schemas.stats.analytics import ListingSchema, TechnicalDetailsSchema, E
 from app.utils import flatten_listing_ml
 
 pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
-# async def flatten_listing_ml(listings: list[ListingSchemaML]) -> list[dict]:
-#     flat_listings = []
-#
-#     for listing in listings:
-#         listing_dict = listing.dict()
-#         flat_listing = ({k: v for k, v in listing_dict.items() if k not in ["technical_details", "equipment"]})
-#
-#         technical_details = listing_dict.get("technical_details", {}) or {}
-#         equipment = listing_dict.get("equipment", {}) or {}
-#
-#         flat_listing.update(technical_details)
-#         flat_listing.update(equipment)
-#
-#         for k, v in flat_listing.items():
-#             if isinstance(v, bool):
-#                 flat_listing[k] = int(v)
-#         flat_listings.append(flat_listing)
-#     return flat_listings
 
 
 async def test_flatten_listing_ml():
@@ -33,8 +15,8 @@ async def test_flatten_listing_ml():
         color="black",
         price=25000,
         url="http://test.url",
-        technical_details = TechnicalDetailsSchema(category="sedan", transmission="Automatic"),
-        equipment = EquipmentSchema(abs=True, speed_limiter=False)
+        technical_details=TechnicalDetailsSchema(category="sedan", transmission="Automatic"),
+        equipment=EquipmentSchema(abs=True, speed_limiter=False)
     )
     result = await flatten_listing_ml([listing])
 
@@ -57,10 +39,8 @@ async def test_flatten_listing_ml():
     assert flat_listing["abs"] == 1  # Boolean converted to int
     assert flat_listing["speed_limiter"] == 0  # Boolean converted to int
 
+
 async def test_flatten_listing_ml_empty():
     result = await flatten_listing_ml([])
     assert isinstance(result, list), "Result should be a list"
     assert len(result) == 0, "Should return an empty list for no listings"
-
-
-
