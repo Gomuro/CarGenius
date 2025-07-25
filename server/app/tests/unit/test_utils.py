@@ -1,5 +1,5 @@
 import pytest
-from app.schemas.stats.analytics import ListingSchema, TechnicalDetailsSchema, EquipmentSchema, ListingSchemaML
+from app.schemas.stats.analytics import TechnicalDetailsSchema, EquipmentSchema, ListingSchemaML
 from app.utils import flatten_listing_ml
 
 pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
@@ -22,8 +22,6 @@ async def test_flatten_listing_ml():
 
     assert isinstance(result, list), "Result should be a list"
     assert isinstance(result[0], dict), "Each item in the result should be a dictionary"
-    print("ListingSchemaML@@@@@@@@@@@@@@", ListingSchemaML)
-    print(f"Flattened result$$$$$$$$$$$$$$$: {result}")
     assert len(result) == 1, "Should return one flattened listing"
     flat_listing = result[0]
     assert flat_listing["brand"] == "Audi"
