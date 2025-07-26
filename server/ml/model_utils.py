@@ -8,10 +8,15 @@ SCALER_PATH = os.path.join(BASE_DIR, "model", "scaler.pkl")
 FEATURES_PATH = os.path.join(BASE_DIR, "model", "model_features.pkl")
 
 def load_model():
-    model = joblib.load(MODEL_PATH)         # Load the trained model ["RandomForestRegressor"]
-    features = joblib.load(FEATURES_PATH)   # Load the features used in training ["price", "mileage", "power", "registration_year", ...]
+    """
+    Loads the trained model, features, scaler, and imputers/indicator for preprocessing.
+    Returns: model, features, scaler, num_imputer, cat_imputer, missing_indicator
+    """
+    model = joblib.load(MODEL_PATH)
+    features = joblib.load(FEATURES_PATH)
     scaler = joblib.load(SCALER_PATH)
-    return model, features, scaler
+   
+    return model, features, scaler,
 
 
 def get_ml_model():
