@@ -453,29 +453,33 @@ class CarGurusService:
                     skipped += 1
                     continue
 
-                listing = ListingMobileDe(
-                    brand=listing_data["brand"],
-                    model=listing_data["model"],
-                    registration_year=listing_data["registration_year"],
-                    mileage=listing_data.get("mileage"),
-                    city_or_postal_code=listing_data.get("city_or_postal_code"),
-                    color=listing_data.get("color"),
-                    price=listing_data["price"],
-                    currency=listing_data.get("currency", "EUR"),
-                    url=listing_data["url"],
-                    is_active=listing_data.get("is_active", True)
-                )
-                db.add(listing)
-                await db.flush()
+                try:
+                    listing = ListingMobileDe(
+                        brand=listing_data["brand"],
+                        model=listing_data["model"],
+                        registration_year=listing_data["registration_year"],
+                        mileage=listing_data.get("mileage"),
+                        city_or_postal_code=listing_data.get("city_or_postal_code"),
+                        color=listing_data.get("color"),
+                        price=listing_data["price"],
+                        currency=listing_data.get("currency", "EUR"),
+                        url=listing_data["url"],
+                        is_active=listing_data.get("is_active", True)
+                    )
+                    db.add(listing)
+                    await db.flush()
 
-                tech = TechnicalDetails(**tech_data, listing_id=listing.id)
-                db.add(tech)
+                    tech = TechnicalDetails(**tech_data, listing_id=listing.id)
+                    db.add(tech)
 
-                equip = Equipment(**equipment_data, listing_id=listing.id)
-                db.add(equip)
+                    equip = Equipment(**equipment_data, listing_id=listing.id)
+                    db.add(equip)
 
-                await db.commit()
-                created += 1
+                    await db.commit()
+                    created += 1
+                except (KeyError, ValueError, TypeError) as e:
+                    print(f"Skipping listing due to error: {e}. Data: {listing_data}")
+                    continue
 
             print(f"✅ Page {page_number} saved. Created: {created}, Skipped: {skipped}")
             page_number += 1

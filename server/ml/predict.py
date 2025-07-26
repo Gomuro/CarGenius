@@ -7,7 +7,7 @@ from .model_utils import load_model
 
 def predict_price(input_data_list: List[dict]) -> List[float]:
     """ Predict car prices based on input data."""
-    model, features, scaler = load_model()  # Load the model, features and scaler
+    model, features, scaler = load_model()  # Load the model, features, scaler, imputers, indicator
     df = pd.DataFrame(input_data_list).drop(columns=["price"], errors="ignore")
 
     # Check for complex types in columns
